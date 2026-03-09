@@ -14,7 +14,7 @@ export function Room({
   selectedItem: ItemType | null;
   onPlace: (x: number, y: number, z: number) => void;
 }) {
-  const isOrnament = selectedItem === "lamp" || selectedItem === "vase";
+  const isOrnament = ["lamp", "vase", "laptop", "book", "tv"].includes(selectedItem || "");
 
   // Calculate grid occupancy
   const floorOccupied = new Set(

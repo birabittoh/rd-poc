@@ -158,27 +158,129 @@ async function startServer() {
 
           let rotation = 0;
           if (type === "chair") {
-            const adjacentTable = gameState.furniture.find(f => f.type === "table" && Math.abs(f.x - x) + Math.abs(f.y - y) === 1);
-            if (adjacentTable) {
-              if (adjacentTable.x > x) rotation = Math.PI / 2;
-              else if (adjacentTable.x < x) rotation = -Math.PI / 2;
-              else if (adjacentTable.y > y) rotation = 0;
-              else if (adjacentTable.y < y) rotation = Math.PI;
+            const tables = gameState.furniture.filter(f => f.type === "table");
+            if (tables.length > 0) {
+              // Find nearest table
+              let nearestTable = tables[0];
+              let minDist = Infinity;
+              for (const t of tables) {
+                const dist = Math.abs(t.x - x) + Math.abs(t.y - y);
+                if (dist < minDist) {
+                  minDist = dist;
+                  nearestTable = t;
+                }
+              }
+              
+              const dx = nearestTable.x - x;
+              const dy = nearestTable.y - y;
+              
+              if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0) rotation = Math.PI / 2;
+                else rotation = -Math.PI / 2;
+              } else {
+                if (dy > 0) rotation = 0;
+                else rotation = Math.PI;
+              }
             }
-          } else if (type === "tv" || type === "library") {
-            const distLeft = x;
-            const distRight = GRID_SIZE - 1 - x;
-            const distTop = y;
-            const distBottom = GRID_SIZE - 1 - y;
-            const minDist = Math.min(distLeft, distRight, distTop, distBottom);
-            if (minDist === distTop) rotation = 0;
-            else if (minDist === distBottom) rotation = Math.PI;
-            else if (minDist === distLeft) rotation = Math.PI / 2;
-            else if (minDist === distRight) rotation = -Math.PI / 2;
+          } else if (type === "tv" || type === "library" || type === "laptop") {
+            const chairs = gameState.furniture.filter(f => f.type === "chair");
+            if (chairs.length > 0 && type !== "library") {
+              // Face nearest chair
+              let nearestChair = chairs[0];
+              let minDist = Infinity;
+              for (const c of chairs) {
+                const dist = Math.abs(c.x - x) + Math.abs(c.y - y);
+                if (dist < minDist) {
+                  minDist = dist;
+                  nearestChair = c;
+                }
+              }
+              
+              const dx = nearestChair.x - x;
+              const dy = nearestChair.y - y;
+              
+              if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0) rotation = Math.PI / 2;
+                else rotation = -Math.PI / 2;
+              } else {
+                if (dy > 0) rotation = 0;
+                else rotation = Math.PI;
+              }
+            } else {
+              // Face away from nearest wall
+              const distLeft = x;
+              const distRight = GRID_SIZE - 1 - x;
+              const distTop = y;
+              const distBottom = GRID_SIZE - 1 - y;
+              const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+              if (minDist === distTop) rotation = 0;
+              else if (minDist === distBottom) rotation = Math.PI;
+              else if (minDist === distLeft) rotation = Math.PI / 2;
+              else if (minDist === distRight) rotation = -Math.PI / 2;
+            }
           }
 
           const id = Math.random().toString(36).substring(2, 9);
           gameState.furniture.push({ id, type, x, y, z, rotation });
+          
+          // If a table was placed, update all chairs to face their nearest table
+          if (type === "table") {
+            const tables = gameState.furniture.filter(f => f.type === "table");
+            for (const chair of gameState.furniture.filter(f => f.type === "chair")) {
+              let nearestTable = tables[0];
+              let minDist = Infinity;
+              for (const t of tables) {
+                const dist = Math.abs(t.x - chair.x) + Math.abs(t.y - chair.y);
+                if (dist < minDist) {
+                  minDist = dist;
+                  nearestTable = t;
+                }
+              }
+              
+              if (nearestTable) {
+                const dx = nearestTable.x - chair.x;
+                const dy = nearestTable.y - chair.y;
+                
+                if (Math.abs(dx) > Math.abs(dy)) {
+                  if (dx > 0) chair.rotation = Math.PI / 2;
+                  else chair.rotation = -Math.PI / 2;
+                } else {
+                  if (dy > 0) chair.rotation = 0;
+                  else chair.rotation = Math.PI;
+                }
+              }
+            }
+          }
+          
+          // If a chair was placed, update all laptops and TVs to face their nearest chair
+          if (type === "chair") {
+            const chairs = gameState.furniture.filter(f => f.type === "chair");
+            for (const item of gameState.furniture.filter(f => f.type === "laptop" || f.type === "tv")) {
+              let nearestChair = chairs[0];
+              let minDist = Infinity;
+              for (const c of chairs) {
+                const dist = Math.abs(c.x - item.x) + Math.abs(c.y - item.y);
+                if (dist < minDist) {
+                  minDist = dist;
+                  nearestChair = c;
+                }
+              }
+              
+              if (nearestChair) {
+                const dx = nearestChair.x - item.x;
+                const dy = nearestChair.y - item.y;
+                
+                if (Math.abs(dx) > Math.abs(dy)) {
+                  if (dx > 0) item.rotation = Math.PI / 2;
+                  else item.rotation = -Math.PI / 2;
+                } else {
+                  if (dy > 0) item.rotation = 0;
+                  else item.rotation = Math.PI;
+                }
+              }
+            }
+          }
+          
           broadcastState();
         } else if (message.type === "reset") {
           gameState = {
