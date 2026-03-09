@@ -113,8 +113,8 @@ export default function App() {
         )}
 
         <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full">
-          <div className="flex items-center gap-3 bg-zinc-900/40 p-2 rounded-xl">
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest w-12 sm:w-16 text-right shrink-0">Floor</div>
+          <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl overflow-hidden">
+            <div className="absolute top-2 left-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none">Floor</div>
             <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <FurnitureButton
                 type="table"
@@ -157,10 +157,11 @@ export default function App() {
                 }
               />
             </div>
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-zinc-900/80 to-transparent pointer-events-none" />
           </div>
 
-          <div className="flex items-center gap-3 bg-zinc-900/40 p-2 rounded-xl">
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest w-12 sm:w-16 text-right shrink-0">Surface</div>
+          <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl overflow-hidden">
+            <div className="absolute top-2 left-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none">Surface</div>
             <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <FurnitureButton
                 type="laptop"
@@ -208,6 +209,7 @@ export default function App() {
                 isOrnament
               />
             </div>
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-zinc-900/80 to-transparent pointer-events-none" />
           </div>
         </div>
         <p className="mt-4 text-sm text-zinc-400 font-medium tracking-wide">
