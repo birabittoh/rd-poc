@@ -33,6 +33,38 @@ export function Room({
     return false;
   };
 
+  const isHorizontal = new Set<string>();
+  gameState.furniture.forEach(f => {
+    if (!["table", "library", "chair"].includes(f.type)) return;
+    const right = gameState.furniture.find(other => other.type === f.type && other.x === f.x + 1 && other.y === f.y && other.z === f.z && other.rotation === f.rotation);
+    if (right) {
+      isHorizontal.add(f.id);
+      isHorizontal.add(right.id);
+    }
+  });
+
+  const connectionsMap = new Map<string, { top: boolean, right: boolean, bottom: boolean, left: boolean }>();
+  gameState.furniture.forEach(f => {
+    connectionsMap.set(f.id, { top: false, right: false, bottom: false, left: false });
+  });
+
+  gameState.furniture.forEach(f => {
+    if (!["table", "library", "chair"].includes(f.type)) return;
+    const conn = connectionsMap.get(f.id)!;
+    
+    if (isHorizontal.has(f.id)) {
+      const right = gameState.furniture.find(other => other.type === f.type && other.x === f.x + 1 && other.y === f.y && other.z === f.z && other.rotation === f.rotation);
+      const left = gameState.furniture.find(other => other.type === f.type && other.x === f.x - 1 && other.y === f.y && other.z === f.z && other.rotation === f.rotation);
+      if (right && isHorizontal.has(right.id)) conn.right = true;
+      if (left && isHorizontal.has(left.id)) conn.left = true;
+    } else {
+      const bottom = gameState.furniture.find(other => other.type === f.type && other.x === f.x && other.y === f.y + 1 && other.z === f.z && other.rotation === f.rotation);
+      const top = gameState.furniture.find(other => other.type === f.type && other.x === f.x && other.y === f.y - 1 && other.z === f.z && other.rotation === f.rotation);
+      if (bottom && !isHorizontal.has(bottom.id)) conn.bottom = true;
+      if (top && !isHorizontal.has(top.id)) conn.top = true;
+    }
+  });
+
   return (
     <group
       position={[-(GRID_SIZE * TILE_SIZE) / 2, 0, -(GRID_SIZE * TILE_SIZE) / 2]}
@@ -112,7 +144,7 @@ export function Room({
             ]}
             rotation={[0, f.rotation || 0, 0]}
           >
-            <FurnitureModel type={f.type} />
+            <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} />
 
             {/* Surface Highlight for Ornaments */}
             {isTable && (

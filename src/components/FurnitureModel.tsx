@@ -2,93 +2,146 @@ import React from "react";
 import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { ItemType } from "../types";
 
-export function FurnitureModel({ type }: { type: ItemType }) {
+export function FurnitureModel({ type, connections, rotation }: { type: ItemType, connections?: { top: boolean, right: boolean, bottom: boolean, left: boolean }, rotation?: number }) {
+  const conn = connections || { top: false, right: false, bottom: false, left: false };
+  let localConn = { ...conn };
+  const rotIndex = Math.round((rotation || 0) / (Math.PI / 2));
+  const normalizedRot = ((rotIndex % 4) + 4) % 4;
+  if (normalizedRot === 1) {
+    localConn = { top: conn.right, right: conn.top, bottom: conn.left, left: conn.bottom };
+  } else if (normalizedRot === 2) {
+    localConn = { top: conn.bottom, right: conn.left, bottom: conn.top, left: conn.right };
+  } else if (normalizedRot === 3) {
+    localConn = { top: conn.left, right: conn.bottom, bottom: conn.right, left: conn.top };
+  }
+
   switch (type) {
-    case "table":
+    case "table": {
+      const width = 0.9 + (localConn.right ? 0.05 : 0) + (localConn.left ? 0.05 : 0);
+      const depth = 0.9 + (localConn.bottom ? 0.05 : 0) + (localConn.top ? 0.05 : 0);
+      const posX = (localConn.right ? 0.025 : 0) - (localConn.left ? 0.025 : 0);
+      const posZ = (localConn.bottom ? 0.025 : 0) - (localConn.top ? 0.025 : 0);
+      
+      const showTopLeft = !localConn.left && !localConn.top;
+      const showTopRight = !localConn.right && !localConn.top;
+      const showBottomLeft = !localConn.left && !localConn.bottom;
+      const showBottomRight = !localConn.right && !localConn.bottom;
+
       return (
         <group>
           <Box
-            args={[0.9, 0.1, 0.9]}
-            position={[0, 0.95, 0]}
+            args={[width, 0.1, depth]}
+            position={[posX, 0.95, posZ]}
             castShadow
             receiveShadow
           >
             <meshStandardMaterial color="#8b5a2b" />
           </Box>
-          <Cylinder
-            args={[0.05, 0.05, 0.9]}
-            position={[-0.4, 0.45, -0.4]}
-            castShadow
-          >
-            <meshStandardMaterial color="#5c3a21" />
-          </Cylinder>
-          <Cylinder
-            args={[0.05, 0.05, 0.9]}
-            position={[0.4, 0.45, -0.4]}
-            castShadow
-          >
-            <meshStandardMaterial color="#5c3a21" />
-          </Cylinder>
-          <Cylinder
-            args={[0.05, 0.05, 0.9]}
-            position={[-0.4, 0.45, 0.4]}
-            castShadow
-          >
-            <meshStandardMaterial color="#5c3a21" />
-          </Cylinder>
-          <Cylinder
-            args={[0.05, 0.05, 0.9]}
-            position={[0.4, 0.45, 0.4]}
-            castShadow
-          >
-            <meshStandardMaterial color="#5c3a21" />
-          </Cylinder>
+          {showTopLeft && (
+            <Cylinder
+              args={[0.05, 0.05, 0.9]}
+              position={[-0.4, 0.45, -0.4]}
+              castShadow
+            >
+              <meshStandardMaterial color="#5c3a21" />
+            </Cylinder>
+          )}
+          {showTopRight && (
+            <Cylinder
+              args={[0.05, 0.05, 0.9]}
+              position={[0.4, 0.45, -0.4]}
+              castShadow
+            >
+              <meshStandardMaterial color="#5c3a21" />
+            </Cylinder>
+          )}
+          {showBottomLeft && (
+            <Cylinder
+              args={[0.05, 0.05, 0.9]}
+              position={[-0.4, 0.45, 0.4]}
+              castShadow
+            >
+              <meshStandardMaterial color="#5c3a21" />
+            </Cylinder>
+          )}
+          {showBottomRight && (
+            <Cylinder
+              args={[0.05, 0.05, 0.9]}
+              position={[0.4, 0.45, 0.4]}
+              castShadow
+            >
+              <meshStandardMaterial color="#5c3a21" />
+            </Cylinder>
+          )}
         </group>
       );
-    case "chair":
+    }
+    case "chair": {
+      const seatWidth = 0.6 + (localConn.right ? 0.2 : 0) + (localConn.left ? 0.2 : 0);
+      const seatDepth = 0.6 + (localConn.bottom ? 0.2 : 0) + (localConn.top ? 0.2 : 0);
+      const seatPosX = (localConn.right ? 0.1 : 0) - (localConn.left ? 0.1 : 0);
+      const seatPosZ = (localConn.bottom ? 0.1 : 0) - (localConn.top ? 0.1 : 0);
+
+      const backWidth = 0.6 + (localConn.right ? 0.2 : 0) + (localConn.left ? 0.2 : 0);
+      const backPosX = (localConn.right ? 0.1 : 0) - (localConn.left ? 0.1 : 0);
+
+      const showTopLeft = !localConn.left && !localConn.top;
+      const showTopRight = !localConn.right && !localConn.top;
+      const showBottomLeft = !localConn.left && !localConn.bottom;
+      const showBottomRight = !localConn.right && !localConn.bottom;
+
       return (
         <group>
           <Box
-            args={[0.6, 0.1, 0.6]}
-            position={[0, 0.5, 0]}
+            args={[seatWidth, 0.1, seatDepth]}
+            position={[seatPosX, 0.5, seatPosZ]}
             castShadow
             receiveShadow
           >
             <meshStandardMaterial color="#a0522d" />
           </Box>
-          <Box args={[0.6, 0.6, 0.1]} position={[0, 0.8, -0.25]} castShadow>
+          <Box args={[backWidth, 0.6, 0.1]} position={[backPosX, 0.8, -0.25]} castShadow>
             <meshStandardMaterial color="#a0522d" />
           </Box>
-          <Cylinder
-            args={[0.04, 0.04, 0.5]}
-            position={[-0.25, 0.25, -0.25]}
-            castShadow
-          >
-            <meshStandardMaterial color="#5c3a21" />
-          </Cylinder>
-          <Cylinder
-            args={[0.04, 0.04, 0.5]}
-            position={[0.25, 0.25, -0.25]}
-            castShadow
-          >
-            <meshStandardMaterial color="#5c3a21" />
-          </Cylinder>
-          <Cylinder
-            args={[0.04, 0.04, 0.5]}
-            position={[-0.25, 0.25, 0.25]}
-            castShadow
-          >
-            <meshStandardMaterial color="#5c3a21" />
-          </Cylinder>
-          <Cylinder
-            args={[0.04, 0.04, 0.5]}
-            position={[0.25, 0.25, 0.25]}
-            castShadow
-          >
-            <meshStandardMaterial color="#5c3a21" />
-          </Cylinder>
+          {showTopLeft && (
+            <Cylinder
+              args={[0.04, 0.04, 0.5]}
+              position={[-0.25, 0.25, -0.25]}
+              castShadow
+            >
+              <meshStandardMaterial color="#5c3a21" />
+            </Cylinder>
+          )}
+          {showTopRight && (
+            <Cylinder
+              args={[0.04, 0.04, 0.5]}
+              position={[0.25, 0.25, -0.25]}
+              castShadow
+            >
+              <meshStandardMaterial color="#5c3a21" />
+            </Cylinder>
+          )}
+          {showBottomLeft && (
+            <Cylinder
+              args={[0.04, 0.04, 0.5]}
+              position={[-0.25, 0.25, 0.25]}
+              castShadow
+            >
+              <meshStandardMaterial color="#5c3a21" />
+            </Cylinder>
+          )}
+          {showBottomRight && (
+            <Cylinder
+              args={[0.04, 0.04, 0.5]}
+              position={[0.25, 0.25, 0.25]}
+              castShadow
+            >
+              <meshStandardMaterial color="#5c3a21" />
+            </Cylinder>
+          )}
         </group>
       );
+    }
     case "plant":
       return (
         <group>
@@ -143,22 +196,29 @@ export function FurnitureModel({ type }: { type: ItemType }) {
           </Sphere>
         </group>
       );
-    case "library":
+    case "library": {
+      const libWidth = 0.8 + (localConn.right ? 0.1 : 0) + (localConn.left ? 0.1 : 0);
+      const libPosX = (localConn.right ? 0.05 : 0) - (localConn.left ? 0.05 : 0);
+      
+      const shelfWidth = 0.7 + (localConn.right ? 0.15 : 0) + (localConn.left ? 0.15 : 0);
+      const shelfPosX = (localConn.right ? 0.075 : 0) - (localConn.left ? 0.075 : 0);
+
       return (
         <group>
-          <Box args={[0.8, 1.5, 0.3]} position={[0, 0.75, 0]} castShadow receiveShadow>
+          <Box args={[libWidth, 1.5, 0.3]} position={[libPosX, 0.75, 0]} castShadow receiveShadow>
             <meshStandardMaterial color="#5c3a21" />
           </Box>
           {/* Shelves */}
-          <Box args={[0.7, 0.05, 0.25]} position={[0, 0.3, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
-          <Box args={[0.7, 0.05, 0.25]} position={[0, 0.7, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
-          <Box args={[0.7, 0.05, 0.25]} position={[0, 1.1, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
+          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 0.3, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
+          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 0.7, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
+          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 1.1, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
           {/* Books */}
           <Box args={[0.1, 0.2, 0.2]} position={[-0.2, 0.425, 0.05]} castShadow><meshStandardMaterial color="#ef4444" /></Box>
           <Box args={[0.08, 0.22, 0.2]} position={[0, 0.435, 0.05]} castShadow><meshStandardMaterial color="#3b82f6" /></Box>
           <Box args={[0.12, 0.18, 0.2]} position={[0.2, 0.415, 0.05]} castShadow><meshStandardMaterial color="#10b981" /></Box>
         </group>
       );
+    }
     case "floor_lamp":
       return (
         <group>
