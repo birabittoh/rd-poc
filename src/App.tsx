@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
 import { RotateCcw, Sofa, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb } from "lucide-react";
@@ -66,7 +67,7 @@ export default function App() {
     <div className="relative h-screen w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
       {/* 3D Canvas */}
       <div className="absolute inset-0">
-        <Canvas shadows>
+        <Canvas shadows={{ type: THREE.PCFShadowMap }}>
           <OrthographicCamera
             makeDefault
             position={[10, 10, 10]}

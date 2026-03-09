@@ -7,6 +7,7 @@ import { TILE_SIZE } from "../constants";
 
 export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
   const groupRef = useRef<THREE.Group>(null);
+  const timeRef = useRef(0);
 
   useFrame((state, delta) => {
     if (!groupRef.current) return;
@@ -45,7 +46,8 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
     // Dance animation
     if (ballerina.isDancing) {
       groupRef.current.rotation.y += delta * 4;
-      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 8) * 0.1;
+      timeRef.current += delta;
+      groupRef.current.position.y = Math.sin(timeRef.current * 8) * 0.1;
     } else {
       groupRef.current.position.y = THREE.MathUtils.lerp(
         groupRef.current.position.y,
