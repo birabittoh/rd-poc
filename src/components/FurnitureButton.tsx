@@ -24,19 +24,14 @@ export function FurnitureButton({
     <button
       onClick={onClick}
       className={cn(
-        "relative p-4 rounded-2xl flex flex-col items-center gap-2 transition-all duration-200",
+        "relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0",
         selected
-          ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 scale-105"
+          ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/30 scale-105"
           : "bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white",
       )}
     >
-      {icon}
-      <span className="text-xs font-medium capitalize">{type}</span>
-      {isOrnament && (
-        <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-          Top
-        </span>
-      )}
+      <div className="[&>svg]:w-5 [&>svg]:h-5">{icon}</div>
+      <span className="text-[10px] font-medium capitalize">{type.replace('_', ' ')}</span>
     </button>
   );
 }

@@ -111,93 +111,103 @@ export default function App() {
           </div>
         )}
 
-        <div className="bg-zinc-800/80 backdrop-blur-xl p-4 rounded-3xl shadow-2xl pointer-events-auto border border-white/10 flex flex-wrap justify-center gap-4 max-w-3xl">
-          <FurnitureButton
-            type="table"
-            icon={<Table />}
-            selected={selectedItem === "table"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "table" ? null : "table")
-            }
-          />
-          <FurnitureButton
-            type="chair"
-            icon={<Armchair />}
-            selected={selectedItem === "chair"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "chair" ? null : "chair")
-            }
-          />
-          <FurnitureButton
-            type="plant"
-            icon={<Sofa />}
-            selected={selectedItem === "plant"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "plant" ? null : "plant")
-            }
-          />
-          <FurnitureButton
-            type="library"
-            icon={<Library />}
-            selected={selectedItem === "library"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "library" ? null : "library")
-            }
-          />
-          <FurnitureButton
-            type="floor_lamp"
-            icon={<Lightbulb />}
-            selected={selectedItem === "floor_lamp"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "floor_lamp" ? null : "floor_lamp")
-            }
-          />
-          <div className="w-px bg-white/10 mx-2" />
-          <FurnitureButton
-            type="lamp"
-            icon={<Lamp />}
-            selected={selectedItem === "lamp"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "lamp" ? null : "lamp")
-            }
-            isOrnament
-          />
-          <FurnitureButton
-            type="vase"
-            icon={<Flower2 />}
-            selected={selectedItem === "vase"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "vase" ? null : "vase")
-            }
-            isOrnament
-          />
-          <FurnitureButton
-            type="laptop"
-            icon={<Laptop />}
-            selected={selectedItem === "laptop"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "laptop" ? null : "laptop")
-            }
-            isOrnament
-          />
-          <FurnitureButton
-            type="book"
-            icon={<Book />}
-            selected={selectedItem === "book"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "book" ? null : "book")
-            }
-            isOrnament
-          />
-          <FurnitureButton
-            type="tv"
-            icon={<Tv />}
-            selected={selectedItem === "tv"}
-            onClick={() =>
-              setSelectedItem(selectedItem === "tv" ? null : "tv")
-            }
-            isOrnament
-          />
+        <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full">
+          <div className="flex items-center gap-3 bg-zinc-900/40 p-2 rounded-xl">
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest w-12 sm:w-16 text-right shrink-0">Floor</div>
+            <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <FurnitureButton
+                type="table"
+                icon={<Table />}
+                selected={selectedItem === "table"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "table" ? null : "table")
+                }
+              />
+              <FurnitureButton
+                type="chair"
+                icon={<Armchair />}
+                selected={selectedItem === "chair"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "chair" ? null : "chair")
+                }
+              />
+              <FurnitureButton
+                type="plant"
+                icon={<Sofa />}
+                selected={selectedItem === "plant"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "plant" ? null : "plant")
+                }
+              />
+              <FurnitureButton
+                type="library"
+                icon={<Library />}
+                selected={selectedItem === "library"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "library" ? null : "library")
+                }
+              />
+              <FurnitureButton
+                type="floor_lamp"
+                icon={<Lightbulb />}
+                selected={selectedItem === "floor_lamp"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "floor_lamp" ? null : "floor_lamp")
+                }
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-zinc-900/40 p-2 rounded-xl">
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest w-12 sm:w-16 text-right shrink-0">Surface</div>
+            <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <FurnitureButton
+                type="laptop"
+                icon={<Laptop />}
+                selected={selectedItem === "laptop"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "laptop" ? null : "laptop")
+                }
+                isOrnament
+              />
+              <FurnitureButton
+                type="tv"
+                icon={<Tv />}
+                selected={selectedItem === "tv"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "tv" ? null : "tv")
+                }
+                isOrnament
+              />
+              <FurnitureButton
+                type="vase"
+                icon={<Flower2 />}
+                selected={selectedItem === "vase"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "vase" ? null : "vase")
+                }
+                isOrnament
+              />
+              <FurnitureButton
+                type="book"
+                icon={<Book />}
+                selected={selectedItem === "book"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "book" ? null : "book")
+                }
+                isOrnament
+              />
+              <FurnitureButton
+                type="lamp"
+                icon={<Lamp />}
+                selected={selectedItem === "lamp"}
+                onClick={() =>
+                  setSelectedItem(selectedItem === "lamp" ? null : "lamp")
+                }
+                isOrnament
+              />
+            </div>
+          </div>
         </div>
         <p className="mt-4 text-sm text-zinc-400 font-medium tracking-wide">
           {selectedItem
