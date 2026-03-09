@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sofa, Lamp, Flower2, Table, Armchair } from "lucide-react";
+import { RotateCcw, Sofa, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { FurnitureButton } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
@@ -33,7 +33,7 @@ export default function App() {
     if (!ws || !selectedItem || gameState?.status !== "playing") return;
 
     // Check if placement is valid
-    const isOrnament = selectedItem === "lamp" || selectedItem === "vase";
+    const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
     if (isOrnament && z === 0) return; // Must be on surface
     if (!isOrnament && z > 0) return; // Must be on floor
 
@@ -60,7 +60,7 @@ export default function App() {
     );
   }
 
-  const isOrnament = selectedItem === "lamp" || selectedItem === "vase";
+  const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
 
   return (
     <div className="relative h-screen w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
@@ -111,7 +111,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="bg-zinc-800/80 backdrop-blur-xl p-4 rounded-3xl shadow-2xl pointer-events-auto border border-white/10 flex gap-4">
+        <div className="bg-zinc-800/80 backdrop-blur-xl p-4 rounded-3xl shadow-2xl pointer-events-auto border border-white/10 flex flex-wrap justify-center gap-4 max-w-3xl">
           <FurnitureButton
             type="table"
             icon={<Table />}
@@ -136,6 +136,22 @@ export default function App() {
               setSelectedItem(selectedItem === "plant" ? null : "plant")
             }
           />
+          <FurnitureButton
+            type="library"
+            icon={<Library />}
+            selected={selectedItem === "library"}
+            onClick={() =>
+              setSelectedItem(selectedItem === "library" ? null : "library")
+            }
+          />
+          <FurnitureButton
+            type="floor_lamp"
+            icon={<Lightbulb />}
+            selected={selectedItem === "floor_lamp"}
+            onClick={() =>
+              setSelectedItem(selectedItem === "floor_lamp" ? null : "floor_lamp")
+            }
+          />
           <div className="w-px bg-white/10 mx-2" />
           <FurnitureButton
             type="lamp"
@@ -152,6 +168,33 @@ export default function App() {
             selected={selectedItem === "vase"}
             onClick={() =>
               setSelectedItem(selectedItem === "vase" ? null : "vase")
+            }
+            isOrnament
+          />
+          <FurnitureButton
+            type="laptop"
+            icon={<Laptop />}
+            selected={selectedItem === "laptop"}
+            onClick={() =>
+              setSelectedItem(selectedItem === "laptop" ? null : "laptop")
+            }
+            isOrnament
+          />
+          <FurnitureButton
+            type="book"
+            icon={<Book />}
+            selected={selectedItem === "book"}
+            onClick={() =>
+              setSelectedItem(selectedItem === "book" ? null : "book")
+            }
+            isOrnament
+          />
+          <FurnitureButton
+            type="tv"
+            icon={<Tv />}
+            selected={selectedItem === "tv"}
+            onClick={() =>
+              setSelectedItem(selectedItem === "tv" ? null : "tv")
             }
             isOrnament
           />

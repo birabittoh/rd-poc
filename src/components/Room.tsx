@@ -24,6 +24,15 @@ export function Room({
     gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`),
   );
 
+  const isAdjacentToWallOrFurniture = (x: number, y: number) => {
+    if (x === 0 || x === GRID_SIZE - 1 || y === 0 || y === GRID_SIZE - 1) return true;
+    if (floorOccupied.has(`${x - 1},${y}`)) return true;
+    if (floorOccupied.has(`${x + 1},${y}`)) return true;
+    if (floorOccupied.has(`${x},${y - 1}`)) return true;
+    if (floorOccupied.has(`${x},${y + 1}`)) return true;
+    return false;
+  };
+
   return (
     <group
       position={[-(GRID_SIZE * TILE_SIZE) / 2, 0, -(GRID_SIZE * TILE_SIZE) / 2]}
@@ -50,7 +59,7 @@ export function Room({
             gameState.ballerina.targetX === x &&
             gameState.ballerina.targetY === y;
           const isHighlight =
-            selectedItem && !isOrnament && !isOccupied && !isBallerinaTarget;
+            selectedItem && !isOrnament && !isOccupied && !isBallerinaTarget && isAdjacentToWallOrFurniture(x, y);
 
           return (
             <mesh
@@ -101,6 +110,7 @@ export function Room({
               f.z === 0 ? 0 : 1,
               f.y * TILE_SIZE + TILE_SIZE / 2,
             ]}
+            rotation={[0, f.rotation || 0, 0]}
           >
             <FurnitureModel type={f.type} />
 

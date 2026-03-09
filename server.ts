@@ -7,7 +7,17 @@ const PORT = 3000;
 const GRID_SIZE = 9; // 9x9 grid, center is (4, 4)
 const CENTER = Math.floor(GRID_SIZE / 2);
 
-type ItemType = "table" | "chair" | "plant" | "lamp" | "vase";
+type ItemType =
+  | "table"
+  | "chair"
+  | "plant"
+  | "lamp"
+  | "vase"
+  | "library"
+  | "floor_lamp"
+  | "laptop"
+  | "book"
+  | "tv";
 type PlacementType = "floor" | "surface";
 
 interface Furniture {
@@ -16,6 +26,7 @@ interface Furniture {
   x: number;
   y: number;
   z: number; // 0 for floor, 1 for surface
+  rotation?: number;
 }
 
 interface Ballerina {
@@ -138,8 +149,36 @@ async function startServer() {
           const isOccupied = gameState.furniture.some(f => f.x === x && f.y === y && f.z === z);
           if (isOccupied) return;
 
+          // Adjacency check for floor items
+          if (z === 0) {
+            const isAdjacentToWall = x === 0 || x === GRID_SIZE - 1 || y === 0 || y === GRID_SIZE - 1;
+            const isAdjacentToFurniture = gameState.furniture.some(f => f.z === 0 && (Math.abs(f.x - x) + Math.abs(f.y - y) === 1));
+            if (!isAdjacentToWall && !isAdjacentToFurniture) return;
+          }
+
+          let rotation = 0;
+          if (type === "chair") {
+            const adjacentTable = gameState.furniture.find(f => f.type === "table" && Math.abs(f.x - x) + Math.abs(f.y - y) === 1);
+            if (adjacentTable) {
+              if (adjacentTable.x > x) rotation = Math.PI / 2;
+              else if (adjacentTable.x < x) rotation = -Math.PI / 2;
+              else if (adjacentTable.y > y) rotation = 0;
+              else if (adjacentTable.y < y) rotation = Math.PI;
+            }
+          } else if (type === "tv" || type === "library") {
+            const distLeft = x;
+            const distRight = GRID_SIZE - 1 - x;
+            const distTop = y;
+            const distBottom = GRID_SIZE - 1 - y;
+            const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+            if (minDist === distTop) rotation = 0;
+            else if (minDist === distBottom) rotation = Math.PI;
+            else if (minDist === distLeft) rotation = Math.PI / 2;
+            else if (minDist === distRight) rotation = -Math.PI / 2;
+          }
+
           const id = Math.random().toString(36).substring(2, 9);
-          gameState.furniture.push({ id, type, x, y, z });
+          gameState.furniture.push({ id, type, x, y, z, rotation });
           broadcastState();
         } else if (message.type === "reset") {
           gameState = {

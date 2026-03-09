@@ -1,4 +1,14 @@
-export type ItemType = "table" | "chair" | "plant" | "lamp" | "vase";
+export type ItemType =
+  | "table"
+  | "chair"
+  | "plant"
+  | "lamp"
+  | "vase"
+  | "library"
+  | "floor_lamp"
+  | "laptop"
+  | "book"
+  | "tv";
 
 export interface Furniture {
   id: string;
@@ -6,6 +16,7 @@ export interface Furniture {
   x: number;
   y: number;
   z: number;
+  rotation?: number;
 }
 
 export interface Ballerina {
