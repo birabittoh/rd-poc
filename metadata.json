@@ -1,0 +1,5 @@
+{
+  "name": "Ballerina Room",
+  "description": "A multiplayer isometric room furnishing game with an AI ballerina.",
+  "requestFramePermissions": []
+}
