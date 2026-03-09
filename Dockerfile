@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -14,16 +14,23 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM node:22-alpine
 
-# Copy the built assets from the builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Configure Nginx to serve the SPA (fallback to index.html for React Router)
-RUN sed -i 's/try_files $uri $uri\/ =404;/try_files $uri $uri\/ \/index.html;/g' /etc/nginx/conf.d/default.conf
+# Copy package files and install production dependencies
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Expose port 80
-EXPOSE 80
+# Copy built assets and server code
+COPY --from=builder /app/dist ./dist
+COPY server.ts ./
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Set environment to production
+ENV NODE_ENV=production
+
+# Expose port 3000
+EXPOSE 3000
+
+# Start the Node.js server
+CMD ["npm", "start"]

@@ -320,6 +320,10 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     app.use(express.static("dist"));
+    // SPA fallback
+    app.get("*", (req, res) => {
+      res.sendFile("index.html", { root: "dist" });
+    });
   }
 
   server.listen(PORT, "0.0.0.0", () => {
