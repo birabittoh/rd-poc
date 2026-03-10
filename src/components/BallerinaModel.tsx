@@ -47,7 +47,7 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
     if (ballerina.isDancing) {
       groupRef.current.rotation.y += delta * 4;
       timeRef.current += delta;
-      groupRef.current.position.y = Math.sin(timeRef.current * 8) * 0.1;
+      groupRef.current.position.y = Math.abs(Math.sin(timeRef.current * 8)) * 0.2;
     } else {
       groupRef.current.position.y = THREE.MathUtils.lerp(
         groupRef.current.position.y,

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb } from "lucide-react";
+import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer } from "lucide-react";
 import { GameState, ItemType } from "./types";
-import { FurnitureButton } from "./components/FurnitureButton";
+import { FurnitureButton, cn } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
 import { ScrollContainer } from "./components/ScrollContainer";
 
@@ -12,10 +12,27 @@ const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
   : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
 
+const FLOOR_ITEMS: { type: ItemType; icon: React.ReactNode }[] = [
+  { type: "table", icon: <Table /> },
+  { type: "chair", icon: <Armchair /> },
+  { type: "plant", icon: <Sprout /> },
+  { type: "library", icon: <Library /> },
+  { type: "floor_lamp", icon: <Lightbulb /> },
+];
+
+const SURFACE_ITEMS: { type: ItemType; icon: React.ReactNode }[] = [
+  { type: "laptop", icon: <Laptop /> },
+  { type: "tv", icon: <Tv /> },
+  { type: "vase", icon: <Flower2 /> },
+  { type: "book", icon: <Book /> },
+  { type: "lamp", icon: <Lamp /> },
+];
+
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     const socket = new WebSocket(WS_URL);
@@ -25,6 +42,8 @@ export default function App() {
       const data = JSON.parse(event.data);
       if (data.type === "state") {
         setGameState(data.state);
+      } else if (data.type === "cooldown") {
+        setCooldown(data.remaining);
       }
     };
 
@@ -32,7 +51,7 @@ export default function App() {
   }, []);
 
   const handlePlace = (x: number, y: number, z: number) => {
-    if (!ws || !selectedItem || gameState?.status !== "playing") return;
+    if (!ws || !selectedItem || gameState?.status !== "playing" || cooldown > 0) return;
 
     // Check if placement is valid
     const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
@@ -63,6 +82,8 @@ export default function App() {
   }
 
   const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
+
+  const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== "playing");
 
   return (
     <div className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
@@ -96,7 +117,7 @@ export default function App() {
 
           <Room
             gameState={gameState}
-            selectedItem={selectedItem}
+            selectedItem={isPlacementDisabled ? null : selectedItem}
             onPlace={handlePlace}
           />
         </Canvas>
@@ -119,101 +140,55 @@ export default function App() {
 
         <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full">
           <ScrollContainer title="Floor">
-            <FurnitureButton
-              type="table"
-              icon={<Table />}
-              selected={selectedItem === "table"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "table" ? null : "table")
-              }
-            />
-            <FurnitureButton
-              type="chair"
-              icon={<Armchair />}
-              selected={selectedItem === "chair"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "chair" ? null : "chair")
-              }
-            />
-            <FurnitureButton
-              type="plant"
-              icon={<Sprout />}
-              selected={selectedItem === "plant"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "plant" ? null : "plant")
-              }
-            />
-            <FurnitureButton
-              type="library"
-              icon={<Library />}
-              selected={selectedItem === "library"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "library" ? null : "library")
-              }
-            />
-            <FurnitureButton
-              type="floor_lamp"
-              icon={<Lightbulb />}
-              selected={selectedItem === "floor_lamp"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "floor_lamp" ? null : "floor_lamp")
-              }
-            />
+            {FLOOR_ITEMS.map((item) => (
+              <FurnitureButton
+                key={item.type}
+                type={item.type}
+                icon={item.icon}
+                selected={selectedItem === item.type}
+                disabled={isPlacementDisabled}
+                onClick={() =>
+                  setSelectedItem(selectedItem === item.type ? null : item.type)
+                }
+              />
+            ))}
           </ScrollContainer>
 
           <ScrollContainer title="Surface">
-            <FurnitureButton
-              type="laptop"
-              icon={<Laptop />}
-              selected={selectedItem === "laptop"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "laptop" ? null : "laptop")
-              }
-              isOrnament
-            />
-            <FurnitureButton
-              type="tv"
-              icon={<Tv />}
-              selected={selectedItem === "tv"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "tv" ? null : "tv")
-              }
-              isOrnament
-            />
-            <FurnitureButton
-              type="vase"
-              icon={<Flower2 />}
-              selected={selectedItem === "vase"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "vase" ? null : "vase")
-              }
-              isOrnament
-            />
-            <FurnitureButton
-              type="book"
-              icon={<Book />}
-              selected={selectedItem === "book"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "book" ? null : "book")
-              }
-              isOrnament
-            />
-            <FurnitureButton
-              type="lamp"
-              icon={<Lamp />}
-              selected={selectedItem === "lamp"}
-              onClick={() =>
-                setSelectedItem(selectedItem === "lamp" ? null : "lamp")
-              }
-              isOrnament
-            />
+            {SURFACE_ITEMS.map((item) => (
+              <FurnitureButton
+                key={item.type}
+                type={item.type}
+                icon={item.icon}
+                selected={selectedItem === item.type}
+                disabled={isPlacementDisabled}
+                onClick={() =>
+                  setSelectedItem(selectedItem === item.type ? null : item.type)
+                }
+                isOrnament
+              />
+            ))}
           </ScrollContainer>
         </div>
-        <p className="mt-4 text-sm text-zinc-400 font-medium tracking-wide">
-          {selectedItem
-            ? `Select a ${isOrnament ? "surface" : "floor tile"} to place ${selectedItem}`
-            : "Select an item to place"}
-        </p>
+        <div className="mt-4 relative h-6 flex items-center justify-center w-full">
+          <p className={cn(
+            "text-sm text-zinc-400 font-medium tracking-wide transition-opacity duration-300",
+            cooldown > 0 ? "opacity-0" : "opacity-100"
+          )}>
+            {selectedItem
+              ? `Select a ${isOrnament ? "surface" : "floor tile"} to place ${selectedItem}`
+              : "Select an item to place"}
+          </p>
+
+          {cooldown > 0 && (
+            <div className="absolute inset-0 flex items-center justify-center animate-in fade-in slide-in-from-bottom-2">
+              <div className="bg-zinc-800/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-xl flex items-center gap-2">
+                <Timer className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                <span className="text-sm font-medium">Wait {cooldown}s before placing the next item</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

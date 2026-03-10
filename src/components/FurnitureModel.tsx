@@ -35,15 +35,16 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
             castShadow
             receiveShadow
           >
-            <meshStandardMaterial color="#8b5a2b" />
+            <meshStandardMaterial color="#8b5a2b" roughness={0.4} />
           </Box>
           {showTopLeft && (
             <Cylinder
               args={[0.05, 0.05, 0.9]}
               position={[-0.4, 0.45, -0.4]}
               castShadow
+              receiveShadow
             >
-              <meshStandardMaterial color="#5c3a21" />
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
             </Cylinder>
           )}
           {showTopRight && (
@@ -51,8 +52,9 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
               args={[0.05, 0.05, 0.9]}
               position={[0.4, 0.45, -0.4]}
               castShadow
+              receiveShadow
             >
-              <meshStandardMaterial color="#5c3a21" />
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
             </Cylinder>
           )}
           {showBottomLeft && (
@@ -60,8 +62,9 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
               args={[0.05, 0.05, 0.9]}
               position={[-0.4, 0.45, 0.4]}
               castShadow
+              receiveShadow
             >
-              <meshStandardMaterial color="#5c3a21" />
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
             </Cylinder>
           )}
           {showBottomRight && (
@@ -69,8 +72,9 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
               args={[0.05, 0.05, 0.9]}
               position={[0.4, 0.45, 0.4]}
               castShadow
+              receiveShadow
             >
-              <meshStandardMaterial color="#5c3a21" />
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
             </Cylinder>
           )}
         </group>
@@ -98,18 +102,19 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
             castShadow
             receiveShadow
           >
-            <meshStandardMaterial color="#a0522d" />
+            <meshStandardMaterial color="#a0522d" roughness={0.4} />
           </Box>
-          <Box args={[backWidth, 0.6, 0.1]} position={[backPosX, 0.8, -0.25]} castShadow>
-            <meshStandardMaterial color="#a0522d" />
+          <Box args={[backWidth, 0.6, 0.1]} position={[backPosX, 0.8, -0.25]} castShadow receiveShadow>
+            <meshStandardMaterial color="#a0522d" roughness={0.4} />
           </Box>
           {showTopLeft && (
             <Cylinder
               args={[0.04, 0.04, 0.5]}
               position={[-0.25, 0.25, -0.25]}
               castShadow
+              receiveShadow
             >
-              <meshStandardMaterial color="#5c3a21" />
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
             </Cylinder>
           )}
           {showTopRight && (
@@ -117,8 +122,9 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
               args={[0.04, 0.04, 0.5]}
               position={[0.25, 0.25, -0.25]}
               castShadow
+              receiveShadow
             >
-              <meshStandardMaterial color="#5c3a21" />
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
             </Cylinder>
           )}
           {showBottomLeft && (
@@ -126,8 +132,9 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
               args={[0.04, 0.04, 0.5]}
               position={[-0.25, 0.25, 0.25]}
               castShadow
+              receiveShadow
             >
-              <meshStandardMaterial color="#5c3a21" />
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
             </Cylinder>
           )}
           {showBottomRight && (
@@ -135,8 +142,9 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
               args={[0.04, 0.04, 0.5]}
               position={[0.25, 0.25, 0.25]}
               castShadow
+              receiveShadow
             >
-              <meshStandardMaterial color="#5c3a21" />
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
             </Cylinder>
           )}
         </group>
@@ -145,54 +153,56 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
     case "plant":
       return (
         <group>
-          <Cylinder args={[0.2, 0.15, 0.4]} position={[0, 0.2, 0]} castShadow>
-            <meshStandardMaterial color="#d2b48c" />
+          <Cylinder args={[0.2, 0.15, 0.4]} position={[0, 0.2, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#d2b48c" roughness={0.4} />
           </Cylinder>
-          <Sphere args={[0.3]} position={[0, 0.6, 0]} castShadow>
-            <meshStandardMaterial color="#22c55e" />
+          <Sphere args={[0.3]} position={[0, 0.6, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#22c55e" roughness={0.4} />
           </Sphere>
-          <Sphere args={[0.2]} position={[0.15, 0.8, 0.1]} castShadow>
-            <meshStandardMaterial color="#16a34a" />
+          <Sphere args={[0.2]} position={[0.15, 0.8, 0.1]} castShadow receiveShadow>
+            <meshStandardMaterial color="#16a34a" roughness={0.4} />
           </Sphere>
-          <Sphere args={[0.25]} position={[-0.1, 0.7, -0.15]} castShadow>
-            <meshStandardMaterial color="#15803d" />
+          <Sphere args={[0.25]} position={[-0.1, 0.7, -0.15]} castShadow receiveShadow>
+            <meshStandardMaterial color="#15803d" roughness={0.4} />
           </Sphere>
         </group>
       );
     case "lamp":
       return (
         <group>
-          <Cylinder args={[0.1, 0.15, 0.1]} position={[0, 0.05, 0]} castShadow>
-            <meshStandardMaterial color="#71717a" />
+          <Cylinder args={[0.1, 0.15, 0.1]} position={[0, 0.05, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#71717a" roughness={0.4} />
           </Cylinder>
-          <Cylinder args={[0.02, 0.02, 0.6]} position={[0, 0.35, 0]} castShadow>
-            <meshStandardMaterial color="#d4d4d8" />
+          <Cylinder args={[0.02, 0.02, 0.6]} position={[0, 0.35, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#d4d4d8" roughness={0.4} />
           </Cylinder>
           <Cylinder args={[0.15, 0.25, 0.3]} position={[0, 0.7, 0]} castShadow>
             <meshStandardMaterial color="#fef08a" transparent opacity={0.9} />
           </Cylinder>
           <pointLight
             position={[0, 0.7, 0]}
-            intensity={0.5}
+            intensity={1.2}
             color="#fef08a"
-            distance={3}
+            distance={5}
+            castShadow
+            shadow-bias={-0.001}
           />
         </group>
       );
     case "vase":
       return (
         <group>
-          <Cylinder args={[0.1, 0.08, 0.3]} position={[0, 0.15, 0]} castShadow>
-            <meshStandardMaterial color="#38bdf8" />
+          <Cylinder args={[0.1, 0.08, 0.3]} position={[0, 0.15, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#38bdf8" roughness={0.4} />
           </Cylinder>
-          <Sphere args={[0.15]} position={[0, 0.4, 0]} castShadow>
-            <meshStandardMaterial color="#ec4899" />
+          <Sphere args={[0.15]} position={[0, 0.4, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#ec4899" roughness={0.4} />
           </Sphere>
-          <Sphere args={[0.1]} position={[0.1, 0.45, 0.1]} castShadow>
-            <meshStandardMaterial color="#f472b6" />
+          <Sphere args={[0.1]} position={[0.1, 0.45, 0.1]} castShadow receiveShadow>
+            <meshStandardMaterial color="#f472b6" roughness={0.4} />
           </Sphere>
-          <Sphere args={[0.12]} position={[-0.1, 0.5, -0.05]} castShadow>
-            <meshStandardMaterial color="#db2777" />
+          <Sphere args={[0.12]} position={[-0.1, 0.5, -0.05]} castShadow receiveShadow>
+            <meshStandardMaterial color="#db2777" roughness={0.4} />
           </Sphere>
         </group>
       );
@@ -204,58 +214,60 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
       const shelfPosX = (localConn.right ? 0.075 : 0) - (localConn.left ? 0.075 : 0);
 
       return (
-        <group>
+        <group position={[0, 0, -0.35]}>
           <Box args={[libWidth, 1.5, 0.3]} position={[libPosX, 0.75, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color="#5c3a21" />
+            <meshStandardMaterial color="#5c3a21" roughness={0.4} />
           </Box>
           {/* Shelves */}
-          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 0.3, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
-          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 0.7, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
-          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 1.1, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
+          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 0.3, 0.08]} castShadow receiveShadow><meshStandardMaterial color="#8b5a2b" roughness={0.4} /></Box>
+          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 0.7, 0.08]} castShadow receiveShadow><meshStandardMaterial color="#8b5a2b" roughness={0.4} /></Box>
+          <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 1.1, 0.08]} castShadow receiveShadow><meshStandardMaterial color="#8b5a2b" roughness={0.4} /></Box>
           {/* Books */}
-          <Box args={[0.1, 0.2, 0.2]} position={[-0.2, 0.425, 0.05]} castShadow><meshStandardMaterial color="#ef4444" /></Box>
-          <Box args={[0.08, 0.22, 0.2]} position={[0, 0.435, 0.05]} castShadow><meshStandardMaterial color="#3b82f6" /></Box>
-          <Box args={[0.12, 0.18, 0.2]} position={[0.2, 0.415, 0.05]} castShadow><meshStandardMaterial color="#10b981" /></Box>
+          <Box args={[0.1, 0.2, 0.18]} position={[-0.2, 0.45, 0.12]} castShadow receiveShadow><meshStandardMaterial color="#ef4444" roughness={0.4} /></Box>
+          <Box args={[0.08, 0.22, 0.18]} position={[0, 0.46, 0.12]} castShadow receiveShadow><meshStandardMaterial color="#3b82f6" roughness={0.4} /></Box>
+          <Box args={[0.12, 0.18, 0.18]} position={[0.2, 0.44, 0.12]} castShadow receiveShadow><meshStandardMaterial color="#10b981" roughness={0.4} /></Box>
         </group>
       );
     }
     case "floor_lamp":
       return (
         <group>
-          <Cylinder args={[0.15, 0.15, 0.05]} position={[0, 0.025, 0]} castShadow><meshStandardMaterial color="#3f3f46" /></Cylinder>
-          <Cylinder args={[0.02, 0.02, 1.2]} position={[0, 0.6, 0]} castShadow><meshStandardMaterial color="#71717a" /></Cylinder>
-          <Cylinder args={[0.2, 0.3, 0.4]} position={[0, 1.3, 0]} castShadow><meshStandardMaterial color="#fef08a" transparent opacity={0.9} /></Cylinder>
-          <pointLight position={[0, 1.3, 0]} intensity={0.8} color="#fef08a" distance={4} />
+          <Cylinder args={[0.15, 0.15, 0.05]} position={[0, 0.025, 0]} castShadow receiveShadow><meshStandardMaterial color="#3f3f46" roughness={0.4} /></Cylinder>
+          <Cylinder args={[0.02, 0.02, 1.2]} position={[0, 0.6, 0]} castShadow receiveShadow><meshStandardMaterial color="#71717a" roughness={0.4} /></Cylinder>
+          <Cylinder args={[0.2, 0.3, 0.4]} position={[0, 1.3, 0]} castShadow receiveShadow><meshStandardMaterial color="#fef08a" transparent opacity={0.9} /></Cylinder>
+          <pointLight position={[0, 1.3, 0]} intensity={1.5} color="#fef08a" distance={6} castShadow shadow-bias={-0.001} />
         </group>
       );
     case "laptop":
       return (
         <group>
           {/* Base */}
-          <Box args={[0.4, 0.02, 0.3]} position={[0, 0.01, 0]} castShadow><meshStandardMaterial color="#d4d4d8" /></Box>
+          <Box args={[0.4, 0.02, 0.3]} position={[0, 0.01, 0]} castShadow receiveShadow><meshStandardMaterial color="#d4d4d8" roughness={0.4} /></Box>
           {/* Screen */}
-          <Box args={[0.4, 0.3, 0.02]} position={[0, 0.16, -0.14]} rotation={[-0.2, 0, 0]} castShadow><meshStandardMaterial color="#a1a1aa" /></Box>
+          <Box args={[0.4, 0.3, 0.02]} position={[0, 0.16, -0.14]} rotation={[-0.2, 0, 0]} castShadow receiveShadow><meshStandardMaterial color="#a1a1aa" roughness={0.4} /></Box>
           {/* Screen Inner */}
-          <Box args={[0.36, 0.26, 0.01]} position={[0, 0.16, -0.13]} rotation={[-0.2, 0, 0]}><meshStandardMaterial color="#0ea5e9" /></Box>
+          <Box args={[0.36, 0.26, 0.01]} position={[0, 0.16, -0.13]} rotation={[-0.2, 0, 0]}><meshStandardMaterial color="#0ea5e9" emissive="#0ea5e9" emissiveIntensity={0.5} /></Box>
+          <pointLight position={[0, 0.2, 0.1]} distance={2} intensity={0.4} color="#60a5fa" />
         </group>
       );
     case "book":
       return (
         <group rotation={[0, Math.random(), 0]}>
-          <Box args={[0.2, 0.05, 0.3]} position={[0, 0.025, 0]} castShadow><meshStandardMaterial color="#8b5cf6" /></Box>
-          <Box args={[0.18, 0.04, 0.28]} position={[0, 0.025, 0]}><meshStandardMaterial color="#f8fafc" /></Box>
+          <Box args={[0.2, 0.05, 0.3]} position={[0, 0.025, 0]} castShadow receiveShadow><meshStandardMaterial color="#8b5cf6" roughness={0.4} /></Box>
+          <Box args={[0.18, 0.04, 0.28]} position={[0, 0.025, 0]} receiveShadow><meshStandardMaterial color="#f8fafc" /></Box>
         </group>
       );
     case "tv":
       return (
         <group>
           {/* Stand */}
-          <Box args={[0.3, 0.02, 0.2]} position={[0, 0.01, 0]} castShadow><meshStandardMaterial color="#27272a" /></Box>
-          <Cylinder args={[0.02, 0.02, 0.1]} position={[0, 0.06, 0]} castShadow><meshStandardMaterial color="#3f3f46" /></Cylinder>
+          <Box args={[0.3, 0.02, 0.2]} position={[0, 0.01, 0]} castShadow receiveShadow><meshStandardMaterial color="#27272a" roughness={0.4} /></Box>
+          <Cylinder args={[0.02, 0.02, 0.1]} position={[0, 0.06, 0]} castShadow receiveShadow><meshStandardMaterial color="#3f3f46" roughness={0.4} /></Cylinder>
           {/* Screen */}
-          <Box args={[0.8, 0.5, 0.05]} position={[0, 0.36, 0]} castShadow><meshStandardMaterial color="#18181b" /></Box>
+          <Box args={[0.8, 0.5, 0.05]} position={[0, 0.36, 0]} castShadow receiveShadow><meshStandardMaterial color="#18181b" roughness={0.4} /></Box>
           {/* Screen Inner */}
-          <Box args={[0.76, 0.46, 0.01]} position={[0, 0.36, 0.026]}><meshStandardMaterial color="#10b981" /></Box>
+          <Box args={[0.76, 0.46, 0.01]} position={[0, 0.36, 0.026]}><meshStandardMaterial color="#1e3a8a" emissive="#3b82f6" emissiveIntensity={0.5} /></Box>
+          <pointLight position={[0, 0.36, 0.2]} distance={4} intensity={0.8} color="#3b82f6" />
         </group>
       );
   }

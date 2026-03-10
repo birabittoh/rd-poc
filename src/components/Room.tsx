@@ -74,13 +74,13 @@ export function Room({
         receiveShadow
         position={[
           (GRID_SIZE * TILE_SIZE) / 2,
-          -0.1,
+          0,
           (GRID_SIZE * TILE_SIZE) / 2,
         ]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[GRID_SIZE * TILE_SIZE, GRID_SIZE * TILE_SIZE]} />
-        <meshStandardMaterial color="#e4e4e7" />
+        <meshStandardMaterial color="#e4e4e7" roughness={0.1} metalness={0.2} />
       </mesh>
 
       {/* Grid Tiles */}
