@@ -246,7 +246,8 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
           {/* Screen */}
           <Box args={[0.4, 0.3, 0.02]} position={[0, 0.16, -0.14]} rotation={[-0.2, 0, 0]} castShadow receiveShadow><meshStandardMaterial color="#a1a1aa" roughness={0.4} /></Box>
           {/* Screen Inner */}
-          <Box args={[0.36, 0.26, 0.01]} position={[0, 0.16, -0.13]} rotation={[-0.2, 0, 0]}><meshStandardMaterial color="#0ea5e9" /></Box>
+          <Box args={[0.36, 0.26, 0.01]} position={[0, 0.16, -0.13]} rotation={[-0.2, 0, 0]}><meshStandardMaterial color="#0ea5e9" emissive="#0ea5e9" emissiveIntensity={0.5} /></Box>
+          <pointLight position={[0, 0.2, 0.1]} distance={2} intensity={0.4} color="#60a5fa" />
         </group>
       );
     case "book":
@@ -265,7 +266,8 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
           {/* Screen */}
           <Box args={[0.8, 0.5, 0.05]} position={[0, 0.36, 0]} castShadow receiveShadow><meshStandardMaterial color="#18181b" roughness={0.4} /></Box>
           {/* Screen Inner */}
-          <Box args={[0.76, 0.46, 0.01]} position={[0, 0.36, 0.026]}><meshStandardMaterial color="#10b981" /></Box>
+          <Box args={[0.76, 0.46, 0.01]} position={[0, 0.36, 0.026]}><meshStandardMaterial color="#1e3a8a" emissive="#3b82f6" emissiveIntensity={0.5} /></Box>
+          <pointLight position={[0, 0.36, 0.2]} distance={4} intensity={0.8} color="#3b82f6" />
         </group>
       );
   }
