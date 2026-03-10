@@ -11,39 +11,37 @@ export function DynamicWalls() {
 
   useFrame(({ camera }) => {
     // Determine which walls block the view based on camera angle
-    // In @react-three/fiber, the default orientation might mean we need to adjust this.
-    // Let's use the camera position directly to decide which walls are "front" and "right" from the viewer's perspective.
+    const angle = Math.atan2(camera.position.x, camera.position.z);
 
-    const x = camera.position.x;
-    const z = camera.position.z;
+    // Normalize angle to 0-2PI
+    let normalizedAngle = angle;
+    if (normalizedAngle < 0) normalizedAngle += Math.PI * 2;
 
     // 0: Back (z = 0), 1: Right (x = GRID_SIZE), 2: Front (z = GRID_SIZE), 3: Left (x = 0)
-    const opacities = [1, 1, 1, 1];
+    const newOpacities = [1, 1, 1, 1];
 
-    // If camera is at positive X, positive Z (standard isometric view),
-    // then the walls at GRID_SIZE (Front and Right) are the ones that could block the view.
-
-    // Front wall (z = GRID_SIZE)
-    if (z > (GRID_SIZE * TILE_SIZE) / 2) {
-        opacities[2] = 0.1;
-    }
-    // Right wall (x = GRID_SIZE)
-    if (x > (GRID_SIZE * TILE_SIZE) / 2) {
-        opacities[1] = 0.1;
-    }
-    // Back wall (z = 0)
-    if (z < (GRID_SIZE * TILE_SIZE) / 2) {
-        opacities[0] = 0.1;
-    }
-    // Left wall (x = 0)
-    if (x < (GRID_SIZE * TILE_SIZE) / 2) {
-        opacities[3] = 0.1;
+    // Simple heuristic based on octants
+    if (normalizedAngle >= 0 && normalizedAngle < Math.PI * 0.5) {
+      newOpacities[1] = 0.1;
+      newOpacities[2] = 0.1;
+    } else if (normalizedAngle >= Math.PI * 0.5 && normalizedAngle < Math.PI) {
+      newOpacities[0] = 0.1;
+      newOpacities[1] = 0.1;
+    } else if (normalizedAngle >= Math.PI && normalizedAngle < Math.PI * 1.5) {
+      newOpacities[0] = 0.1;
+      newOpacities[3] = 0.1;
+    } else {
+      newOpacities[2] = 0.1;
+      newOpacities[3] = 0.1;
     }
 
-    if (mat0.current) mat0.current.opacity = opacities[0];
-    if (mat1.current) mat1.current.opacity = opacities[1];
-    if (mat2.current) mat2.current.opacity = opacities[2];
-    if (mat3.current) mat3.current.opacity = opacities[3];
+    const mats = [mat0, mat1, mat2, mat3];
+    mats.forEach((mat, i) => {
+      if (mat.current) {
+        mat.current.opacity = newOpacities[i];
+        mat.current.depthWrite = newOpacities[i] >= 1;
+      }
+    });
   });
 
   const wallHeight = 4;
@@ -60,7 +58,6 @@ export function DynamicWalls() {
           transparent
           opacity={1}
           roughness={0.4}
-          depthWrite={false}
         />
       </mesh>
 
@@ -77,7 +74,6 @@ export function DynamicWalls() {
           transparent
           opacity={1}
           roughness={0.4}
-          depthWrite={false}
         />
       </mesh>
 
@@ -93,7 +89,6 @@ export function DynamicWalls() {
           transparent
           opacity={1}
           roughness={0.4}
-          depthWrite={false}
         />
       </mesh>
 
@@ -110,7 +105,6 @@ export function DynamicWalls() {
           transparent
           opacity={1}
           roughness={0.4}
-          depthWrite={false}
         />
       </mesh>
     </group>
