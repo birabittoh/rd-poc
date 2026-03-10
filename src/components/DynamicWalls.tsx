@@ -54,6 +54,7 @@ export function DynamicWalls() {
           color="#f4f4f5"
           transparent
           opacity={1}
+          roughness={0.4}
         />
       </mesh>
 
@@ -69,6 +70,7 @@ export function DynamicWalls() {
           color="#f4f4f5"
           transparent
           opacity={1}
+          roughness={0.4}
         />
       </mesh>
 
@@ -83,6 +85,7 @@ export function DynamicWalls() {
           color="#f4f4f5"
           transparent
           opacity={1}
+          roughness={0.4}
         />
       </mesh>
 
@@ -98,6 +101,7 @@ export function DynamicWalls() {
           color="#f4f4f5"
           transparent
           opacity={1}
+          roughness={0.4}
         />
       </mesh>
     </group>

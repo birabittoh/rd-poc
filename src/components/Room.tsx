@@ -80,7 +80,7 @@ export function Room({
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[GRID_SIZE * TILE_SIZE, GRID_SIZE * TILE_SIZE]} />
-        <meshStandardMaterial color="#e4e4e7" />
+        <meshStandardMaterial color="#e4e4e7" roughness={0.4} />
       </mesh>
 
       {/* Grid Tiles */}
