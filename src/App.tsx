@@ -10,7 +10,7 @@ import { ScrollContainer } from "./components/ScrollContainer";
 
 const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
-  : `ws://${window.location.host}`;
+  : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
