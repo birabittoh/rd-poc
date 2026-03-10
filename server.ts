@@ -64,11 +64,11 @@ const cooldowns = new Map<string, number>();
 function broadcastState() {
   const stateMessage = JSON.stringify({ type: "state", state: gameState });
   const now = Date.now();
-  for (const [client, clientId] of clients.entries()) {
+  for (const [client, ip] of clients.entries()) {
     if (client.readyState === WebSocket.OPEN) {
       client.send(stateMessage);
 
-      const cooldownEnd = cooldowns.get(clientId) || 0;
+      const cooldownEnd = cooldowns.get(ip) || 0;
       const remaining = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
       client.send(JSON.stringify({ type: "cooldown", remaining }));
     }
@@ -136,27 +136,27 @@ async function startServer() {
   const server = http.createServer(app);
   const wss = new WebSocketServer({ server });
 
-  wss.on("connection", (ws) => {
+  wss.on("connection", (ws, req) => {
+    const ip = req.socket.remoteAddress || "unknown";
+    clients.set(ws, ip);
+
+    ws.send(JSON.stringify({ type: "state", state: gameState }));
+    const now = Date.now();
+    const cooldownEnd = cooldowns.get(ip) || 0;
+    const remaining = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
+    ws.send(JSON.stringify({ type: "cooldown", remaining }));
+
     ws.on("message", (data) => {
       try {
         const message = JSON.parse(data.toString());
-        if (message.type === "init") {
-          const clientId = message.payload.clientId;
-          clients.set(ws, clientId);
-
-          ws.send(JSON.stringify({ type: "state", state: gameState }));
-          const now = Date.now();
-          const cooldownEnd = cooldowns.get(clientId) || 0;
-          const remaining = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
-          ws.send(JSON.stringify({ type: "cooldown", remaining }));
-        } else if (message.type === "place_furniture") {
+        if (message.type === "place_furniture") {
           if (gameState.status !== "playing") return;
           
-          const clientId = clients.get(ws);
-          if (!clientId) return;
+          const ip = clients.get(ws);
+          if (!ip) return;
 
           const now = Date.now();
-          const cooldownEnd = cooldowns.get(clientId) || 0;
+          const cooldownEnd = cooldowns.get(ip) || 0;
           if (now < cooldownEnd) return;
 
           const { type, x, y, z } = message.payload;
@@ -245,7 +245,7 @@ async function startServer() {
           const id = Math.random().toString(36).substring(2, 9);
           gameState.furniture.push({ id, type, x, y, z, rotation });
           
-          cooldowns.set(clientId, now + PLACEMENT_COOLDOWN_MS);
+          cooldowns.set(ip, now + PLACEMENT_COOLDOWN_MS);
 
           // If a table was placed, update all chairs to face their nearest table
           if (type === "table") {

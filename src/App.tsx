@@ -12,6 +12,22 @@ const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
   : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
 
+const FLOOR_ITEMS: { type: ItemType; icon: React.ReactNode }[] = [
+  { type: "table", icon: <Table /> },
+  { type: "chair", icon: <Armchair /> },
+  { type: "plant", icon: <Sprout /> },
+  { type: "library", icon: <Library /> },
+  { type: "floor_lamp", icon: <Lightbulb /> },
+];
+
+const SURFACE_ITEMS: { type: ItemType; icon: React.ReactNode }[] = [
+  { type: "laptop", icon: <Laptop /> },
+  { type: "tv", icon: <Tv /> },
+  { type: "vase", icon: <Flower2 /> },
+  { type: "book", icon: <Book /> },
+  { type: "lamp", icon: <Lamp /> },
+];
+
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -19,18 +35,8 @@ export default function App() {
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    let clientId = localStorage.getItem("ballerina_client_id");
-    if (!clientId) {
-      clientId = Math.random().toString(36).substring(2, 15);
-      localStorage.setItem("ballerina_client_id", clientId);
-    }
-
     const socket = new WebSocket(WS_URL);
     setWs(socket);
-
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ type: "init", payload: { clientId } }));
-    };
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -144,104 +150,34 @@ export default function App() {
 
         <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full">
           <ScrollContainer title="Floor">
-            <FurnitureButton
-              type="table"
-              icon={<Table />}
-              selected={selectedItem === "table"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "table" ? null : "table")
-              }
-            />
-            <FurnitureButton
-              type="chair"
-              icon={<Armchair />}
-              selected={selectedItem === "chair"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "chair" ? null : "chair")
-              }
-            />
-            <FurnitureButton
-              type="plant"
-              icon={<Sprout />}
-              selected={selectedItem === "plant"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "plant" ? null : "plant")
-              }
-            />
-            <FurnitureButton
-              type="library"
-              icon={<Library />}
-              selected={selectedItem === "library"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "library" ? null : "library")
-              }
-            />
-            <FurnitureButton
-              type="floor_lamp"
-              icon={<Lightbulb />}
-              selected={selectedItem === "floor_lamp"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "floor_lamp" ? null : "floor_lamp")
-              }
-            />
+            {FLOOR_ITEMS.map((item) => (
+              <FurnitureButton
+                key={item.type}
+                type={item.type}
+                icon={item.icon}
+                selected={selectedItem === item.type}
+                disabled={isPlacementDisabled}
+                onClick={() =>
+                  setSelectedItem(selectedItem === item.type ? null : item.type)
+                }
+              />
+            ))}
           </ScrollContainer>
 
           <ScrollContainer title="Surface">
-            <FurnitureButton
-              type="laptop"
-              icon={<Laptop />}
-              selected={selectedItem === "laptop"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "laptop" ? null : "laptop")
-              }
-              isOrnament
-            />
-            <FurnitureButton
-              type="tv"
-              icon={<Tv />}
-              selected={selectedItem === "tv"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "tv" ? null : "tv")
-              }
-              isOrnament
-            />
-            <FurnitureButton
-              type="vase"
-              icon={<Flower2 />}
-              selected={selectedItem === "vase"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "vase" ? null : "vase")
-              }
-              isOrnament
-            />
-            <FurnitureButton
-              type="book"
-              icon={<Book />}
-              selected={selectedItem === "book"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "book" ? null : "book")
-              }
-              isOrnament
-            />
-            <FurnitureButton
-              type="lamp"
-              icon={<Lamp />}
-              selected={selectedItem === "lamp"}
-              disabled={isPlacementDisabled}
-              onClick={() =>
-                setSelectedItem(selectedItem === "lamp" ? null : "lamp")
-              }
-              isOrnament
-            />
+            {SURFACE_ITEMS.map((item) => (
+              <FurnitureButton
+                key={item.type}
+                type={item.type}
+                icon={item.icon}
+                selected={selectedItem === item.type}
+                disabled={isPlacementDisabled}
+                onClick={() =>
+                  setSelectedItem(selectedItem === item.type ? null : item.type)
+                }
+                isOrnament
+              />
+            ))}
           </ScrollContainer>
         </div>
         <p className="mt-4 text-sm text-zinc-400 font-medium tracking-wide">
