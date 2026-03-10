@@ -176,7 +176,7 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
           <Cylinder args={[0.02, 0.02, 0.6]} position={[0, 0.35, 0]} castShadow receiveShadow>
             <meshStandardMaterial color="#d4d4d8" roughness={0.4} />
           </Cylinder>
-          <Cylinder args={[0.15, 0.25, 0.3]} position={[0, 0.7, 0]} castShadow>
+          <Cylinder args={[0.15, 0.25, 0.3]} position={[0, 0.7, 0]} castShadow frustumCulled={false} renderOrder={10}>
             <meshStandardMaterial color="#fef08a" transparent opacity={0.9} depthWrite={false} />
           </Cylinder>
           <pointLight
@@ -234,7 +234,7 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
         <group>
           <Cylinder args={[0.15, 0.15, 0.05]} position={[0, 0.025, 0]} castShadow receiveShadow><meshStandardMaterial color="#3f3f46" roughness={0.4} /></Cylinder>
           <Cylinder args={[0.02, 0.02, 1.2]} position={[0, 0.6, 0]} castShadow receiveShadow><meshStandardMaterial color="#71717a" roughness={0.4} /></Cylinder>
-          <Cylinder args={[0.2, 0.3, 0.4]} position={[0, 1.3, 0]} castShadow receiveShadow><meshStandardMaterial color="#fef08a" transparent opacity={0.9} depthWrite={false} /></Cylinder>
+          <Cylinder args={[0.2, 0.3, 0.4]} position={[0, 1.3, 0]} castShadow receiveShadow frustumCulled={false} renderOrder={10}><meshStandardMaterial color="#fef08a" transparent opacity={0.9} depthWrite={false} /></Cylinder>
           <pointLight position={[0, 1.3, 0]} intensity={1.5} color="#fef08a" distance={6} castShadow shadow-bias={-0.001} />
         </group>
       );

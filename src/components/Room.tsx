@@ -115,6 +115,8 @@ export function Room({
               onPointerOut={() => {
                 document.body.style.cursor = "auto";
               }}
+              frustumCulled={false}
+              renderOrder={5}
             >
               <planeGeometry args={[TILE_SIZE * 0.95, TILE_SIZE * 0.95]} />
               <meshBasicMaterial
@@ -165,6 +167,8 @@ export function Room({
                 onPointerOut={() => {
                   document.body.style.cursor = "auto";
                 }}
+                frustumCulled={false}
+                renderOrder={5}
               >
                 <planeGeometry args={[TILE_SIZE * 0.8, TILE_SIZE * 0.8]} />
                 <meshBasicMaterial
