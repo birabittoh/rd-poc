@@ -121,6 +121,7 @@ export function Room({
                 color={isHighlight ? "#6366f1" : "#d4d4d8"}
                 transparent
                 opacity={isHighlight ? 0.4 : 0.1}
+                depthWrite={false}
               />
             </mesh>
           );
@@ -170,6 +171,7 @@ export function Room({
                   color="#f59e0b"
                   transparent
                   opacity={isHighlight ? 0.6 : 0}
+                  depthWrite={false}
                 />
               </mesh>
             )}
