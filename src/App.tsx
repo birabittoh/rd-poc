@@ -4,7 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
 import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer } from "lucide-react";
 import { GameState, ItemType } from "./types";
-import { FurnitureButton } from "./components/FurnitureButton";
+import { FurnitureButton, cn } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
 import { ScrollContainer } from "./components/ScrollContainer";
 
@@ -87,16 +87,6 @@ export default function App() {
 
   return (
     <div className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
-      {/* Cooldown Overlay */}
-      {cooldown > 0 && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50">
-          <div className="bg-zinc-800/90 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
-            <Timer className="w-4 h-4 text-amber-500 animate-pulse" />
-            <span className="text-sm font-medium">Wait {cooldown}s before placing the next item</span>
-          </div>
-        </div>
-      )}
-
       {/* 3D Canvas */}
       <div className="absolute inset-0">
         <Canvas
@@ -180,11 +170,25 @@ export default function App() {
             ))}
           </ScrollContainer>
         </div>
-        <p className="mt-4 text-sm text-zinc-400 font-medium tracking-wide">
-          {selectedItem
-            ? `Select a ${isOrnament ? "surface" : "floor tile"} to place ${selectedItem}`
-            : "Select an item to place"}
-        </p>
+        <div className="mt-4 relative h-6 flex items-center justify-center w-full">
+          <p className={cn(
+            "text-sm text-zinc-400 font-medium tracking-wide transition-opacity duration-300",
+            cooldown > 0 ? "opacity-0" : "opacity-100"
+          )}>
+            {selectedItem
+              ? `Select a ${isOrnament ? "surface" : "floor tile"} to place ${selectedItem}`
+              : "Select an item to place"}
+          </p>
+
+          {cooldown > 0 && (
+            <div className="absolute inset-0 flex items-center justify-center animate-in fade-in slide-in-from-bottom-2">
+              <div className="bg-zinc-800/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-xl flex items-center gap-2">
+                <Timer className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                <span className="text-sm font-medium">Wait {cooldown}s before placing the next item</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
