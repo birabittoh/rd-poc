@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sofa, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb } from "lucide-react";
+import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { FurnitureButton } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
@@ -133,7 +133,7 @@ export default function App() {
             />
             <FurnitureButton
               type="plant"
-              icon={<Sofa />}
+              icon={<Sprout />}
               selected={selectedItem === "plant"}
               onClick={() =>
                 setSelectedItem(selectedItem === "plant" ? null : "plant")
