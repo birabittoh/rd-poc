@@ -7,26 +7,29 @@ import { GameState, ItemType } from "./types";
 import { FurnitureButton, cn } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
 import { ScrollContainer } from "./components/ScrollContainer";
+import { ITEM_DEFINITIONS } from "./items";
+import { MIN_ZOOM, MAX_ZOOM } from "./constants";
 
 const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
   : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
 
-const FLOOR_ITEMS: { type: ItemType; icon: React.ReactNode }[] = [
-  { type: "table", icon: <Table /> },
-  { type: "chair", icon: <Armchair /> },
-  { type: "plant", icon: <Sprout /> },
-  { type: "library", icon: <Library /> },
-  { type: "floor_lamp", icon: <Lightbulb /> },
-];
+const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
+  table: <Table />,
+  chair: <Armchair />,
+  plant: <Sprout />,
+  library: <Library />,
+  floor_lamp: <Lightbulb />,
+  laptop: <Laptop />,
+  tv: <Tv />,
+  vase: <Flower2 />,
+  book: <Book />,
+  lamp: <Lamp />,
+};
 
-const SURFACE_ITEMS: { type: ItemType; icon: React.ReactNode }[] = [
-  { type: "laptop", icon: <Laptop /> },
-  { type: "tv", icon: <Tv /> },
-  { type: "vase", icon: <Flower2 /> },
-  { type: "book", icon: <Book /> },
-  { type: "lamp", icon: <Lamp /> },
-];
+const ALL_ITEMS = Object.values(ITEM_DEFINITIONS);
+const FLOOR_ITEMS = ALL_ITEMS.filter(item => !item.isOrnament);
+const SURFACE_ITEMS = ALL_ITEMS.filter(item => item.isOrnament);
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -53,10 +56,9 @@ export default function App() {
   const handlePlace = (x: number, y: number, z: number) => {
     if (!ws || !selectedItem || gameState?.status !== "playing" || cooldown > 0) return;
 
-    // Check if placement is valid
-    const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
-    if (isOrnament && z === 0) return; // Must be on surface
-    if (!isOrnament && z > 0) return; // Must be on floor
+    const definition = ITEM_DEFINITIONS[selectedItem];
+    if (definition.isOrnament && z === 0) return; // Must be on surface
+    if (!definition.isOrnament && z > 0) return; // Must be on floor
 
     ws.send(
       JSON.stringify({
@@ -81,8 +83,7 @@ export default function App() {
     );
   }
 
-  const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
-
+  const selectedItemDefinition = selectedItem ? ITEM_DEFINITIONS[selectedItem] : null;
   const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== "playing");
 
   return (
@@ -104,6 +105,8 @@ export default function App() {
           <OrbitControls
             enablePan={false}
             enableZoom={true}
+            minZoom={MIN_ZOOM}
+            maxZoom={MAX_ZOOM}
             maxPolarAngle={Math.PI / 2.5}
             minPolarAngle={Math.PI / 6}
           />
@@ -144,7 +147,7 @@ export default function App() {
               <FurnitureButton
                 key={item.type}
                 type={item.type}
-                icon={item.icon}
+                icon={ITEM_ICONS[item.type]}
                 selected={selectedItem === item.type}
                 disabled={isPlacementDisabled}
                 onClick={() =>
@@ -159,7 +162,7 @@ export default function App() {
               <FurnitureButton
                 key={item.type}
                 type={item.type}
-                icon={item.icon}
+                icon={ITEM_ICONS[item.type]}
                 selected={selectedItem === item.type}
                 disabled={isPlacementDisabled}
                 onClick={() =>
@@ -176,7 +179,7 @@ export default function App() {
             cooldown > 0 ? "opacity-0" : "opacity-100"
           )}>
             {selectedItem
-              ? `Select a ${isOrnament ? "surface" : "floor tile"} to place ${selectedItem}`
+              ? `Select a ${selectedItemDefinition?.isOrnament ? "surface" : "floor tile"} to place ${selectedItem}`
               : "Select an item to place"}
           </p>
 
