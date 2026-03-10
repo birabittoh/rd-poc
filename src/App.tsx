@@ -6,6 +6,7 @@ import { RotateCcw, Sofa, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Libr
 import { GameState, ItemType } from "./types";
 import { FurnitureButton } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
+import { ScrollContainer } from "./components/ScrollContainer";
 
 const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
@@ -113,104 +114,96 @@ export default function App() {
         )}
 
         <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full">
-          <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl overflow-hidden">
-            <div className="absolute top-2 left-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none">Floor</div>
-            <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <FurnitureButton
-                type="table"
-                icon={<Table />}
-                selected={selectedItem === "table"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "table" ? null : "table")
-                }
-              />
-              <FurnitureButton
-                type="chair"
-                icon={<Armchair />}
-                selected={selectedItem === "chair"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "chair" ? null : "chair")
-                }
-              />
-              <FurnitureButton
-                type="plant"
-                icon={<Sofa />}
-                selected={selectedItem === "plant"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "plant" ? null : "plant")
-                }
-              />
-              <FurnitureButton
-                type="library"
-                icon={<Library />}
-                selected={selectedItem === "library"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "library" ? null : "library")
-                }
-              />
-              <FurnitureButton
-                type="floor_lamp"
-                icon={<Lightbulb />}
-                selected={selectedItem === "floor_lamp"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "floor_lamp" ? null : "floor_lamp")
-                }
-              />
-            </div>
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-zinc-900/80 to-transparent pointer-events-none" />
-          </div>
+          <ScrollContainer title="Floor">
+            <FurnitureButton
+              type="table"
+              icon={<Table />}
+              selected={selectedItem === "table"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "table" ? null : "table")
+              }
+            />
+            <FurnitureButton
+              type="chair"
+              icon={<Armchair />}
+              selected={selectedItem === "chair"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "chair" ? null : "chair")
+              }
+            />
+            <FurnitureButton
+              type="plant"
+              icon={<Sofa />}
+              selected={selectedItem === "plant"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "plant" ? null : "plant")
+              }
+            />
+            <FurnitureButton
+              type="library"
+              icon={<Library />}
+              selected={selectedItem === "library"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "library" ? null : "library")
+              }
+            />
+            <FurnitureButton
+              type="floor_lamp"
+              icon={<Lightbulb />}
+              selected={selectedItem === "floor_lamp"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "floor_lamp" ? null : "floor_lamp")
+              }
+            />
+          </ScrollContainer>
 
-          <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl overflow-hidden">
-            <div className="absolute top-2 left-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none">Surface</div>
-            <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <FurnitureButton
-                type="laptop"
-                icon={<Laptop />}
-                selected={selectedItem === "laptop"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "laptop" ? null : "laptop")
-                }
-                isOrnament
-              />
-              <FurnitureButton
-                type="tv"
-                icon={<Tv />}
-                selected={selectedItem === "tv"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "tv" ? null : "tv")
-                }
-                isOrnament
-              />
-              <FurnitureButton
-                type="vase"
-                icon={<Flower2 />}
-                selected={selectedItem === "vase"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "vase" ? null : "vase")
-                }
-                isOrnament
-              />
-              <FurnitureButton
-                type="book"
-                icon={<Book />}
-                selected={selectedItem === "book"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "book" ? null : "book")
-                }
-                isOrnament
-              />
-              <FurnitureButton
-                type="lamp"
-                icon={<Lamp />}
-                selected={selectedItem === "lamp"}
-                onClick={() =>
-                  setSelectedItem(selectedItem === "lamp" ? null : "lamp")
-                }
-                isOrnament
-              />
-            </div>
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-zinc-900/80 to-transparent pointer-events-none" />
-          </div>
+          <ScrollContainer title="Surface">
+            <FurnitureButton
+              type="laptop"
+              icon={<Laptop />}
+              selected={selectedItem === "laptop"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "laptop" ? null : "laptop")
+              }
+              isOrnament
+            />
+            <FurnitureButton
+              type="tv"
+              icon={<Tv />}
+              selected={selectedItem === "tv"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "tv" ? null : "tv")
+              }
+              isOrnament
+            />
+            <FurnitureButton
+              type="vase"
+              icon={<Flower2 />}
+              selected={selectedItem === "vase"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "vase" ? null : "vase")
+              }
+              isOrnament
+            />
+            <FurnitureButton
+              type="book"
+              icon={<Book />}
+              selected={selectedItem === "book"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "book" ? null : "book")
+              }
+              isOrnament
+            />
+            <FurnitureButton
+              type="lamp"
+              icon={<Lamp />}
+              selected={selectedItem === "lamp"}
+              onClick={() =>
+                setSelectedItem(selectedItem === "lamp" ? null : "lamp")
+              }
+              isOrnament
+            />
+          </ScrollContainer>
         </div>
         <p className="mt-4 text-sm text-zinc-400 font-medium tracking-wide">
           {selectedItem
