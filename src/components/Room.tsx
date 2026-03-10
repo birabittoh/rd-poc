@@ -74,7 +74,7 @@ export function Room({
         receiveShadow
         position={[
           (GRID_SIZE * TILE_SIZE) / 2,
-          -0.1,
+          0,
           (GRID_SIZE * TILE_SIZE) / 2,
         ]}
         rotation={[-Math.PI / 2, 0, 0]}

@@ -3,9 +3,12 @@ import { createServer as createViteServer } from "vite";
 import { WebSocketServer, WebSocket } from "ws";
 import http from "http";
 
+import { PLACEMENT_COOLDOWN } from "./src/constants";
+
 const PORT = 3000;
 const GRID_SIZE = 9; // 9x9 grid, center is (4, 4)
 const CENTER = Math.floor(GRID_SIZE / 2);
+const PLACEMENT_COOLDOWN_MS = PLACEMENT_COOLDOWN * 1000;
 
 type ItemType =
   | "table"
@@ -55,13 +58,19 @@ let gameState: GameState = {
   status: "playing",
 };
 
-const clients = new Set<WebSocket>();
+const clients = new Map<WebSocket, string>();
+const cooldowns = new Map<string, number>();
 
 function broadcastState() {
-  const message = JSON.stringify({ type: "state", state: gameState });
-  for (const client of clients) {
+  const stateMessage = JSON.stringify({ type: "state", state: gameState });
+  const now = Date.now();
+  for (const [client, clientId] of clients.entries()) {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
+      client.send(stateMessage);
+
+      const cooldownEnd = cooldowns.get(clientId) || 0;
+      const remaining = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
+      client.send(JSON.stringify({ type: "cooldown", remaining }));
     }
   }
 }
@@ -128,15 +137,28 @@ async function startServer() {
   const wss = new WebSocketServer({ server });
 
   wss.on("connection", (ws) => {
-    clients.add(ws);
-    ws.send(JSON.stringify({ type: "state", state: gameState }));
-
     ws.on("message", (data) => {
       try {
         const message = JSON.parse(data.toString());
-        if (message.type === "place_furniture") {
+        if (message.type === "init") {
+          const clientId = message.payload.clientId;
+          clients.set(ws, clientId);
+
+          ws.send(JSON.stringify({ type: "state", state: gameState }));
+          const now = Date.now();
+          const cooldownEnd = cooldowns.get(clientId) || 0;
+          const remaining = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
+          ws.send(JSON.stringify({ type: "cooldown", remaining }));
+        } else if (message.type === "place_furniture") {
           if (gameState.status !== "playing") return;
           
+          const clientId = clients.get(ws);
+          if (!clientId) return;
+
+          const now = Date.now();
+          const cooldownEnd = cooldowns.get(clientId) || 0;
+          if (now < cooldownEnd) return;
+
           const { type, x, y, z } = message.payload;
           
           // Validate placement
@@ -223,6 +245,8 @@ async function startServer() {
           const id = Math.random().toString(36).substring(2, 9);
           gameState.furniture.push({ id, type, x, y, z, rotation });
           
+          cooldowns.set(clientId, now + PLACEMENT_COOLDOWN_MS);
+
           // If a table was placed, update all chairs to face their nearest table
           if (type === "table") {
             const tables = gameState.furniture.filter(f => f.type === "table");

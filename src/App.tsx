@@ -16,15 +16,28 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
+    let clientId = localStorage.getItem("ballerina_client_id");
+    if (!clientId) {
+      clientId = Math.random().toString(36).substring(2, 15);
+      localStorage.setItem("ballerina_client_id", clientId);
+    }
+
     const socket = new WebSocket(WS_URL);
     setWs(socket);
+
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ type: "init", payload: { clientId } }));
+    };
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "state") {
         setGameState(data.state);
+      } else if (data.type === "cooldown") {
+        setCooldown(data.remaining);
       }
     };
 
@@ -32,7 +45,7 @@ export default function App() {
   }, []);
 
   const handlePlace = (x: number, y: number, z: number) => {
-    if (!ws || !selectedItem || gameState?.status !== "playing") return;
+    if (!ws || !selectedItem || gameState?.status !== "playing" || cooldown > 0) return;
 
     // Check if placement is valid
     const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
@@ -64,8 +77,20 @@ export default function App() {
 
   const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
 
+  const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== "playing");
+
   return (
     <div className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
+      {/* Cooldown Overlay */}
+      {cooldown > 0 && (
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-zinc-800/90 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+            <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span className="text-sm font-medium">Placement cooldown: {cooldown}s</span>
+          </div>
+        </div>
+      )}
+
       {/* 3D Canvas */}
       <div className="absolute inset-0">
         <Canvas
@@ -96,7 +121,7 @@ export default function App() {
 
           <Room
             gameState={gameState}
-            selectedItem={selectedItem}
+            selectedItem={isPlacementDisabled ? null : selectedItem}
             onPlace={handlePlace}
           />
         </Canvas>
@@ -123,6 +148,7 @@ export default function App() {
               type="table"
               icon={<Table />}
               selected={selectedItem === "table"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "table" ? null : "table")
               }
@@ -131,6 +157,7 @@ export default function App() {
               type="chair"
               icon={<Armchair />}
               selected={selectedItem === "chair"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "chair" ? null : "chair")
               }
@@ -139,6 +166,7 @@ export default function App() {
               type="plant"
               icon={<Sprout />}
               selected={selectedItem === "plant"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "plant" ? null : "plant")
               }
@@ -147,6 +175,7 @@ export default function App() {
               type="library"
               icon={<Library />}
               selected={selectedItem === "library"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "library" ? null : "library")
               }
@@ -155,6 +184,7 @@ export default function App() {
               type="floor_lamp"
               icon={<Lightbulb />}
               selected={selectedItem === "floor_lamp"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "floor_lamp" ? null : "floor_lamp")
               }
@@ -166,6 +196,7 @@ export default function App() {
               type="laptop"
               icon={<Laptop />}
               selected={selectedItem === "laptop"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "laptop" ? null : "laptop")
               }
@@ -175,6 +206,7 @@ export default function App() {
               type="tv"
               icon={<Tv />}
               selected={selectedItem === "tv"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "tv" ? null : "tv")
               }
@@ -184,6 +216,7 @@ export default function App() {
               type="vase"
               icon={<Flower2 />}
               selected={selectedItem === "vase"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "vase" ? null : "vase")
               }
@@ -193,6 +226,7 @@ export default function App() {
               type="book"
               icon={<Book />}
               selected={selectedItem === "book"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "book" ? null : "book")
               }
@@ -202,6 +236,7 @@ export default function App() {
               type="lamp"
               icon={<Lamp />}
               selected={selectedItem === "lamp"}
+              disabled={isPlacementDisabled}
               onClick={() =>
                 setSelectedItem(selectedItem === "lamp" ? null : "lamp")
               }

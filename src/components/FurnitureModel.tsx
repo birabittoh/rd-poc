@@ -204,7 +204,7 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
       const shelfPosX = (localConn.right ? 0.075 : 0) - (localConn.left ? 0.075 : 0);
 
       return (
-        <group>
+        <group position={[0, 0, -0.35]}>
           <Box args={[libWidth, 1.5, 0.3]} position={[libPosX, 0.75, 0]} castShadow receiveShadow>
             <meshStandardMaterial color="#5c3a21" />
           </Box>
