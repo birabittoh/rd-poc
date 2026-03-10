@@ -213,9 +213,9 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
           <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 0.7, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
           <Box args={[shelfWidth, 0.05, 0.25]} position={[shelfPosX, 1.1, 0.05]} castShadow><meshStandardMaterial color="#8b5a2b" /></Box>
           {/* Books */}
-          <Box args={[0.1, 0.2, 0.2]} position={[-0.2, 0.425, 0.05]} castShadow><meshStandardMaterial color="#ef4444" /></Box>
-          <Box args={[0.08, 0.22, 0.2]} position={[0, 0.435, 0.05]} castShadow><meshStandardMaterial color="#3b82f6" /></Box>
-          <Box args={[0.12, 0.18, 0.2]} position={[0.2, 0.415, 0.05]} castShadow><meshStandardMaterial color="#10b981" /></Box>
+          <Box args={[0.1, 0.2, 0.18]} position={[-0.2, 0.425, 0.06]} castShadow><meshStandardMaterial color="#ef4444" /></Box>
+          <Box args={[0.08, 0.22, 0.18]} position={[0, 0.435, 0.06]} castShadow><meshStandardMaterial color="#3b82f6" /></Box>
+          <Box args={[0.12, 0.18, 0.18]} position={[0.2, 0.415, 0.06]} castShadow><meshStandardMaterial color="#10b981" /></Box>
         </group>
       );
     }

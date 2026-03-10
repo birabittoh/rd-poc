@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb } from "lucide-react";
+import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { FurnitureButton } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
@@ -91,8 +91,8 @@ export default function App() {
       {cooldown > 0 && (
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50">
           <div className="bg-zinc-800/90 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
-            <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-sm font-medium">Placement cooldown: {cooldown}s</span>
+            <Timer className="w-4 h-4 text-amber-500 animate-pulse" />
+            <span className="text-sm font-medium">Wait {cooldown}s before placing the next item</span>
           </div>
         </div>
       )}

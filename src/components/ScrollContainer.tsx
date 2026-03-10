@@ -34,9 +34,11 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
       <div
         ref={scrollRef}
         onScroll={checkScroll}
-        className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="flex gap-2 justify-center overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
-        {children}
+        <div className="flex gap-2 min-w-full justify-center">
+          {children}
+        </div>
       </div>
 
       {/* Left Fade */}
