@@ -35,10 +35,13 @@ export function DynamicWalls() {
       newOpacities[3] = 0.1;
     }
 
-    if (mat0.current) mat0.current.opacity = newOpacities[0];
-    if (mat1.current) mat1.current.opacity = newOpacities[1];
-    if (mat2.current) mat2.current.opacity = newOpacities[2];
-    if (mat3.current) mat3.current.opacity = newOpacities[3];
+    const mats = [mat0, mat1, mat2, mat3];
+    mats.forEach((mat, i) => {
+      if (mat.current) {
+        mat.current.opacity = newOpacities[i];
+        mat.current.depthWrite = newOpacities[i] >= 1;
+      }
+    });
   });
 
   const wallHeight = 4;

@@ -115,12 +115,15 @@ export function Room({
               onPointerOut={() => {
                 document.body.style.cursor = "auto";
               }}
+              frustumCulled={false}
+              renderOrder={5}
             >
               <planeGeometry args={[TILE_SIZE * 0.95, TILE_SIZE * 0.95]} />
               <meshBasicMaterial
                 color={isHighlight ? "#6366f1" : "#d4d4d8"}
                 transparent
                 opacity={isHighlight ? 0.4 : 0.1}
+                depthWrite={false}
               />
             </mesh>
           );
@@ -164,12 +167,15 @@ export function Room({
                 onPointerOut={() => {
                   document.body.style.cursor = "auto";
                 }}
+                frustumCulled={false}
+                renderOrder={5}
               >
                 <planeGeometry args={[TILE_SIZE * 0.8, TILE_SIZE * 0.8]} />
                 <meshBasicMaterial
                   color="#f59e0b"
                   transparent
                   opacity={isHighlight ? 0.6 : 0}
+                  depthWrite={false}
                 />
               </mesh>
             )}
