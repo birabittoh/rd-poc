@@ -3,48 +3,12 @@ import { createServer as createViteServer } from "vite";
 import { WebSocketServer, WebSocket } from "ws";
 import http from "http";
 
-import { PLACEMENT_COOLDOWN } from "./src/constants.ts";
+import { PLACEMENT_COOLDOWN, GRID_SIZE, CENTER } from "./src/constants.ts";
+import { GameState, ItemType, Furniture } from "./src/types.ts";
+import { ITEM_DEFINITIONS } from "./src/items.ts";
 
 const PORT = 3000;
-const GRID_SIZE = 9; // 9x9 grid, center is (4, 4)
-const CENTER = Math.floor(GRID_SIZE / 2);
 const PLACEMENT_COOLDOWN_MS = PLACEMENT_COOLDOWN * 1000;
-
-type ItemType =
-  | "table"
-  | "chair"
-  | "plant"
-  | "lamp"
-  | "vase"
-  | "library"
-  | "floor_lamp"
-  | "laptop"
-  | "book"
-  | "tv";
-type PlacementType = "floor" | "surface";
-
-interface Furniture {
-  id: string;
-  type: ItemType;
-  x: number;
-  y: number;
-  z: number; // 0 for floor, 1 for surface
-  rotation?: number;
-}
-
-interface Ballerina {
-  x: number;
-  y: number;
-  targetX: number;
-  targetY: number;
-  isDancing: boolean;
-}
-
-interface GameState {
-  furniture: Furniture[];
-  ballerina: Ballerina;
-  status: "playing" | "game_over";
-}
 
 let gameState: GameState = {
   furniture: [],
@@ -131,6 +95,15 @@ function updateBallerina() {
 // Game loop
 setInterval(updateBallerina, 2000);
 
+function updateRotations(triggeredBy: ItemType) {
+  for (const item of gameState.furniture) {
+    const definition = ITEM_DEFINITIONS[item.type];
+    if (definition.rotationTriggers?.includes(triggeredBy)) {
+      item.rotation = definition.findRotation(item.x, item.y, gameState.furniture);
+    }
+  }
+}
+
 async function startServer() {
   const app = express();
   const server = http.createServer(app);
@@ -159,7 +132,9 @@ async function startServer() {
           const cooldownEnd = cooldowns.get(ip) || 0;
           if (now < cooldownEnd) return;
 
-          const { type, x, y, z } = message.payload;
+          const { type, x, y, z } = message.payload as { type: ItemType; x: number; y: number; z: number };
+          const definition = ITEM_DEFINITIONS[type];
+          if (!definition) return;
           
           // Validate placement
           if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return;
@@ -178,132 +153,13 @@ async function startServer() {
             if (!isAdjacentToWall && !isAdjacentToFurniture) return;
           }
 
-          let rotation = 0;
-          if (type === "chair") {
-            const tables = gameState.furniture.filter(f => f.type === "table");
-            if (tables.length > 0) {
-              // Find nearest table
-              let nearestTable = tables[0];
-              let minDist = Infinity;
-              for (const t of tables) {
-                const dist = Math.abs(t.x - x) + Math.abs(t.y - y);
-                if (dist < minDist) {
-                  minDist = dist;
-                  nearestTable = t;
-                }
-              }
-              
-              const dx = nearestTable.x - x;
-              const dy = nearestTable.y - y;
-              
-              if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0) rotation = Math.PI / 2;
-                else rotation = -Math.PI / 2;
-              } else {
-                if (dy > 0) rotation = 0;
-                else rotation = Math.PI;
-              }
-            }
-          } else if (type === "tv" || type === "library" || type === "laptop") {
-            const chairs = gameState.furniture.filter(f => f.type === "chair");
-            if (chairs.length > 0 && type !== "library") {
-              // Face nearest chair
-              let nearestChair = chairs[0];
-              let minDist = Infinity;
-              for (const c of chairs) {
-                const dist = Math.abs(c.x - x) + Math.abs(c.y - y);
-                if (dist < minDist) {
-                  minDist = dist;
-                  nearestChair = c;
-                }
-              }
-              
-              const dx = nearestChair.x - x;
-              const dy = nearestChair.y - y;
-              
-              if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0) rotation = Math.PI / 2;
-                else rotation = -Math.PI / 2;
-              } else {
-                if (dy > 0) rotation = 0;
-                else rotation = Math.PI;
-              }
-            } else {
-              // Face away from nearest wall
-              const distLeft = x;
-              const distRight = GRID_SIZE - 1 - x;
-              const distTop = y;
-              const distBottom = GRID_SIZE - 1 - y;
-              const minDist = Math.min(distLeft, distRight, distTop, distBottom);
-              if (minDist === distTop) rotation = 0;
-              else if (minDist === distBottom) rotation = Math.PI;
-              else if (minDist === distLeft) rotation = Math.PI / 2;
-              else if (minDist === distRight) rotation = -Math.PI / 2;
-            }
-          }
-
+          const rotation = definition.findRotation(x, y, gameState.furniture);
           const id = Math.random().toString(36).substring(2, 9);
           gameState.furniture.push({ id, type, x, y, z, rotation });
           
           cooldowns.set(ip, now + PLACEMENT_COOLDOWN_MS);
 
-          // If a table was placed, update all chairs to face their nearest table
-          if (type === "table") {
-            const tables = gameState.furniture.filter(f => f.type === "table");
-            for (const chair of gameState.furniture.filter(f => f.type === "chair")) {
-              let nearestTable = tables[0];
-              let minDist = Infinity;
-              for (const t of tables) {
-                const dist = Math.abs(t.x - chair.x) + Math.abs(t.y - chair.y);
-                if (dist < minDist) {
-                  minDist = dist;
-                  nearestTable = t;
-                }
-              }
-              
-              if (nearestTable) {
-                const dx = nearestTable.x - chair.x;
-                const dy = nearestTable.y - chair.y;
-                
-                if (Math.abs(dx) > Math.abs(dy)) {
-                  if (dx > 0) chair.rotation = Math.PI / 2;
-                  else chair.rotation = -Math.PI / 2;
-                } else {
-                  if (dy > 0) chair.rotation = 0;
-                  else chair.rotation = Math.PI;
-                }
-              }
-            }
-          }
-          
-          // If a chair was placed, update all laptops and TVs to face their nearest chair
-          if (type === "chair") {
-            const chairs = gameState.furniture.filter(f => f.type === "chair");
-            for (const item of gameState.furniture.filter(f => f.type === "laptop" || f.type === "tv")) {
-              let nearestChair = chairs[0];
-              let minDist = Infinity;
-              for (const c of chairs) {
-                const dist = Math.abs(c.x - item.x) + Math.abs(c.y - item.y);
-                if (dist < minDist) {
-                  minDist = dist;
-                  nearestChair = c;
-                }
-              }
-              
-              if (nearestChair) {
-                const dx = nearestChair.x - item.x;
-                const dy = nearestChair.y - item.y;
-                
-                if (Math.abs(dx) > Math.abs(dy)) {
-                  if (dx > 0) item.rotation = Math.PI / 2;
-                  else item.rotation = -Math.PI / 2;
-                } else {
-                  if (dy > 0) item.rotation = 0;
-                  else item.rotation = Math.PI;
-                }
-              }
-            }
-          }
+          updateRotations(type);
           
           broadcastState();
         } else if (message.type === "reset") {
