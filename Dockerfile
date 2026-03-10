@@ -24,6 +24,7 @@ RUN npm ci --omit=dev
 
 # Copy built assets and server code
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src ./src
 COPY server.ts ./
 
 # Set environment to production

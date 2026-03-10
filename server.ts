@@ -3,7 +3,7 @@ import { createServer as createViteServer } from "vite";
 import { WebSocketServer, WebSocket } from "ws";
 import http from "http";
 
-import { PLACEMENT_COOLDOWN } from "./src/constants";
+import { PLACEMENT_COOLDOWN } from "./src/constants.ts";
 
 const PORT = 3000;
 const GRID_SIZE = 9; // 9x9 grid, center is (4, 4)
