@@ -1,25 +1,50 @@
 import React from "react";
-import { GameState, ItemType } from "../types";
+import { GameState, ItemType, Furniture } from "../types";
+import { ITEM_DEFINITIONS } from "../items";
 import { GRID_SIZE, TILE_SIZE } from "../constants";
 import { FurnitureModel } from "./FurnitureModel";
 import { BallerinaModel } from "./BallerinaModel";
 import { DynamicWalls } from "./DynamicWalls";
 
+function getOccupiedTiles(item: Furniture) {
+  const def = ITEM_DEFINITIONS[item.type];
+  const tiles: { x: number; y: number }[] = [{ x: item.x, y: item.y }];
+
+  if (def.size > 1) {
+    const rotation = item.rotation || 0;
+    const dx = Math.round(Math.sin(rotation));
+    const dy = Math.round(Math.cos(rotation));
+
+    for (let i = 1; i < def.size; i++) {
+      tiles.push({
+        x: item.x + dx * i,
+        y: item.y + dy * i,
+      });
+    }
+  }
+  return tiles;
+}
+
 export function Room({
   gameState,
   selectedItem,
+  placementPath,
   onPlace,
 }: {
   gameState: GameState;
   selectedItem: ItemType | null;
+  placementPath: { x: number, y: number }[];
   onPlace: (x: number, y: number, z: number) => void;
 }) {
-  const isOrnament = ["lamp", "vase", "laptop", "book", "tv"].includes(selectedItem || "");
+  const itemDef = selectedItem ? ITEM_DEFINITIONS[selectedItem] : null;
+  const isOrnament = itemDef?.category === "surface";
 
   // Calculate grid occupancy
-  const floorOccupied = new Set(
-    gameState.furniture.filter((f) => f.z === 0).map((f) => `${f.x},${f.y}`),
-  );
+  const floorOccupied = new Set<string>();
+  gameState.furniture.filter(f => f.z === 0).forEach(f => {
+    getOccupiedTiles(f).forEach(t => floorOccupied.add(`${t.x},${t.y}`));
+  });
+
   const surfaceOccupied = new Set(
     gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`),
   );
@@ -33,36 +58,30 @@ export function Room({
     return false;
   };
 
-  const isHorizontal = new Set<string>();
-  gameState.furniture.forEach(f => {
-    if (!["table", "library", "chair"].includes(f.type)) return;
-    const right = gameState.furniture.find(other => other.type === f.type && other.x === f.x + 1 && other.y === f.y && other.z === f.z && other.rotation === f.rotation);
-    if (right) {
-      isHorizontal.add(f.id);
-      isHorizontal.add(right.id);
-    }
-  });
-
   const connectionsMap = new Map<string, { top: boolean, right: boolean, bottom: boolean, left: boolean }>();
   gameState.furniture.forEach(f => {
     connectionsMap.set(f.id, { top: false, right: false, bottom: false, left: false });
   });
 
   gameState.furniture.forEach(f => {
-    if (!["table", "library", "chair"].includes(f.type)) return;
+    const def = ITEM_DEFINITIONS[f.type];
+    if (!def.connectable) return;
     const conn = connectionsMap.get(f.id)!;
-    
-    if (isHorizontal.has(f.id)) {
-      const right = gameState.furniture.find(other => other.type === f.type && other.x === f.x + 1 && other.y === f.y && other.z === f.z && other.rotation === f.rotation);
-      const left = gameState.furniture.find(other => other.type === f.type && other.x === f.x - 1 && other.y === f.y && other.z === f.z && other.rotation === f.rotation);
-      if (right && isHorizontal.has(right.id)) conn.right = true;
-      if (left && isHorizontal.has(left.id)) conn.left = true;
-    } else {
-      const bottom = gameState.furniture.find(other => other.type === f.type && other.x === f.x && other.y === f.y + 1 && other.z === f.z && other.rotation === f.rotation);
-      const top = gameState.furniture.find(other => other.type === f.type && other.x === f.x && other.y === f.y - 1 && other.z === f.z && other.rotation === f.rotation);
-      if (bottom && !isHorizontal.has(bottom.id)) conn.bottom = true;
-      if (top && !isHorizontal.has(top.id)) conn.top = true;
-    }
+    const tiles = getOccupiedTiles(f);
+
+    gameState.furniture.forEach(other => {
+      if (other.id === f.id || other.type !== f.type || other.z !== f.z || other.rotation !== f.rotation) return;
+      const otherTiles = getOccupiedTiles(other);
+
+      tiles.forEach(t1 => {
+        otherTiles.forEach(t2 => {
+          if (t1.x === t2.x && t1.y === t2.y - 1) conn.bottom = true;
+          if (t1.x === t2.x && t1.y === t2.y + 1) conn.top = true;
+          if (t1.y === t2.y && t1.x === t2.x - 1) conn.right = true;
+          if (t1.y === t2.y && t1.x === t2.x + 1) conn.left = true;
+        });
+      });
+    });
   });
 
   return (
@@ -90,8 +109,26 @@ export function Room({
           const isBallerinaTarget =
             gameState.ballerina.targetX === x &&
             gameState.ballerina.targetY === y;
-          const isHighlight =
-            selectedItem && !isOrnament && !isOccupied && !isBallerinaTarget && isAdjacentToWallOrFurniture(x, y);
+
+          let isHighlight = false;
+          let highlightColor = "#6366f1"; // Indigo default
+
+          if (selectedItem && !isOrnament) {
+            if (itemDef?.size && itemDef.size > 1) {
+              highlightColor = "#3b82f6"; // Blue for multi-tile
+              if (placementPath.length === 0) {
+                isHighlight = !isOccupied && !isBallerinaTarget && isAdjacentToWallOrFurniture(x, y);
+              } else {
+                const head = placementPath[0];
+                const dist = Math.abs(x - head.x) + Math.abs(y - head.y);
+                isHighlight = dist === 1 && !isOccupied && !isBallerinaTarget;
+              }
+            } else {
+              isHighlight = !isOccupied && !isBallerinaTarget && isAdjacentToWallOrFurniture(x, y);
+            }
+          }
+
+          const isPath = placementPath.some(p => p.x === x && p.y === y);
 
           return (
             <mesh
@@ -104,10 +141,10 @@ export function Room({
               rotation={[-Math.PI / 2, 0, 0]}
               onClick={(e) => {
                 e.stopPropagation();
-                if (isHighlight) onPlace(x, y, 0);
+                if (isHighlight || isPath) onPlace(x, y, 0);
               }}
               onPointerOver={(e) => {
-                if (isHighlight) {
+                if (isHighlight || isPath) {
                   e.stopPropagation();
                   document.body.style.cursor = "pointer";
                 }
@@ -120,9 +157,9 @@ export function Room({
             >
               <planeGeometry args={[TILE_SIZE * 0.95, TILE_SIZE * 0.95]} />
               <meshBasicMaterial
-                color={isHighlight ? "#6366f1" : "#d4d4d8"}
+                color={isPath ? highlightColor : (isHighlight ? highlightColor : "#d4d4d8")}
                 transparent
-                opacity={isHighlight ? 0.4 : 0.1}
+                opacity={isPath ? 0.8 : (isHighlight ? 0.4 : 0.1)}
                 depthWrite={false}
               />
             </mesh>

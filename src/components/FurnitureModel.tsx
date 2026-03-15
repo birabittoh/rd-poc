@@ -270,5 +270,46 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
           <pointLight position={[0, 0.36, 0.2]} distance={4} intensity={0.8} color="#3b82f6" />
         </group>
       );
+    case "bed": {
+      const showRailLeft = !localConn.left;
+      const showRailRight = !localConn.right;
+
+      return (
+        <group>
+          {/* Main Frame / Mattress */}
+          <Box args={[0.9, 0.4, 1.9]} position={[0, 0.2, 0.5]} castShadow receiveShadow>
+            <meshStandardMaterial color="#f8fafc" roughness={0.6} />
+          </Box>
+          {/* Base Frame */}
+          <Box args={[0.95, 0.15, 2]} position={[0, 0.075, 0.5]} castShadow receiveShadow>
+            <meshStandardMaterial color="#8b5a2b" roughness={0.4} />
+          </Box>
+          {/* Left Rail */}
+          {showRailLeft && (
+            <Box args={[0.05, 0.3, 2]} position={[-0.45, 0.25, 0.5]} castShadow receiveShadow>
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+            </Box>
+          )}
+          {/* Right Rail */}
+          {showRailRight && (
+            <Box args={[0.05, 0.3, 2]} position={[0.45, 0.25, 0.5]} castShadow receiveShadow>
+              <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+            </Box>
+          )}
+          {/* Head Cushion */}
+          <Box args={[0.8, 0.2, 0.4]} position={[0, 0.45, -0.2]} castShadow receiveShadow>
+            <meshStandardMaterial color="#e2e8f0" roughness={0.5} />
+          </Box>
+          {/* Headboard */}
+          <Box args={[0.95, 0.8, 0.05]} position={[0, 0.4, -0.475]} castShadow receiveShadow>
+            <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+          </Box>
+          {/* Blanket */}
+          <Box args={[0.85, 0.02, 1.2]} position={[0, 0.41, 0.8]} castShadow receiveShadow>
+            <meshStandardMaterial color="#3b82f6" roughness={0.6} />
+          </Box>
+        </group>
+      );
+    }
   }
 }
