@@ -274,14 +274,17 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
       const showRailLeft = !localConn.left;
       const showRailRight = !localConn.right;
 
+      const width = 0.9 + (localConn.right ? 0.05 : 0) + (localConn.left ? 0.05 : 0);
+      const posX = (localConn.right ? 0.025 : 0) - (localConn.left ? 0.025 : 0);
+
       return (
         <group>
           {/* Main Frame / Mattress */}
-          <Box args={[0.9, 0.4, 1.9]} position={[0, 0.2, 0.5]} castShadow receiveShadow>
+          <Box args={[width, 0.4, 1.9]} position={[posX, 0.2, 0.5]} castShadow receiveShadow>
             <meshStandardMaterial color="#f8fafc" roughness={0.6} />
           </Box>
           {/* Base Frame */}
-          <Box args={[0.95, 0.15, 2]} position={[0, 0.075, 0.5]} castShadow receiveShadow>
+          <Box args={[width + 0.05, 0.15, 2]} position={[posX, 0.075, 0.5]} castShadow receiveShadow>
             <meshStandardMaterial color="#8b5a2b" roughness={0.4} />
           </Box>
           {/* Left Rail */}
@@ -297,15 +300,15 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
             </Box>
           )}
           {/* Head Cushion */}
-          <Box args={[0.8, 0.2, 0.4]} position={[0, 0.45, -0.2]} castShadow receiveShadow>
+          <Box args={[0.8, 0.12, 0.4]} position={[posX, 0.41, -0.2]} castShadow receiveShadow>
             <meshStandardMaterial color="#e2e8f0" roughness={0.5} />
           </Box>
           {/* Headboard */}
-          <Box args={[0.95, 0.8, 0.05]} position={[0, 0.4, -0.475]} castShadow receiveShadow>
+          <Box args={[width + 0.05, 0.8, 0.05]} position={[posX, 0.4, -0.475]} castShadow receiveShadow>
             <meshStandardMaterial color="#5c3a21" roughness={0.4} />
           </Box>
           {/* Blanket */}
-          <Box args={[0.85, 0.02, 1.2]} position={[0, 0.41, 0.8]} castShadow receiveShadow>
+          <Box args={[width - 0.05, 0.02, 1.2]} position={[posX, 0.41, 0.8]} castShadow receiveShadow>
             <meshStandardMaterial color="#3b82f6" roughness={0.6} />
           </Box>
         </group>

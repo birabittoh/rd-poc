@@ -12,7 +12,6 @@ const GRID_SIZE = 9; // 9x9 grid, center is (4, 4)
 const CENTER = Math.floor(GRID_SIZE / 2);
 const PLACEMENT_COOLDOWN_MS = PLACEMENT_COOLDOWN * 1000;
 
-
 let gameState: GameState = {
   furniture: [],
   ballerina: {
@@ -221,13 +220,13 @@ async function startServer() {
                 const tiles = getOccupiedTiles(f);
                 return (
                   tiles.length === newTiles.length &&
-                  tiles.every((t1, i) => t1.x === newTiles[i].x && t1.y === newTiles[i].y) &&
-                  f.rotation === rotation
+                  tiles.every((t1, i) => t1.x === newTiles[i].x && t1.y === newTiles[i].y)
                 );
               });
               if (baseItem) {
                 // Stack it
                 newItem.z = baseItem.z + 1;
+                newItem.rotation = baseItem.rotation;
                 // Re-check stacking at new level
                 const occupiedAtNewLevel = gameState.furniture.some((f) => {
                   if (f.z !== newItem.z) return false;
@@ -248,11 +247,56 @@ async function startServer() {
             const adjacentIdentical = gameState.furniture.find((f) => {
               if (f.type !== type || f.z !== newItem.z) return false;
               const tiles = getOccupiedTiles(f);
-              return tiles.some((t1) => newTiles.some((t2) => Math.abs(t1.x - t2.x) + Math.abs(t1.y - t2.y) === 1));
+              // Check if perfectly aligned longitudinally
+              const isAligned = tiles.some((t1) =>
+                newTiles.some((t2) => {
+                  const dx = Math.abs(t1.x - t2.x);
+                  const dy = Math.abs(t1.y - t2.y);
+                  return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+                }),
+              );
+              return isAligned;
             });
+
             if (adjacentIdentical) {
+              const originalRotation = newItem.rotation;
               newItem.rotation = adjacentIdentical.rotation;
-              // Recalculate tiles with inherited rotation
+
+              // When size > 1, the head tile might need to be adjusted if the user clicked "backwards"
+              // but we want to force the same rotation.
+              if (def.size > 1) {
+                const matchesFootprint = (tiles1: { x: number; y: number }[], tiles2: { x: number; y: number }[]) => {
+                  if (tiles1.length !== tiles2.length) return false;
+                  const set1 = new Set(tiles1.map((t) => `${t.x},${t.y}`));
+                  const set2 = new Set(tiles2.map((t) => `${t.x},${t.y}`));
+                  for (const t of set1) if (!set2.has(t)) return false;
+                  return true;
+                };
+
+                // Try both possible head positions for this footprint and forced rotation
+                const possibleHeads = [
+                  { x: newTiles[0].x, y: newTiles[0].y },
+                  { x: newTiles[1].x, y: newTiles[1].y },
+                ];
+
+                let foundValid = false;
+                for (const h of possibleHeads) {
+                  const testItem = { ...newItem, x: h.x, y: h.y };
+                  const testTiles = getOccupiedTiles(testItem as Furniture);
+                  if (matchesFootprint(testTiles, newTiles)) {
+                    newItem.x = h.x;
+                    newItem.y = h.y;
+                    foundValid = true;
+                    break;
+                  }
+                }
+
+                if (!foundValid) {
+                  newItem.rotation = originalRotation;
+                }
+              }
+
+              // Recalculate tiles with inherited rotation/position
               const updatedTiles = getOccupiedTiles(newItem);
               // Re-validate occupancy with new rotation
               const stillOccupied = existingAtLevel.some((f) => {
@@ -261,7 +305,9 @@ async function startServer() {
               });
               if (stillOccupied) {
                 // If it can't join with that rotation, just use original
-                newItem.rotation = rotation;
+                newItem.rotation = originalRotation;
+                newItem.x = x;
+                newItem.y = y;
               }
             }
           }
