@@ -156,6 +156,9 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
     else if (minDist === distRight) rotation = -Math.PI / 2;
   }
 
+  const itemsOfType = state.furniture.filter((f) => f.type === type);
+  const variant = def.variants ? itemsOfType.length % def.variants : 0;
+
   const newItem: Furniture = {
     id: Math.random().toString(36).substring(2, 9),
     type,
@@ -163,6 +166,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
     y,
     z,
     rotation,
+    variant,
   };
 
   const newTiles = getOccupiedTiles(newItem);

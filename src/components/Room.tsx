@@ -239,7 +239,7 @@ export function Room({
               document.body.style.cursor = "auto";
             }}
           >
-            <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} z={f.z} />
+            <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} z={f.z} variant={f.variant} />
 
             {/* Surface Highlight for Ornaments */}
             {isSurface && (
