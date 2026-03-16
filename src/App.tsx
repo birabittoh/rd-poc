@@ -192,6 +192,14 @@ export default function App() {
   const isOrnament = selectedItem ? ITEM_DEFINITIONS[selectedItem].category === 'surface' : false;
   const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== 'playing');
 
+  const surfaceOccupied = new Set(
+    gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)
+  );
+  const hasFreeSurface = gameState.furniture.some(
+    (f) =>
+      ITEM_DEFINITIONS[f.type].surfaceHeight !== undefined && !surfaceOccupied.has(`${f.x},${f.y}`)
+  );
+
   return (
     <div className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
       {/* 3D Canvas */}
@@ -284,7 +292,7 @@ export default function App() {
                       label={item.label}
                       icon={ITEM_ICONS[item.type]}
                       selected={selectedItem === item.type}
-                      disabled={isPlacementDisabled}
+                      disabled={isPlacementDisabled || !hasFreeSurface}
                       onClick={() => {
                         setSelectedItem(item.type);
                         setSelectedVariant(0);
@@ -312,7 +320,9 @@ export default function App() {
                   <X className="w-4 h-4" />
                 </button>
 
-                <ScrollContainer title={`Select ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`}>
+                <ScrollContainer
+                  title={`${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`}
+                >
                   {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants || 1 }).map(
                     (_, i) => (
                       <button

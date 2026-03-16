@@ -108,12 +108,17 @@ export function Room({
 
       const otherTiles = getOccupiedTiles(other);
 
+      const sidesOnly = def.connectableDirections !== 'all';
+      const rot = f.rotation || 0;
+      const allowX = !sidesOnly || Math.abs(Math.round(Math.cos(rot))) === 1;
+      const allowY = !sidesOnly || Math.abs(Math.round(Math.sin(rot))) === 1;
+
       tiles.forEach((t1) => {
         otherTiles.forEach((t2) => {
-          if (t1.x === t2.x && t1.y === t2.y - 1) conn.bottom = true;
-          if (t1.x === t2.x && t1.y === t2.y + 1) conn.top = true;
-          if (t1.y === t2.y && t1.x === t2.x - 1) conn.right = true;
-          if (t1.y === t2.y && t1.x === t2.x + 1) conn.left = true;
+          if (allowY && t1.x === t2.x && t1.y === t2.y - 1) conn.bottom = true;
+          if (allowY && t1.x === t2.x && t1.y === t2.y + 1) conn.top = true;
+          if (allowX && t1.y === t2.y && t1.x === t2.x - 1) conn.right = true;
+          if (allowX && t1.y === t2.y && t1.x === t2.x + 1) conn.left = true;
         });
       });
     });

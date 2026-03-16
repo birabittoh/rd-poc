@@ -26,6 +26,7 @@ export interface ItemDefinition {
   interactable?: boolean;
   surfaceHeight?: number;
   label?: string;
+  connectableDirections?: 'sides' | 'all';
   rotationStrategy?: 'faceNearest' | 'faceAwayFromWall' | 'manual' | 'inherit' | 'faceInteractable';
   facingType?: ItemType;
   variants?: number;

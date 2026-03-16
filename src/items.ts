@@ -6,6 +6,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     category: 'floor',
     size: 1,
     connectable: true,
+    connectableDirections: 'all',
     rotationStrategy: 'faceAwayFromWall',
     interactable: true,
     surfaceHeight: 1.0,
