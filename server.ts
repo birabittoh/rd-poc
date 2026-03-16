@@ -60,6 +60,23 @@ function getOccupiedTiles(item: Furniture) {
   return tiles;
 }
 
+function hasHorizontalConnections(item: Furniture, state: GameState) {
+  const def = ITEM_DEFINITIONS[item.type];
+  if (!def.connectable) return false;
+  const tiles = getOccupiedTiles(item);
+  return state.furniture.some((other) => {
+    if (other.id === item.id || other.type !== item.type || other.z !== item.z || other.rotation !== item.rotation) return false;
+    const otherTiles = getOccupiedTiles(other);
+    return tiles.some((t1) =>
+      otherTiles.some((t2) => {
+        const dx = Math.abs(t1.x - t2.x);
+        const dy = Math.abs(t1.y - t2.y);
+        return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+      })
+    );
+  });
+}
+
 function getGridOccupancy() {
   const grid = Array(GRID_SIZE)
     .fill(null)
@@ -224,6 +241,11 @@ async function startServer() {
                 );
               });
               if (baseItem) {
+                // Constraint: Only stack once (max height 2)
+                if (baseItem.z !== 0) return;
+                // Constraint: No horizontal connections allowed if stacking
+                if (hasHorizontalConnections(baseItem, gameState)) return;
+
                 // Stack it
                 newItem.z = baseItem.z + 1;
                 newItem.rotation = baseItem.rotation;
@@ -243,9 +265,19 @@ async function startServer() {
           }
 
           // Joining Logic (Inherit rotation from identical adjacent item)
-          if (def.connectable) {
+          if (def.connectable && newItem.z === 0) {
             const adjacentIdentical = gameState.furniture.find((f) => {
               if (f.type !== type || f.z !== newItem.z) return false;
+
+              // Constraint: Cannot join if the adjacent item has something stacked on top
+              const isStackedOn = gameState.furniture.some((top) => {
+                if (top.z !== f.z + 1) return false;
+                const topTiles = getOccupiedTiles(top);
+                const fTiles = getOccupiedTiles(f);
+                return topTiles.some((t1) => fTiles.some((t2) => t1.x === t2.x && t1.y === t2.y));
+              });
+              if (isStackedOn) return false;
+
               const tiles = getOccupiedTiles(f);
               // Check if perfectly aligned longitudinally
               const isAligned = tiles.some((t1) =>

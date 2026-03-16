@@ -69,8 +69,17 @@ export function Room({
     const conn = connectionsMap.get(f.id)!;
     const tiles = getOccupiedTiles(f);
 
+    // Constraint: No horizontal connections if stacked
+    const isStacked = gameState.furniture.some(other => (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) && other.x === f.x && other.y === f.y);
+    if (isStacked) return;
+
     gameState.furniture.forEach(other => {
       if (other.id === f.id || other.type !== f.type || other.z !== f.z || other.rotation !== f.rotation) return;
+
+      // Constraint: Other item also cannot be stacked
+      const otherIsStacked = gameState.furniture.some(s => (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) && s.x === other.x && s.y === other.y);
+      if (otherIsStacked) return;
+
       const otherTiles = getOccupiedTiles(other);
 
       tiles.forEach(t1 => {
@@ -117,11 +126,22 @@ export function Room({
             if (itemDef?.size && itemDef.size > 1) {
               highlightColor = "#3b82f6"; // Blue for multi-tile
               if (placementPath.length === 0) {
-                isHighlight = !isOccupied && !isBallerinaTarget && isAdjacentToWallOrFurniture(x, y);
+                const canPlaceFromHere = [
+                  {dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}
+                ].some(offset => {
+                  const nx = x + offset.dx;
+                  const ny = y + offset.dy;
+                  if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) return false;
+                  if (floorOccupied.has(`${nx},${ny}`)) return false;
+                  return isAdjacentToWallOrFurniture(x, y) || isAdjacentToWallOrFurniture(nx, ny);
+                });
+                isHighlight = !isOccupied && !isBallerinaTarget && canPlaceFromHere;
               } else {
                 const head = placementPath[0];
                 const dist = Math.abs(x - head.x) + Math.abs(y - head.y);
-                isHighlight = dist === 1 && !isOccupied && !isBallerinaTarget;
+                // Check if the resulting footprint is adjacent to wall or furniture
+                const isFootprintAdjacent = isAdjacentToWallOrFurniture(head.x, head.y) || isAdjacentToWallOrFurniture(x, y);
+                isHighlight = dist === 1 && !isOccupied && !isBallerinaTarget && isFootprintAdjacent;
               }
             } else {
               isHighlight = !isOccupied && !isBallerinaTarget && isAdjacentToWallOrFurniture(x, y);
@@ -174,7 +194,15 @@ export function Room({
         const isHighlight =
           selectedItem && isOrnament && isTable && !hasOrnament;
 
-        const isStackable = selectedItem && ITEM_DEFINITIONS[selectedItem].stackable && selectedItem === f.type;
+        const conn = connectionsMap.get(f.id);
+        const isJoined = conn && (conn.top || conn.right || conn.bottom || conn.left);
+        const isStackedOn = gameState.furniture.some(other => other.z === f.z + 1 && other.x === f.x && other.y === f.y);
+
+        const isStackable = selectedItem &&
+          ITEM_DEFINITIONS[selectedItem].stackable &&
+          selectedItem === f.type &&
+          f.z === 0 &&
+          !isJoined;
 
         return (
           <group
@@ -201,7 +229,7 @@ export function Room({
               document.body.style.cursor = "auto";
             }}
           >
-            <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} />
+            <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} z={f.z} />
 
             {/* Surface Highlight for Ornaments */}
             {isTable && (

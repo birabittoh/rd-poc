@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Cylinder, Sphere } from "@react-three/drei";
 import { ItemType } from "../types";
 
-export function FurnitureModel({ type, connections, rotation }: { type: ItemType, connections?: { top: boolean, right: boolean, bottom: boolean, left: boolean }, rotation?: number }) {
+export function FurnitureModel({ type, connections, rotation, z }: { type: ItemType, connections?: { top: boolean, right: boolean, bottom: boolean, left: boolean }, rotation?: number, z?: number }) {
   const conn = connections || { top: false, right: false, bottom: false, left: false };
   let localConn = { ...conn };
   const rotIndex = Math.round((rotation || 0) / (Math.PI / 2));
@@ -277,6 +277,8 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
       const width = 0.9 + (localConn.right ? 0.05 : 0) + (localConn.left ? 0.05 : 0);
       const posX = (localConn.right ? 0.025 : 0) - (localConn.left ? 0.025 : 0);
 
+      const isTopBunk = (z || 0) > 0;
+
       return (
         <group>
           {/* Main Frame / Mattress */}
@@ -316,6 +318,43 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
           >
             <meshStandardMaterial color="#3b82f6" roughness={0.6} />
           </Box>
+          {/* Bunk bed supports (4 corner posts and ladder) */}
+          {isTopBunk && (
+            <group>
+              {/* Four posts extending down to ground level */}
+              {/* Front Left */}
+              <Box args={[0.08, 1, 0.08]} position={[-0.45, -0.5, -0.45]} castShadow receiveShadow>
+                <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+              </Box>
+              {/* Front Right */}
+              <Box args={[0.08, 1, 0.08]} position={[0.45, -0.5, -0.45]} castShadow receiveShadow>
+                <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+              </Box>
+              {/* Back Left (at position 1.45 instead of 0.45 because bed is size 2) */}
+              <Box args={[0.08, 1, 0.08]} position={[-0.45, -0.5, 1.45]} castShadow receiveShadow>
+                <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+              </Box>
+              {/* Back Right */}
+              <Box args={[0.08, 1, 0.08]} position={[0.45, -0.5, 1.45]} castShadow receiveShadow>
+                <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+              </Box>
+              {/* Ladder on the side (opposite to cushion side) */}
+              <group position={[showRailRight ? 0.48 : -0.48, -0.5, 0.5]}>
+                <Box args={[0.04, 1, 0.04]} position={[0, 0, -0.2]} castShadow receiveShadow>
+                  <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+                </Box>
+                <Box args={[0.04, 1, 0.04]} position={[0, 0, 0.2]} castShadow receiveShadow>
+                  <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+                </Box>
+                {/* Steps */}
+                {[0, 0.2, 0.4, 0.6, 0.8].map((y, i) => (
+                  <Box key={i} args={[0.02, 0.04, 0.4]} position={[0, y - 0.45, 0]} castShadow receiveShadow>
+                    <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+                  </Box>
+                ))}
+              </group>
+            </group>
+          )}
         </group>
       );
     }
