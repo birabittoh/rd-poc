@@ -197,7 +197,7 @@ export default function App() {
       {/* Demo mode badge */}
       {isDemoMode && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500/90 backdrop-blur-md text-black font-bold px-4 py-1.5 rounded-full text-sm tracking-widest shadow-lg pointer-events-none select-none">
-          DEMO — not connected to server
+          DEMO
         </div>
       )}
 
