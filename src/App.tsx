@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
-import { OrthographicCamera, OrbitControls } from "@react-three/drei";
+import { OrthographicCamera, OrbitControls, Environment } from "@react-three/drei";
 import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed, LayoutGrid, Square, Columns2, Coffee, X, Frame } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { ITEM_DEFINITIONS } from "./items";
@@ -191,6 +191,7 @@ export default function App() {
             castShadow
             shadow-mapSize={[2048, 2048]}
           />
+          <Environment preset="city" />
 
           <Room
             gameState={gameState}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, MeshReflectorMaterial } from "@react-three/drei";
+import { Box } from "@react-three/drei";
 import { FurnitureProps } from "../../types";
 
 export function Mirror({ localConn, variant }: FurnitureProps) {
@@ -28,19 +28,23 @@ export function Mirror({ localConn, variant }: FurnitureProps) {
       </Box>
 
       {/* Mirror surface */}
-      <mesh position={[posX, 0.95, 0.051]}>
+      <mesh position={[posX, 0.95, 0.055]} castShadow={false} receiveShadow={false}>
         <planeGeometry args={[width - 0.1, 1.7]} />
-        <MeshReflectorMaterial
-          blur={[0, 0]}
-          mixBlur={0}
-          mixStrength={1}
-          mixContrast={1}
-          resolution={1024}
-          mirror={1}
-          depthScale={0}
-          minDepthThreshold={0.9}
-          maxDepthThreshold={1}
-          color="#a0a0a0"
+        <meshStandardMaterial
+          color="#cbd5e0"
+          metalness={1}
+          roughness={0.02}
+          envMapIntensity={2}
+        />
+      </mesh>
+
+      {/* Subtle shine / glass look */}
+      <mesh position={[posX, 0.95, 0.056]} castShadow={false} receiveShadow={false}>
+        <planeGeometry args={[width - 0.1, 1.7]} />
+        <meshStandardMaterial
+          color="#ffffff"
+          transparent
+          opacity={0.1}
           metalness={0.5}
           roughness={0}
         />
