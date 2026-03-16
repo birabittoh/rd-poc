@@ -16,6 +16,8 @@ import { Drawer } from './furniture/Drawer';
 import { BedsideTable } from './furniture/BedsideTable';
 import { Wardrobe } from './furniture/Wardrobe';
 import { Bed } from './furniture/Bed';
+import { Mirror } from './furniture/Mirror';
+import { MirrorOrnament } from './furniture/MirrorOrnament';
 
 interface FurnitureModelProps {
   type: ItemType;
@@ -59,6 +61,10 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: Furn
       return <Wardrobe localConn={localConn} variant={variant} />;
     case 'bed':
       return <Bed localConn={localConn} variant={variant} z={z} />;
+    case 'mirror':
+      return <Mirror localConn={localConn} variant={variant} />;
+    case 'mirror_ornament':
+      return <MirrorOrnament localConn={localConn} variant={variant} />;
     default:
       return null;
   }

@@ -4,6 +4,7 @@ import { cn } from '../utils/cn';
 
 export function FurnitureButton({
   type,
+  label,
   icon,
   selected,
   disabled,
@@ -11,6 +12,7 @@ export function FurnitureButton({
   isOrnament: _isOrnament,
 }: {
   type: ItemType;
+  label?: string;
   icon: React.ReactNode;
   selected: boolean;
   disabled?: boolean;
@@ -30,7 +32,7 @@ export function FurnitureButton({
       )}
     >
       <div className="[&>svg]:w-5 [&>svg]:h-5">{icon}</div>
-      <span className="text-[10px] font-medium capitalize">{type.replace('_', ' ')}</span>
+      <span className="text-[10px] font-medium capitalize">{label ?? type.replace('_', ' ')}</span>
     </button>
   );
 }

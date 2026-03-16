@@ -21,6 +21,8 @@ import {
   Columns2,
   Coffee,
   X,
+  RectangleVertical,
+  ScanLine,
 } from 'lucide-react';
 import { GameState, ItemType } from './types';
 import { ITEM_DEFINITIONS } from './items';
@@ -52,6 +54,8 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   bedside_table: <Square />,
   wardrobe: <Columns2 />,
   coffee_table: <Coffee />,
+  mirror: <RectangleVertical />,
+  mirror_ornament: <ScanLine />,
 };
 
 const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'floor');
@@ -185,12 +189,7 @@ export default function App() {
     );
   }
 
-  const isOrnament =
-    selectedItem === 'lamp' ||
-    selectedItem === 'vase' ||
-    selectedItem === 'laptop' ||
-    selectedItem === 'book' ||
-    selectedItem === 'tv';
+  const isOrnament = selectedItem ? ITEM_DEFINITIONS[selectedItem].category === 'surface' : false;
   const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== 'playing');
 
   return (
@@ -264,6 +263,7 @@ export default function App() {
                     <FurnitureButton
                       key={item.type}
                       type={item.type}
+                      label={item.label}
                       icon={ITEM_ICONS[item.type]}
                       selected={selectedItem === item.type}
                       disabled={isPlacementDisabled}
@@ -281,6 +281,7 @@ export default function App() {
                     <FurnitureButton
                       key={item.type}
                       type={item.type}
+                      label={item.label}
                       icon={ITEM_ICONS[item.type]}
                       selected={selectedItem === item.type}
                       disabled={isPlacementDisabled}
@@ -311,7 +312,7 @@ export default function App() {
                   <X className="w-4 h-4" />
                 </button>
 
-                <ScrollContainer title={`Select ${selectedItem.replace('_', ' ')}`}>
+                <ScrollContainer title={`Select ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`}>
                   {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants || 1 }).map(
                     (_, i) => (
                       <button
@@ -344,7 +345,7 @@ export default function App() {
             )}
           >
             {selectedItem
-              ? `Select a ${isOrnament ? 'surface' : 'floor tile'} to place ${selectedItem}`
+              ? `Select a ${isOrnament ? 'surface' : 'floor tile'} to place ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`
               : 'Select an item to place'}
           </p>
 

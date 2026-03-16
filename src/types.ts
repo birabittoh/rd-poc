@@ -13,7 +13,9 @@ export type ItemType =
   | 'drawer'
   | 'bedside_table'
   | 'wardrobe'
-  | 'coffee_table';
+  | 'coffee_table'
+  | 'mirror'
+  | 'mirror_ornament';
 
 export interface ItemDefinition {
   type: ItemType;
@@ -23,6 +25,7 @@ export interface ItemDefinition {
   connectable?: boolean;
   interactable?: boolean;
   surfaceHeight?: number;
+  label?: string;
   rotationStrategy?: 'faceNearest' | 'faceAwayFromWall' | 'manual' | 'inherit' | 'faceInteractable';
   facingType?: ItemType;
   variants?: number;

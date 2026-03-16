@@ -61,6 +61,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
   },
   tv: {
     type: 'tv',
+    label: 'TV',
     category: 'surface',
     size: 1,
     connectable: true,
@@ -104,6 +105,23 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     rotationStrategy: 'faceAwayFromWall',
     interactable: true,
     surfaceHeight: 0.46,
+    variants: 4,
+  },
+  mirror: {
+    type: 'mirror',
+    category: 'floor',
+    size: 1,
+    connectable: true,
+    rotationStrategy: 'faceAwayFromWall',
+    variants: 4,
+  },
+  mirror_ornament: {
+    type: 'mirror_ornament',
+    label: 'Table Mirror',
+    category: 'surface',
+    size: 1,
+    interactable: true,
+    rotationStrategy: 'faceAwayFromWall',
     variants: 4,
   },
 };
