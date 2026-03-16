@@ -133,7 +133,6 @@ export default function App() {
 
     if (isDemoMode) {
       setGameState(prev => prev ? (placeFurniture(prev, payload!) ?? prev) : prev);
-      setCooldown(PLACEMENT_COOLDOWN);
     } else if (ws) {
       ws.send(JSON.stringify({ type: "place_furniture", payload }));
     }

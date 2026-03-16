@@ -261,8 +261,12 @@ export function FurnitureModel({ type, connections, rotation, z }: { type: ItemT
       const isConnectedH = localConn.left || localConn.right;
       const width = 0.8 + (localConn.right ? 0.1 : 0) + (localConn.left ? 0.1 : 0);
       const posX = (localConn.right ? 0.05 : 0) - (localConn.left ? 0.05 : 0);
-      const height = isConnectedH ? 1.1 : 0.5;
-      const screenY = isConnectedH ? 0.66 : 0.36;
+      const height = isConnectedH ? 1.0 : 0.5;
+      const screenY = isConnectedH ? 0.61 : 0.36;
+
+      // Calculate inner screen dimensions to remove seams
+      const innerWidth = width - (localConn.right ? 0 : 0.02) - (localConn.left ? 0 : 0.02);
+      const innerPosX = posX + (localConn.right ? 0.01 : 0) - (localConn.left ? 0.01 : 0);
 
       return (
         <group>
@@ -276,7 +280,7 @@ export function FurnitureModel({ type, connections, rotation, z }: { type: ItemT
           {/* Screen */}
           <Box args={[width, height, 0.05]} position={[posX, screenY, 0]} castShadow receiveShadow><meshStandardMaterial color="#18181b" roughness={0.4} /></Box>
           {/* Screen Inner */}
-          <Box args={[width - 0.04, height - 0.04, 0.01]} position={[posX, screenY, 0.026]}><meshStandardMaterial color="#1e3a8a" emissive="#3b82f6" emissiveIntensity={0.5} /></Box>
+          <Box args={[innerWidth, height - 0.04, 0.01]} position={[innerPosX, screenY, 0.026]}><meshStandardMaterial color="#1e3a8a" emissive="#3b82f6" emissiveIntensity={0.5} /></Box>
           <pointLight position={[posX, screenY, 0.2]} distance={4} intensity={0.8} color="#3b82f6" />
         </group>
       );

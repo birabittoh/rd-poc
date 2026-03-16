@@ -104,10 +104,10 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   const def = ITEM_DEFINITIONS[type];
   if (!def) return null;
 
-  let rotation = manualRotation || 0;
+  let rotation = manualRotation !== undefined ? manualRotation : 0;
 
   // Rotation Strategies
-  if (def.rotationStrategy === "faceNearest" && def.facingType) {
+  if (manualRotation === undefined && def.rotationStrategy === "faceNearest" && def.facingType) {
     const targets = state.furniture.filter((f) => f.type === def.facingType);
     if (targets.length > 0) {
       let nearest = targets[0];
@@ -121,7 +121,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
     }
-  } else if (def.rotationStrategy === "faceAwayFromWall") {
+  } else if (manualRotation === undefined && def.rotationStrategy === "faceAwayFromWall") {
     const distLeft = x, distRight = GRID_SIZE - 1 - x;
     const distTop = y, distBottom = GRID_SIZE - 1 - y;
     const minDist = Math.min(distLeft, distRight, distTop, distBottom);
