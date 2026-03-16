@@ -39,6 +39,15 @@ export function Room({
   const itemDef = selectedItem ? ITEM_DEFINITIONS[selectedItem] : null;
   const isOrnament = itemDef?.category === "surface";
 
+  const getSurfaceHeight = (type: ItemType) => {
+    switch (type) {
+      case "table": return 1.0;
+      case "drawer": return 0.8;
+      case "bedside_table": return 0.5;
+      default: return 0;
+    }
+  };
+
   // Calculate grid occupancy
   const floorOccupied = new Set<string>();
   gameState.furniture.filter(f => f.z === 0).forEach(f => {
@@ -193,10 +202,13 @@ export function Room({
 
       {/* Furniture */}
       {gameState.furniture.map((f) => {
-        const isTable = f.type === "table";
+        const isSurface = f.type === "table" || f.type === "drawer" || f.type === "bedside_table";
         const hasOrnament = surfaceOccupied.has(`${f.x},${f.y}`);
         const isHighlight =
-          selectedItem && isOrnament && isTable && !hasOrnament;
+          selectedItem && isOrnament && isSurface && !hasOrnament;
+
+        const floorItem = f.z > 0 ? gameState.furniture.find(other => other.z === 0 && other.x === f.x && other.y === f.y) : null;
+        const currentSurfaceHeight = f.z === 0 ? 0 : (floorItem ? getSurfaceHeight(floorItem.type) : 1);
 
         const conn = connectionsMap.get(f.id);
         const isJoined = conn && (conn.top || conn.right || conn.bottom || conn.left);
@@ -213,7 +225,7 @@ export function Room({
             key={f.id}
             position={[
               f.x * TILE_SIZE + TILE_SIZE / 2,
-              f.z === 0 ? 0 : 1,
+              currentSurfaceHeight,
               f.y * TILE_SIZE + TILE_SIZE / 2,
             ]}
             rotation={[0, f.rotation || 0, 0]}
@@ -236,9 +248,9 @@ export function Room({
             <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} z={f.z} />
 
             {/* Surface Highlight for Ornaments */}
-            {isTable && (
+            {isSurface && (
               <mesh
-                position={[0, 1.05, 0]}
+                position={[0, getSurfaceHeight(f.type) + 0.05, 0]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 onClick={(e) => {
                   e.stopPropagation();
