@@ -27,8 +27,13 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
       const showBottomLeft = !localConn.left && !localConn.bottom;
       const showBottomRight = !localConn.right && !localConn.bottom;
 
-      const mainColor = variant === 1 ? "#e2e8f0" : "#8b5a2b";
-      const legColor = variant === 1 ? "#94a3b8" : "#5c3a21";
+      let mainColor = "#8b5a2b";
+      let legColor = "#5c3a21";
+      if (variant === 1) { mainColor = "#e2e8f0"; legColor = "#94a3b8"; }
+      else if (variant === 2) { mainColor = "#1f2937"; legColor = "#111827"; }
+      else if (variant === 3) { mainColor = "#d97706"; legColor = "#92400e"; }
+
+      const isModern = variant === 1 || variant === 2;
 
       return (
         <group>
@@ -41,7 +46,7 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
             <meshStandardMaterial color={mainColor} roughness={0.4} />
           </Box>
           {showTopLeft && (
-            variant === 1 ? (
+            isModern ? (
               <Box args={[0.08, 0.9, 0.08]} position={[-0.4, 0.45, -0.4]} castShadow receiveShadow>
                 <meshStandardMaterial color={legColor} roughness={0.4} />
               </Box>
@@ -52,7 +57,7 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
             )
           )}
           {showTopRight && (
-            variant === 1 ? (
+            isModern ? (
               <Box args={[0.08, 0.9, 0.08]} position={[0.4, 0.45, -0.4]} castShadow receiveShadow>
                 <meshStandardMaterial color={legColor} roughness={0.4} />
               </Box>
@@ -63,7 +68,7 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
             )
           )}
           {showBottomLeft && (
-            variant === 1 ? (
+            isModern ? (
               <Box args={[0.08, 0.9, 0.08]} position={[-0.4, 0.45, 0.4]} castShadow receiveShadow>
                 <meshStandardMaterial color={legColor} roughness={0.4} />
               </Box>
@@ -74,7 +79,7 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
             )
           )}
           {showBottomRight && (
-            variant === 1 ? (
+            isModern ? (
               <Box args={[0.08, 0.9, 0.08]} position={[0.4, 0.45, 0.4]} castShadow receiveShadow>
                 <meshStandardMaterial color={legColor} roughness={0.4} />
               </Box>
@@ -101,8 +106,13 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
       const showBottomLeft = !localConn.left && !localConn.bottom;
       const showBottomRight = !localConn.right && !localConn.bottom;
 
-      const chairColor = variant === 1 ? "#3b82f6" : "#a0522d";
-      const legColor = variant === 1 ? "#1e40af" : "#5c3a21";
+      let chairColor = "#a0522d";
+      let legColor = "#5c3a21";
+      if (variant === 1) { chairColor = "#3b82f6"; legColor = "#1e40af"; }
+      else if (variant === 2) { chairColor = "#ef4444"; legColor = "#991b1b"; }
+      else if (variant === 3) { chairColor = "#10b981"; legColor = "#065f46"; }
+
+      const isTall = variant === 1 || variant === 2;
 
       return (
         <group>
@@ -114,7 +124,7 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
           >
             <meshStandardMaterial color={chairColor} roughness={0.4} />
           </Box>
-          <Box args={[backWidth, variant === 1 ? 0.8 : 0.6, 0.1]} position={[backPosX, variant === 1 ? 0.9 : 0.8, -0.25]} castShadow receiveShadow>
+          <Box args={[backWidth, isTall ? 0.8 : 0.6, 0.1]} position={[backPosX, isTall ? 0.9 : 0.8, -0.25]} castShadow receiveShadow>
             <meshStandardMaterial color={chairColor} roughness={0.4} />
           </Box>
           {showTopLeft && (
@@ -141,40 +151,51 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
       );
     }
     case "plant":
+      const potColor = variant === 1 ? "#71717a" : (variant === 2 ? "#3f3f46" : (variant === 3 ? "#92400e" : "#d2b48c"));
+      const leafColor1 = variant === 3 ? "#b91c1c" : "#22c55e";
+      const leafColor2 = variant === 3 ? "#991b1b" : "#16a34a";
+      const leafColor3 = variant === 3 ? "#7f1d1d" : "#15803d";
+
+      const isBoxy = variant === 1 || variant === 2;
+
       return (
         <group>
           <Cylinder args={[0.2, 0.15, 0.4]} position={[0, 0.2, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color={variant === 1 ? "#71717a" : "#d2b48c"} roughness={0.4} />
+            <meshStandardMaterial color={potColor} roughness={0.4} />
           </Cylinder>
-          {variant === 1 ? (
+          {isBoxy ? (
             <>
               <Box args={[0.4, 0.4, 0.4]} position={[0, 0.6, 0]} castShadow receiveShadow>
-                <meshStandardMaterial color="#22c55e" roughness={0.4} />
+                <meshStandardMaterial color={leafColor1} roughness={0.4} />
               </Box>
               <Box args={[0.3, 0.3, 0.3]} position={[0.15, 0.8, 0.1]} castShadow receiveShadow>
-                <meshStandardMaterial color="#16a34a" roughness={0.4} />
+                <meshStandardMaterial color={leafColor2} roughness={0.4} />
               </Box>
               <Box args={[0.35, 0.35, 0.35]} position={[-0.1, 0.7, -0.15]} castShadow receiveShadow>
-                <meshStandardMaterial color="#15803d" roughness={0.4} />
+                <meshStandardMaterial color={leafColor3} roughness={0.4} />
               </Box>
             </>
           ) : (
             <>
               <Sphere args={[0.3]} position={[0, 0.6, 0]} castShadow receiveShadow>
-                <meshStandardMaterial color="#22c55e" roughness={0.4} />
+                <meshStandardMaterial color={leafColor1} roughness={0.4} />
               </Sphere>
               <Sphere args={[0.2]} position={[0.15, 0.8, 0.1]} castShadow receiveShadow>
-                <meshStandardMaterial color="#16a34a" roughness={0.4} />
+                <meshStandardMaterial color={leafColor2} roughness={0.4} />
               </Sphere>
               <Sphere args={[0.25]} position={[-0.1, 0.7, -0.15]} castShadow receiveShadow>
-                <meshStandardMaterial color="#15803d" roughness={0.4} />
+                <meshStandardMaterial color={leafColor3} roughness={0.4} />
               </Sphere>
             </>
           )}
         </group>
       );
     case "lamp":
-      const lampColor = variant === 1 ? "#fca5a5" : "#fef08a";
+      let lampColor = "#fef08a";
+      if (variant === 1) lampColor = "#fca5a5";
+      else if (variant === 2) lampColor = "#93c5fd";
+      else if (variant === 3) lampColor = "#86efac";
+
       return (
         <group>
           <Cylinder args={[0.1, 0.15, 0.1]} position={[0, 0.05, 0]} castShadow receiveShadow>
@@ -197,14 +218,20 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
         </group>
       );
     case "vase":
-      const vaseColor = variant === 1 ? "#fbbf24" : "#38bdf8";
+      let vaseColor = "#38bdf8";
+      if (variant === 1) vaseColor = "#fbbf24";
+      else if (variant === 2) vaseColor = "#a855f7";
+      else if (variant === 3) vaseColor = "#10b981";
+
+      const flowerColor1 = variant === 2 ? "#f472b6" : (variant === 3 ? "#fbbf24" : "#ec4899");
+
       return (
         <group>
           <Cylinder args={[0.1, 0.08, 0.3]} position={[0, 0.15, 0]} castShadow receiveShadow>
             <meshStandardMaterial color={vaseColor} roughness={0.4} />
           </Cylinder>
           <Sphere args={[0.15]} position={[0, 0.4, 0]} castShadow receiveShadow>
-            <meshStandardMaterial color="#ec4899" roughness={0.4} />
+            <meshStandardMaterial color={flowerColor1} roughness={0.4} />
           </Sphere>
           <Sphere args={[0.1]} position={[0.1, 0.45, 0.1]} castShadow receiveShadow>
             <meshStandardMaterial color="#f472b6" roughness={0.4} />
@@ -221,8 +248,11 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
       const shelfWidth = 0.7 + (localConn.right ? 0.15 : 0) + (localConn.left ? 0.15 : 0);
       const shelfPosX = (localConn.right ? 0.075 : 0) - (localConn.left ? 0.075 : 0);
 
-      const libColor = variant === 1 ? "#4a5568" : "#5c3a21";
-      const shelfColor = variant === 1 ? "#718096" : "#8b5a2b";
+      let libColor = "#5c3a21";
+      let shelfColor = "#8b5a2b";
+      if (variant === 1) { libColor = "#4a5568"; shelfColor = "#718096"; }
+      else if (variant === 2) { libColor = "#1f2937"; shelfColor = "#374151"; }
+      else if (variant === 3) { libColor = "#f8fafc"; shelfColor = "#e2e8f0"; }
 
       return (
         <group position={[0, 0, -0.35]}>
@@ -241,30 +271,45 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
       );
     }
     case "floor_lamp":
-      const floorLampColor = variant === 1 ? "#a7f3d0" : "#fef08a";
+      let floorLampColor = "#fef08a";
+      if (variant === 1) floorLampColor = "#a7f3d0";
+      else if (variant === 2) floorLampColor = "#fca5a5";
+      else if (variant === 3) floorLampColor = "#fbbf24";
+
+      const baseColor = variant === 2 ? "#18181b" : "#3f3f46";
+
       return (
         <group>
-          <Cylinder args={[0.15, 0.15, 0.05]} position={[0, 0.025, 0]} castShadow receiveShadow><meshStandardMaterial color="#3f3f46" roughness={0.4} /></Cylinder>
+          <Cylinder args={[0.15, 0.15, 0.05]} position={[0, 0.025, 0]} castShadow receiveShadow><meshStandardMaterial color={baseColor} roughness={0.4} /></Cylinder>
           <Cylinder args={[0.02, 0.02, 1.2]} position={[0, 0.6, 0]} castShadow receiveShadow><meshStandardMaterial color="#71717a" roughness={0.4} /></Cylinder>
           <Cylinder args={[0.2, 0.3, 0.4]} position={[0, 1.3, 0]} castShadow receiveShadow frustumCulled={false} renderOrder={10}><meshStandardMaterial color={floorLampColor} transparent opacity={0.9} depthWrite={false} /></Cylinder>
           <pointLight position={[0, 1.3, 0]} intensity={1.5} color={floorLampColor} distance={6} castShadow shadow-bias={-0.001} />
         </group>
       );
     case "laptop":
-      const laptopColor = variant === 1 ? "#27272a" : "#d4d4d8";
+      let laptopColor = "#d4d4d8";
+      let screenColor = "#0ea5e9";
+      if (variant === 1) { laptopColor = "#27272a"; screenColor = "#ef4444"; }
+      else if (variant === 2) { laptopColor = "#fcd34d"; screenColor = "#10b981"; }
+      else if (variant === 3) { laptopColor = "#f472b6"; screenColor = "#ffffff"; }
+
       return (
         <group>
           {/* Base */}
           <Box args={[0.4, 0.02, 0.3]} position={[0, 0.01, 0]} castShadow receiveShadow><meshStandardMaterial color={laptopColor} roughness={0.4} /></Box>
           {/* Screen */}
-          <Box args={[0.4, 0.3, 0.02]} position={[0, 0.16, -0.14]} rotation={[-0.2, 0, 0]} castShadow receiveShadow><meshStandardMaterial color={variant === 1 ? "#3f3f46" : "#a1a1aa"} roughness={0.4} /></Box>
+          <Box args={[0.4, 0.3, 0.02]} position={[0, 0.16, -0.14]} rotation={[-0.2, 0, 0]} castShadow receiveShadow><meshStandardMaterial color={variant === 1 ? "#3f3f46" : (variant === 3 ? "#ec4899" : "#a1a1aa")} roughness={0.4} /></Box>
           {/* Screen Inner */}
-          <Box args={[0.36, 0.26, 0.01]} position={[0, 0.16, -0.13]} rotation={[-0.2, 0, 0]}><meshStandardMaterial color="#0ea5e9" emissive="#0ea5e9" emissiveIntensity={0.5} /></Box>
-          <pointLight position={[0, 0.2, 0.1]} distance={2} intensity={0.4} color="#60a5fa" />
+          <Box args={[0.36, 0.26, 0.01]} position={[0, 0.16, -0.13]} rotation={[-0.2, 0, 0]}><meshStandardMaterial color={screenColor} emissive={screenColor} emissiveIntensity={0.5} /></Box>
+          <pointLight position={[0, 0.2, 0.1]} distance={2} intensity={0.4} color={screenColor} />
         </group>
       );
     case "book":
-      const bookColor = variant === 1 ? "#ef4444" : "#8b5cf6";
+      let bookColor = "#8b5cf6";
+      if (variant === 1) bookColor = "#ef4444";
+      else if (variant === 2) bookColor = "#10b981";
+      else if (variant === 3) bookColor = "#f59e0b";
+
       return (
         <group rotation={[0, Math.random(), 0]}>
           <Box args={[0.2, 0.05, 0.3]} position={[0, 0.025, 0]} castShadow receiveShadow><meshStandardMaterial color={bookColor} roughness={0.4} /></Box>
@@ -282,8 +327,11 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
       const innerWidth = width - (localConn.right ? 0 : 0.02) - (localConn.left ? 0 : 0.02);
       const innerPosX = posX + (localConn.right ? 0.01 : 0) - (localConn.left ? 0.01 : 0);
 
-      const screenColor = variant === 1 ? "#065f46" : "#1e3a8a";
-      const lightColor = variant === 1 ? "#10b981" : "#3b82f6";
+      let screenColor = "#1e3a8a";
+      let lightColor = "#3b82f6";
+      if (variant === 1) { screenColor = "#065f46"; lightColor = "#10b981"; }
+      else if (variant === 2) { screenColor = "#991b1b"; lightColor = "#ef4444"; }
+      else if (variant === 3) { screenColor = "#78350f"; lightColor = "#f59e0b"; }
 
       return (
         <group>
@@ -305,8 +353,13 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
     case "drawer": {
       const width = 0.8 + (localConn.right ? 0.1 : 0) + (localConn.left ? 0.1 : 0);
       const posX = (localConn.right ? 0.05 : 0) - (localConn.left ? 0.05 : 0);
-      const drawerColor = variant === 1 ? "#e2e8f0" : "#5c3a21";
-      const frontColor = variant === 1 ? "#f8fafc" : "#8b5a2b";
+
+      let drawerColor = "#5c3a21";
+      let frontColor = "#8b5a2b";
+      if (variant === 1) { drawerColor = "#e2e8f0"; frontColor = "#f8fafc"; }
+      else if (variant === 2) { drawerColor = "#1f2937"; frontColor = "#374151"; }
+      else if (variant === 3) { drawerColor = "#475569"; frontColor = "#64748b"; }
+
       return (
         <group position={[0, 0, -0.1]}>
           <Box args={[width, 0.8, 0.8]} position={[posX, 0.4, 0]} castShadow receiveShadow>
@@ -327,7 +380,11 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
       );
     }
     case "bedside_table":
-      const bedsideColor = variant === 1 ? "#1f2937" : "#8b5a2b";
+      let bedsideColor = "#8b5a2b";
+      if (variant === 1) bedsideColor = "#1f2937";
+      else if (variant === 2) bedsideColor = "#f8fafc";
+      else if (variant === 3) bedsideColor = "#4b5563";
+
       return (
         <group>
           <Box args={[0.6, 0.5, 0.6]} position={[0, 0.25, 0]} castShadow receiveShadow>
@@ -342,8 +399,13 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
     case "wardrobe": {
       const width = 0.8 + (localConn.right ? 0.1 : 0) + (localConn.left ? 0.1 : 0);
       const posX = (localConn.right ? 0.05 : 0) - (localConn.left ? 0.05 : 0);
-      const wardrobeColor = variant === 1 ? "#edf2f7" : "#5c3a21";
-      const doorColor = variant === 1 ? "#cbd5e0" : "#8b5a2b";
+
+      let wardrobeColor = "#5c3a21";
+      let doorColor = "#8b5a2b";
+      if (variant === 1) { wardrobeColor = "#edf2f7"; doorColor = "#cbd5e0"; }
+      else if (variant === 2) { wardrobeColor = "#1f2937"; doorColor = "#111827"; }
+      else if (variant === 3) { wardrobeColor = "#78350f"; doorColor = "#92400e"; }
+
       return (
         <group position={[0, 0, -0.2]}>
           <Box args={[width, 1.8, 0.6]} position={[posX, 0.9, 0]} castShadow receiveShadow>
@@ -376,9 +438,12 @@ export function FurnitureModel({ type, connections, rotation, z, variant }: { ty
 
       const isTopBunk = (z || 0) > 0;
 
-      const frameColor = variant === 1 ? "#475569" : "#8b5a2b";
-      const railColor = variant === 1 ? "#1e293b" : "#5c3a21";
-      const blanketColor = variant === 1 ? "#ec4899" : "#3b82f6";
+      let frameColor = "#8b5a2b";
+      let railColor = "#5c3a21";
+      let blanketColor = "#3b82f6";
+      if (variant === 1) { frameColor = "#475569"; railColor = "#1e293b"; blanketColor = "#ec4899"; }
+      else if (variant === 2) { frameColor = "#f8fafc"; railColor = "#e2e8f0"; blanketColor = "#10b981"; }
+      else if (variant === 3) { frameColor = "#1e2937"; railColor = "#0f172a"; blanketColor = "#f59e0b"; }
 
       return (
         <group>
