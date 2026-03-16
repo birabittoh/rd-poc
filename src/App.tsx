@@ -279,7 +279,8 @@ export default function App() {
               >
                 <button
                   onClick={() => setSelectedItem(null)}
-                  className="absolute top-2 right-2 z-20 p-1 rounded-lg bg-zinc-700/50 text-zinc-400 hover:bg-zinc-600 hover:text-white transition-colors"
+                  className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
+                  aria-label="Close"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -290,7 +291,7 @@ export default function App() {
                       key={i}
                       onClick={() => setSelectedVariant(i)}
                       className={cn(
-                        "relative rounded-xl transition-all duration-300 overflow-hidden ring-2 ring-inset",
+                        "relative p-1 rounded-xl transition-all duration-300 overflow-hidden ring-2 ring-inset shrink-0 my-1",
                         selectedVariant === i
                           ? "ring-indigo-500 bg-indigo-500/10 scale-105 shadow-lg shadow-indigo-500/20"
                           : "ring-white/5 bg-zinc-700/30 hover:bg-zinc-700/50 hover:ring-white/10"
