@@ -1,4 +1,4 @@
-import { Furniture, GameState, ItemType } from "./types.ts";
+import type { Furniture, GameState, ItemType } from "./types.ts";
 import { ITEM_DEFINITIONS } from "./items.ts";
 import { GRID_SIZE, CENTER } from "./constants.ts";
 
