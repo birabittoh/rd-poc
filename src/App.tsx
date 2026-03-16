@@ -10,6 +10,7 @@ import { PlacementPayload, placeFurniture, stepBallerina, createInitialState } f
 import { FurnitureButton, cn } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
 import { ScrollContainer } from "./components/ScrollContainer";
+import { VariantPreview } from "./components/VariantPreview";
 
 const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
@@ -219,6 +220,31 @@ export default function App() {
           </div>
         )}
 
+        {selectedItem && ITEM_DEFINITIONS[selectedItem].variants && ITEM_DEFINITIONS[selectedItem].variants! > 1 && (
+          <div className="mb-3 bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col items-center gap-2 max-w-2xl w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Select Variant</span>
+            <div className="flex gap-4">
+              {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants! }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedVariant(i)}
+                  className={cn(
+                    "relative rounded-xl transition-all duration-300 overflow-hidden ring-2 ring-inset",
+                    selectedVariant === i
+                      ? "ring-indigo-500 bg-indigo-500/10 scale-110 shadow-lg shadow-indigo-500/20"
+                      : "ring-white/5 bg-zinc-700/30 hover:bg-zinc-700/50 hover:ring-white/10"
+                  )}
+                >
+                  <VariantPreview type={selectedItem} variant={i} />
+                  {selectedVariant === i && (
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full">
           <ScrollContainer title="Floor">
             {FLOOR_ITEMS.map((item) => (
@@ -255,28 +281,6 @@ export default function App() {
             ))}
           </ScrollContainer>
         </div>
-
-        {selectedItem && ITEM_DEFINITIONS[selectedItem].variants && ITEM_DEFINITIONS[selectedItem].variants! > 1 && (
-          <div className="mt-2 bg-zinc-800/80 backdrop-blur-xl p-2 rounded-xl shadow-2xl pointer-events-auto border border-white/10 flex items-center gap-2 max-w-2xl w-full justify-center">
-            <span className="text-xs font-bold text-zinc-400 mr-2 uppercase tracking-widest">Variant</span>
-            <div className="flex gap-2">
-              {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants! }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedVariant(i)}
-                  className={cn(
-                    "w-8 h-8 rounded-lg text-xs font-bold transition-all duration-200",
-                    selectedVariant === i
-                      ? "bg-indigo-500 text-white"
-                      : "bg-zinc-700 text-zinc-400 hover:bg-zinc-600 hover:text-white"
-                  )}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
         <div className="mt-4 relative h-6 flex items-center justify-center w-full">
           <p className={cn(
             "text-sm text-zinc-400 font-medium tracking-wide transition-opacity duration-300",
