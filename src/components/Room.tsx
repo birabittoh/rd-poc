@@ -69,16 +69,20 @@ export function Room({
     const conn = connectionsMap.get(f.id)!;
     const tiles = getOccupiedTiles(f);
 
-    // Constraint: No horizontal connections if stacked
-    const isStacked = gameState.furniture.some(other => (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) && other.x === f.x && other.y === f.y);
-    if (isStacked) return;
+    // Constraint: No horizontal connections if stacked (except for TVs)
+    if (f.type !== "tv") {
+      const isStacked = gameState.furniture.some(other => (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) && other.x === f.x && other.y === f.y);
+      if (isStacked) return;
+    }
 
     gameState.furniture.forEach(other => {
       if (other.id === f.id || other.type !== f.type || other.z !== f.z || other.rotation !== f.rotation) return;
 
-      // Constraint: Other item also cannot be stacked
-      const otherIsStacked = gameState.furniture.some(s => (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) && s.x === other.x && s.y === other.y);
-      if (otherIsStacked) return;
+      // Constraint: Other item also cannot be stacked (except for TVs)
+      if (f.type !== "tv") {
+        const otherIsStacked = gameState.furniture.some(s => (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) && s.x === other.x && s.y === other.y);
+        if (otherIsStacked) return;
+      }
 
       const otherTiles = getOccupiedTiles(other);
 

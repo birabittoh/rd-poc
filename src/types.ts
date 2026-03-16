@@ -9,7 +9,10 @@ export type ItemType =
   | "laptop"
   | "book"
   | "tv"
-  | "bed";
+  | "bed"
+  | "drawer"
+  | "bedside_table"
+  | "wardrobe";
 
 export interface ItemDefinition {
   type: ItemType;

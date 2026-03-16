@@ -181,7 +181,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   }
 
   // Joining Logic (inherit rotation from identical adjacent item)
-  if (def.connectable && newItem.z === 0) {
+  if (def.connectable) {
     const adjacentIdentical = state.furniture.find((f) => {
       if (f.type !== type || f.z !== newItem.z) return false;
 
