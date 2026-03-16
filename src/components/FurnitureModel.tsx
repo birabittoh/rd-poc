@@ -308,7 +308,12 @@ export function FurnitureModel({ type, connections, rotation }: { type: ItemType
             <meshStandardMaterial color="#5c3a21" roughness={0.4} />
           </Box>
           {/* Blanket */}
-          <Box args={[width - 0.05, 0.02, 1.2]} position={[posX, 0.41, 0.8]} castShadow receiveShadow>
+          <Box
+            args={[width + (localConn.left || localConn.right ? 0.05 : -0.05), 0.02, 1.2]}
+            position={[posX, 0.41, 0.8]}
+            castShadow
+            receiveShadow
+          >
             <meshStandardMaterial color="#3b82f6" roughness={0.6} />
           </Box>
         </group>

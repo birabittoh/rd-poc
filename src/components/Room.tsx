@@ -34,7 +34,7 @@ export function Room({
   gameState: GameState;
   selectedItem: ItemType | null;
   placementPath: { x: number, y: number }[];
-  onPlace: (x: number, y: number, z: number) => void;
+  onPlace: (x: number, y: number, z: number, rotation?: number) => void;
 }) {
   const itemDef = selectedItem ? ITEM_DEFINITIONS[selectedItem] : null;
   const isOrnament = itemDef?.category === "surface";
@@ -174,6 +174,8 @@ export function Room({
         const isHighlight =
           selectedItem && isOrnament && isTable && !hasOrnament;
 
+        const isStackable = selectedItem && ITEM_DEFINITIONS[selectedItem].stackable && selectedItem === f.type;
+
         return (
           <group
             key={f.id}
@@ -183,6 +185,21 @@ export function Room({
               f.y * TILE_SIZE + TILE_SIZE / 2,
             ]}
             rotation={[0, f.rotation || 0, 0]}
+            onClick={(e) => {
+              if (isStackable) {
+                e.stopPropagation();
+                onPlace(f.x, f.y, f.z, f.rotation);
+              }
+            }}
+            onPointerOver={(e) => {
+              if (isStackable) {
+                e.stopPropagation();
+                document.body.style.cursor = "pointer";
+              }
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = "auto";
+            }}
           >
             <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} />
 

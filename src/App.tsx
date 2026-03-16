@@ -53,10 +53,22 @@ export default function App() {
     return () => socket.close();
   }, []);
 
-  const handlePlace = (x: number, y: number, z: number) => {
+  const handlePlace = (x: number, y: number, z: number, rotationOverride?: number) => {
     if (!ws || !selectedItem || gameState?.status !== "playing" || cooldown > 0) return;
 
     const def = ITEM_DEFINITIONS[selectedItem];
+
+    if (rotationOverride !== undefined) {
+      ws.send(
+        JSON.stringify({
+          type: "place_furniture",
+          payload: { type: selectedItem, x, y, z, rotation: rotationOverride },
+        }),
+      );
+      setSelectedItem(null);
+      setPlacementPath([]);
+      return;
+    }
 
     if (def.size > 1) {
       if (placementPath.length === 0) {
