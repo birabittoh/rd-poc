@@ -9,7 +9,10 @@ export type ItemType =
   | "laptop"
   | "book"
   | "tv"
-  | "bed";
+  | "bed"
+  | "drawer"
+  | "bedside_table"
+  | "wardrobe";
 
 export interface ItemDefinition {
   type: ItemType;
@@ -17,7 +20,9 @@ export interface ItemDefinition {
   size: number;
   stackable?: boolean;
   connectable?: boolean;
-  rotationStrategy?: "faceNearest" | "faceAwayFromWall" | "manual" | "inherit";
+  interactable?: boolean;
+  surfaceHeight?: number;
+  rotationStrategy?: "faceNearest" | "faceAwayFromWall" | "manual" | "inherit" | "faceInteractable";
   facingType?: ItemType;
 }
 

@@ -69,16 +69,22 @@ export function Room({
     const conn = connectionsMap.get(f.id)!;
     const tiles = getOccupiedTiles(f);
 
-    // Constraint: No horizontal connections if stacked
-    const isStacked = gameState.furniture.some(other => (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) && other.x === f.x && other.y === f.y);
-    if (isStacked) return;
+    // Constraint: No horizontal connections if stacked (except for non-stackable items with ornaments or TVs)
+    const isActuallyStackable = def.stackable;
+    if (f.type !== "tv" && isActuallyStackable) {
+      const isStacked = gameState.furniture.some(other => (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) && other.x === f.x && other.y === f.y);
+      if (isStacked) return;
+    }
 
     gameState.furniture.forEach(other => {
       if (other.id === f.id || other.type !== f.type || other.z !== f.z || other.rotation !== f.rotation) return;
 
-      // Constraint: Other item also cannot be stacked
-      const otherIsStacked = gameState.furniture.some(s => (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) && s.x === other.x && s.y === other.y);
-      if (otherIsStacked) return;
+      // Constraint: Other item also cannot be stacked (except for non-stackable items or TVs)
+      const otherDef = ITEM_DEFINITIONS[other.type];
+      if (f.type !== "tv" && otherDef.stackable) {
+        const otherIsStacked = gameState.furniture.some(s => (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) && s.x === other.x && s.y === other.y);
+        if (otherIsStacked) return;
+      }
 
       const otherTiles = getOccupiedTiles(other);
 
@@ -189,10 +195,14 @@ export function Room({
 
       {/* Furniture */}
       {gameState.furniture.map((f) => {
-        const isTable = f.type === "table";
+        const fDef = ITEM_DEFINITIONS[f.type];
+        const isSurface = !!fDef.surfaceHeight;
         const hasOrnament = surfaceOccupied.has(`${f.x},${f.y}`);
         const isHighlight =
-          selectedItem && isOrnament && isTable && !hasOrnament;
+          selectedItem && isOrnament && isSurface && !hasOrnament;
+
+        const floorItem = f.z > 0 ? gameState.furniture.find(other => other.z === 0 && other.x === f.x && other.y === f.y) : null;
+        const currentSurfaceHeight = f.z === 0 ? 0 : (floorItem ? (ITEM_DEFINITIONS[floorItem.type].surfaceHeight ?? 1) : 1);
 
         const conn = connectionsMap.get(f.id);
         const isJoined = conn && (conn.top || conn.right || conn.bottom || conn.left);
@@ -209,7 +219,7 @@ export function Room({
             key={f.id}
             position={[
               f.x * TILE_SIZE + TILE_SIZE / 2,
-              f.z === 0 ? 0 : 1,
+              currentSurfaceHeight,
               f.y * TILE_SIZE + TILE_SIZE / 2,
             ]}
             rotation={[0, f.rotation || 0, 0]}
@@ -232,9 +242,9 @@ export function Room({
             <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} z={f.z} />
 
             {/* Surface Highlight for Ornaments */}
-            {isTable && (
+            {isSurface && (
               <mesh
-                position={[0, 1.05, 0]}
+                position={[0, (fDef.surfaceHeight ?? 0) + 0.05, 0]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 onClick={(e) => {
                   e.stopPropagation();

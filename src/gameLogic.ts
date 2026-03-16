@@ -104,10 +104,10 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   const def = ITEM_DEFINITIONS[type];
   if (!def) return null;
 
-  let rotation = manualRotation || 0;
+  let rotation = manualRotation !== undefined ? manualRotation : 0;
 
   // Rotation Strategies
-  if (def.rotationStrategy === "faceNearest" && def.facingType) {
+  if (manualRotation === undefined && def.rotationStrategy === "faceNearest" && def.facingType) {
     const targets = state.furniture.filter((f) => f.type === def.facingType);
     if (targets.length > 0) {
       let nearest = targets[0];
@@ -121,7 +121,32 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
     }
-  } else if (def.rotationStrategy === "faceAwayFromWall") {
+  } else if (manualRotation === undefined && def.rotationStrategy === "faceInteractable") {
+    const targets = state.furniture.filter((f) => ITEM_DEFINITIONS[f.type].interactable);
+    if (targets.length > 0) {
+      let selected = targets[0];
+      let minDist = Infinity;
+      for (const t of targets) {
+        const dist = Math.abs(t.x - x) + Math.abs(t.y - y);
+        const tDef = ITEM_DEFINITIONS[t.type];
+        const sDef = ITEM_DEFINITIONS[selected.type];
+
+        if (dist < minDist) {
+          minDist = dist;
+          selected = t;
+        } else if (dist === minDist) {
+          // Conflict resolution: prefer ornaments (surface) over floor furniture
+          if (tDef.category === "surface" && sDef.category === "floor") {
+            selected = t;
+          }
+        }
+      }
+      const dx = selected.x - x;
+      const dy = selected.y - y;
+      if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
+      else rotation = dy > 0 ? 0 : Math.PI;
+    }
+  } else if (manualRotation === undefined && def.rotationStrategy === "faceAwayFromWall") {
     const distLeft = x, distRight = GRID_SIZE - 1 - x;
     const distTop = y, distBottom = GRID_SIZE - 1 - y;
     const minDist = Math.min(distLeft, distRight, distTop, distBottom);
@@ -181,7 +206,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   }
 
   // Joining Logic (inherit rotation from identical adjacent item)
-  if (def.connectable && newItem.z === 0) {
+  if (def.connectable) {
     const adjacentIdentical = state.furniture.find((f) => {
       if (f.type !== type || f.z !== newItem.z) return false;
 

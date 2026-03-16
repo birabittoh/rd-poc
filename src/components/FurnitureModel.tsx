@@ -257,19 +257,94 @@ export function FurnitureModel({ type, connections, rotation, z }: { type: ItemT
           <Box args={[0.18, 0.04, 0.28]} position={[0, 0.025, 0]} receiveShadow><meshStandardMaterial color="#f8fafc" /></Box>
         </group>
       );
-    case "tv":
+    case "tv": {
+      const isConnectedH = localConn.left || localConn.right;
+      const width = 0.8 + (localConn.right ? 0.1 : 0) + (localConn.left ? 0.1 : 0);
+      const posX = (localConn.right ? 0.05 : 0) - (localConn.left ? 0.05 : 0);
+      const height = isConnectedH ? 1.0 : 0.5;
+      const screenY = isConnectedH ? 0.61 : 0.36;
+
+      // Calculate inner screen dimensions to remove seams
+      const innerWidth = width - (localConn.right ? 0 : 0.02) - (localConn.left ? 0 : 0.02);
+      const innerPosX = posX + (localConn.right ? 0.01 : 0) - (localConn.left ? 0.01 : 0);
+
       return (
         <group>
-          {/* Stand */}
-          <Box args={[0.3, 0.02, 0.2]} position={[0, 0.01, 0]} castShadow receiveShadow><meshStandardMaterial color="#27272a" roughness={0.4} /></Box>
-          <Cylinder args={[0.02, 0.02, 0.1]} position={[0, 0.06, 0]} castShadow receiveShadow><meshStandardMaterial color="#3f3f46" roughness={0.4} /></Cylinder>
+          {!isConnectedH && (
+            <>
+              {/* Stand */}
+              <Box args={[0.3, 0.02, 0.2]} position={[0, 0.01, 0]} castShadow receiveShadow><meshStandardMaterial color="#27272a" roughness={0.4} /></Box>
+              <Cylinder args={[0.02, 0.02, 0.1]} position={[0, 0.06, 0]} castShadow receiveShadow><meshStandardMaterial color="#3f3f46" roughness={0.4} /></Cylinder>
+            </>
+          )}
           {/* Screen */}
-          <Box args={[0.8, 0.5, 0.05]} position={[0, 0.36, 0]} castShadow receiveShadow><meshStandardMaterial color="#18181b" roughness={0.4} /></Box>
+          <Box args={[width, height, 0.05]} position={[posX, screenY, 0]} castShadow receiveShadow><meshStandardMaterial color="#18181b" roughness={0.4} /></Box>
           {/* Screen Inner */}
-          <Box args={[0.76, 0.46, 0.01]} position={[0, 0.36, 0.026]}><meshStandardMaterial color="#1e3a8a" emissive="#3b82f6" emissiveIntensity={0.5} /></Box>
-          <pointLight position={[0, 0.36, 0.2]} distance={4} intensity={0.8} color="#3b82f6" />
+          <Box args={[innerWidth, height - 0.04, 0.01]} position={[innerPosX, screenY, 0.026]}><meshStandardMaterial color="#1e3a8a" emissive="#3b82f6" emissiveIntensity={0.5} /></Box>
+          <pointLight position={[posX, screenY, 0.2]} distance={4} intensity={0.8} color="#3b82f6" />
         </group>
       );
+    }
+    case "drawer": {
+      const width = 0.8 + (localConn.right ? 0.1 : 0) + (localConn.left ? 0.1 : 0);
+      const posX = (localConn.right ? 0.05 : 0) - (localConn.left ? 0.05 : 0);
+      return (
+        <group position={[0, 0, -0.1]}>
+          <Box args={[width, 0.8, 0.8]} position={[posX, 0.4, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+          </Box>
+          {/* Drawer fronts */}
+          {[0.2, 0.55].map((y, i) => (
+            <group key={i} position={[posX, y, 0.4]}>
+               <Box args={[width - 0.1, 0.3, 0.05]} castShadow receiveShadow>
+                 <meshStandardMaterial color="#8b5a2b" roughness={0.4} />
+               </Box>
+               <Box args={[0.2, 0.05, 0.05]} position={[0, 0, 0.03]} castShadow receiveShadow>
+                 <meshStandardMaterial color="#d4d4d8" roughness={0.4} />
+               </Box>
+            </group>
+          ))}
+        </group>
+      );
+    }
+    case "bedside_table":
+      return (
+        <group>
+          <Box args={[0.6, 0.5, 0.6]} position={[0, 0.25, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#8b5a2b" roughness={0.4} />
+          </Box>
+          {/* Drawer Handle */}
+          <Box args={[0.2, 0.05, 0.05]} position={[0, 0.35, 0.3]} castShadow receiveShadow>
+            <meshStandardMaterial color="#d4d4d8" roughness={0.4} />
+          </Box>
+        </group>
+      );
+    case "wardrobe": {
+      const width = 0.8 + (localConn.right ? 0.1 : 0) + (localConn.left ? 0.1 : 0);
+      const posX = (localConn.right ? 0.05 : 0) - (localConn.left ? 0.05 : 0);
+      return (
+        <group position={[0, 0, -0.2]}>
+          <Box args={[width, 1.8, 0.6]} position={[posX, 0.9, 0]} castShadow receiveShadow>
+            <meshStandardMaterial color="#5c3a21" roughness={0.4} />
+          </Box>
+          {/* Doors */}
+          <Box args={[width - 0.1, 1.7, 0.05]} position={[posX, 0.9, 0.3]} castShadow receiveShadow>
+            <meshStandardMaterial color="#8b5a2b" roughness={0.4} />
+          </Box>
+          {/* Vertical line between doors */}
+          <Box args={[0.02, 1.7, 0.06]} position={[posX, 0.9, 0.3]} receiveShadow>
+            <meshStandardMaterial color="#5c3a21" />
+          </Box>
+          {/* Handles */}
+          <Box args={[0.05, 0.2, 0.05]} position={[posX - 0.1, 0.9, 0.33]} castShadow receiveShadow>
+            <meshStandardMaterial color="#d4d4d8" />
+          </Box>
+          <Box args={[0.05, 0.2, 0.05]} position={[posX + 0.1, 0.9, 0.33]} castShadow receiveShadow>
+            <meshStandardMaterial color="#d4d4d8" />
+          </Box>
+        </group>
+      );
+    }
     case "bed": {
       const showRailLeft = !localConn.left;
       const showRailRight = !localConn.right;

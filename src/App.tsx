@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed } from "lucide-react";
+import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed, LayoutGrid, Square, Columns2 } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { ITEM_DEFINITIONS } from "./items";
 import { PLACEMENT_COOLDOWN } from "./constants";
@@ -27,6 +27,9 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   vase: <Flower2 />,
   book: <Book />,
   lamp: <Lamp />,
+  drawer: <LayoutGrid />,
+  bedside_table: <Square />,
+  wardrobe: <Columns2 />,
 };
 
 const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter(d => d.category === "floor");
@@ -130,7 +133,6 @@ export default function App() {
 
     if (isDemoMode) {
       setGameState(prev => prev ? (placeFurniture(prev, payload!) ?? prev) : prev);
-      setCooldown(PLACEMENT_COOLDOWN);
     } else if (ws) {
       ws.send(JSON.stringify({ type: "place_furniture", payload }));
     }
