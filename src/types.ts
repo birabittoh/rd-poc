@@ -24,6 +24,7 @@ export interface ItemDefinition {
   surfaceHeight?: number;
   rotationStrategy?: "faceNearest" | "faceAwayFromWall" | "manual" | "inherit" | "faceInteractable";
   facingType?: ItemType;
+  variants?: number;
 }
 
 export interface Furniture {
@@ -33,6 +34,7 @@ export interface Furniture {
   y: number;
   z: number;
   rotation?: number;
+  variant?: number;
 }
 
 export interface Ballerina {

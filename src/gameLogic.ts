@@ -8,6 +8,7 @@ export interface PlacementPayload {
   y: number;
   z: number;
   rotation?: number;
+  variant?: number;
 }
 
 export function getOccupiedTiles(item: Furniture): { x: number; y: number }[] {
@@ -100,7 +101,7 @@ export function stepBallerina(state: GameState): GameState {
 export function placeFurniture(state: GameState, payload: PlacementPayload): GameState | null {
   if (state.status !== "playing") return null;
 
-  const { type, x, y, z, rotation: manualRotation } = payload;
+  const { type, x, y, z, rotation: manualRotation, variant: payloadVariant } = payload;
   const def = ITEM_DEFINITIONS[type];
   if (!def) return null;
 
@@ -156,6 +157,8 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
     else if (minDist === distRight) rotation = -Math.PI / 2;
   }
 
+  const variant = payloadVariant !== undefined ? payloadVariant : 0;
+
   const newItem: Furniture = {
     id: Math.random().toString(36).substring(2, 9),
     type,
@@ -163,6 +166,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
     y,
     z,
     rotation,
+    variant,
   };
 
   const newTiles = getOccupiedTiles(newItem);
@@ -193,6 +197,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
 
       newItem.z = baseItem.z + 1;
       newItem.rotation = baseItem.rotation;
+      newItem.variant = baseItem.variant;
 
       const occupiedAtNewLevel = state.furniture.some((f) => {
         if (f.z !== newItem.z) return false;
@@ -231,6 +236,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
     if (adjacentIdentical) {
       const originalRotation = newItem.rotation;
       newItem.rotation = adjacentIdentical.rotation;
+      newItem.variant = adjacentIdentical.variant;
 
       if (def.size > 1) {
         const matchesFootprint = (tiles1: { x: number; y: number }[], tiles2: { x: number; y: number }[]) => {

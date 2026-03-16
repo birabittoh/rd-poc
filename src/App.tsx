@@ -10,6 +10,7 @@ import { PlacementPayload, placeFurniture, stepBallerina, createInitialState } f
 import { FurnitureButton, cn } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
 import { ScrollContainer } from "./components/ScrollContainer";
+import { VariantPreview } from "./components/VariantPreview";
 
 const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
@@ -40,6 +41,7 @@ export default function App() {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState(0);
   const [placementPath, setPlacementPath] = useState<{ x: number, y: number }[]>([]);
   const [cooldown, setCooldown] = useState(0);
 
@@ -120,10 +122,10 @@ export default function App() {
         else if (dy === 1) rotation = 0;
         else if (dy === -1) rotation = Math.PI;
 
-        payload = { type: selectedItem, x: head.x, y: head.y, z, rotation };
+        payload = { type: selectedItem, x: head.x, y: head.y, z, rotation, variant: selectedVariant };
       }
     } else {
-      payload = { type: selectedItem, x, y, z };
+      payload = { type: selectedItem, x, y, z, variant: selectedVariant };
     }
 
     if (!payload) return;
@@ -218,6 +220,31 @@ export default function App() {
           </div>
         )}
 
+        {selectedItem && ITEM_DEFINITIONS[selectedItem].variants && ITEM_DEFINITIONS[selectedItem].variants! > 1 && (
+          <div className="mb-3 bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col items-center gap-2 max-w-2xl w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Select Variant</span>
+            <div className="flex gap-4">
+              {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants! }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedVariant(i)}
+                  className={cn(
+                    "relative rounded-xl transition-all duration-300 overflow-hidden ring-2 ring-inset",
+                    selectedVariant === i
+                      ? "ring-indigo-500 bg-indigo-500/10 scale-110 shadow-lg shadow-indigo-500/20"
+                      : "ring-white/5 bg-zinc-700/30 hover:bg-zinc-700/50 hover:ring-white/10"
+                  )}
+                >
+                  <VariantPreview type={selectedItem} variant={i} />
+                  {selectedVariant === i && (
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full">
           <ScrollContainer title="Floor">
             {FLOOR_ITEMS.map((item) => (
@@ -229,6 +256,7 @@ export default function App() {
                 disabled={isPlacementDisabled}
                 onClick={() => {
                   setSelectedItem(selectedItem === item.type ? null : item.type);
+                  setSelectedVariant(0);
                   setPlacementPath([]);
                 }}
               />
@@ -245,6 +273,7 @@ export default function App() {
                 disabled={isPlacementDisabled}
                 onClick={() => {
                   setSelectedItem(selectedItem === item.type ? null : item.type);
+                  setSelectedVariant(0);
                   setPlacementPath([]);
                 }}
                 isOrnament
