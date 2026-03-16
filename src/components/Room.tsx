@@ -1,10 +1,9 @@
-import React from "react";
-import { GameState, ItemType, Furniture } from "../types";
-import { ITEM_DEFINITIONS } from "../items";
-import { GRID_SIZE, TILE_SIZE } from "../constants";
-import { FurnitureModel } from "./FurnitureModel";
-import { BallerinaModel } from "./BallerinaModel";
-import { DynamicWalls } from "./DynamicWalls";
+import { GameState, ItemType, Furniture } from '../types';
+import { ITEM_DEFINITIONS } from '../items';
+import { GRID_SIZE, TILE_SIZE } from '../constants';
+import { FurnitureModel } from './FurnitureModel';
+import { BallerinaModel } from './BallerinaModel';
+import { DynamicWalls } from './DynamicWalls';
 
 function getOccupiedTiles(item: Furniture) {
   const def = ITEM_DEFINITIONS[item.type];
@@ -33,20 +32,22 @@ export function Room({
 }: {
   gameState: GameState;
   selectedItem: ItemType | null;
-  placementPath: { x: number, y: number }[];
+  placementPath: { x: number; y: number }[];
   onPlace: (x: number, y: number, z: number, rotation?: number) => void;
 }) {
   const itemDef = selectedItem ? ITEM_DEFINITIONS[selectedItem] : null;
-  const isOrnament = itemDef?.category === "surface";
+  const isOrnament = itemDef?.category === 'surface';
 
   // Calculate grid occupancy
   const floorOccupied = new Set<string>();
-  gameState.furniture.filter(f => f.z === 0).forEach(f => {
-    getOccupiedTiles(f).forEach(t => floorOccupied.add(`${t.x},${t.y}`));
-  });
+  gameState.furniture
+    .filter((f) => f.z === 0)
+    .forEach((f) => {
+      getOccupiedTiles(f).forEach((t) => floorOccupied.add(`${t.x},${t.y}`));
+    });
 
   const surfaceOccupied = new Set(
-    gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`),
+    gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)
   );
 
   const isAdjacentToWallOrFurniture = (x: number, y: number) => {
@@ -58,12 +59,15 @@ export function Room({
     return false;
   };
 
-  const connectionsMap = new Map<string, { top: boolean, right: boolean, bottom: boolean, left: boolean }>();
-  gameState.furniture.forEach(f => {
+  const connectionsMap = new Map<
+    string,
+    { top: boolean; right: boolean; bottom: boolean; left: boolean }
+  >();
+  gameState.furniture.forEach((f) => {
     connectionsMap.set(f.id, { top: false, right: false, bottom: false, left: false });
   });
 
-  gameState.furniture.forEach(f => {
+  gameState.furniture.forEach((f) => {
     const def = ITEM_DEFINITIONS[f.type];
     if (!def.connectable) return;
     const conn = connectionsMap.get(f.id)!;
@@ -71,25 +75,41 @@ export function Room({
 
     // Constraint: No horizontal connections if stacked (except for non-stackable items with ornaments or TVs)
     const isActuallyStackable = def.stackable;
-    if (f.type !== "tv" && isActuallyStackable) {
-      const isStacked = gameState.furniture.some(other => (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) && other.x === f.x && other.y === f.y);
+    if (f.type !== 'tv' && isActuallyStackable) {
+      const isStacked = gameState.furniture.some(
+        (other) =>
+          (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) &&
+          other.x === f.x &&
+          other.y === f.y
+      );
       if (isStacked) return;
     }
 
-    gameState.furniture.forEach(other => {
-      if (other.id === f.id || other.type !== f.type || other.z !== f.z || other.rotation !== f.rotation) return;
+    gameState.furniture.forEach((other) => {
+      if (
+        other.id === f.id ||
+        other.type !== f.type ||
+        other.z !== f.z ||
+        other.rotation !== f.rotation
+      )
+        return;
 
       // Constraint: Other item also cannot be stacked (except for non-stackable items or TVs)
       const otherDef = ITEM_DEFINITIONS[other.type];
-      if (f.type !== "tv" && otherDef.stackable) {
-        const otherIsStacked = gameState.furniture.some(s => (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) && s.x === other.x && s.y === other.y);
+      if (f.type !== 'tv' && otherDef.stackable) {
+        const otherIsStacked = gameState.furniture.some(
+          (s) =>
+            (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) &&
+            s.x === other.x &&
+            s.y === other.y
+        );
         if (otherIsStacked) return;
       }
 
       const otherTiles = getOccupiedTiles(other);
 
-      tiles.forEach(t1 => {
-        otherTiles.forEach(t2 => {
+      tiles.forEach((t1) => {
+        otherTiles.forEach((t2) => {
           if (t1.x === t2.x && t1.y === t2.y - 1) conn.bottom = true;
           if (t1.x === t2.x && t1.y === t2.y + 1) conn.top = true;
           if (t1.y === t2.y && t1.x === t2.x - 1) conn.right = true;
@@ -100,17 +120,11 @@ export function Room({
   });
 
   return (
-    <group
-      position={[-(GRID_SIZE * TILE_SIZE) / 2, 0, -(GRID_SIZE * TILE_SIZE) / 2]}
-    >
+    <group position={[-(GRID_SIZE * TILE_SIZE) / 2, 0, -(GRID_SIZE * TILE_SIZE) / 2]}>
       {/* Floor */}
       <mesh
         receiveShadow
-        position={[
-          (GRID_SIZE * TILE_SIZE) / 2,
-          0,
-          (GRID_SIZE * TILE_SIZE) / 2,
-        ]}
+        position={[(GRID_SIZE * TILE_SIZE) / 2, 0, (GRID_SIZE * TILE_SIZE) / 2]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[GRID_SIZE * TILE_SIZE, GRID_SIZE * TILE_SIZE]} />
@@ -122,19 +136,21 @@ export function Room({
         Array.from({ length: GRID_SIZE }).map((_, x) => {
           const isOccupied = floorOccupied.has(`${x},${y}`);
           const isBallerinaTarget =
-            gameState.ballerina.targetX === x &&
-            gameState.ballerina.targetY === y;
+            gameState.ballerina.targetX === x && gameState.ballerina.targetY === y;
 
           let isHighlight = false;
-          let highlightColor = "#6366f1"; // Indigo default
+          let highlightColor = '#6366f1'; // Indigo default
 
           if (selectedItem && !isOrnament) {
             if (itemDef?.size && itemDef.size > 1) {
-              highlightColor = "#3b82f6"; // Blue for multi-tile
+              highlightColor = '#3b82f6'; // Blue for multi-tile
               if (placementPath.length === 0) {
                 const canPlaceFromHere = [
-                  {dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}
-                ].some(offset => {
+                  { dx: 1, dy: 0 },
+                  { dx: -1, dy: 0 },
+                  { dx: 0, dy: 1 },
+                  { dx: 0, dy: -1 },
+                ].some((offset) => {
                   const nx = x + offset.dx;
                   const ny = y + offset.dy;
                   if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) return false;
@@ -146,24 +162,22 @@ export function Room({
                 const head = placementPath[0];
                 const dist = Math.abs(x - head.x) + Math.abs(y - head.y);
                 // Check if the resulting footprint is adjacent to wall or furniture
-                const isFootprintAdjacent = isAdjacentToWallOrFurniture(head.x, head.y) || isAdjacentToWallOrFurniture(x, y);
-                isHighlight = dist === 1 && !isOccupied && !isBallerinaTarget && isFootprintAdjacent;
+                const isFootprintAdjacent =
+                  isAdjacentToWallOrFurniture(head.x, head.y) || isAdjacentToWallOrFurniture(x, y);
+                isHighlight =
+                  dist === 1 && !isOccupied && !isBallerinaTarget && isFootprintAdjacent;
               }
             } else {
               isHighlight = !isOccupied && !isBallerinaTarget && isAdjacentToWallOrFurniture(x, y);
             }
           }
 
-          const isPath = placementPath.some(p => p.x === x && p.y === y);
+          const isPath = placementPath.some((p) => p.x === x && p.y === y);
 
           return (
             <mesh
               key={`floor-${x}-${y}`}
-              position={[
-                x * TILE_SIZE + TILE_SIZE / 2,
-                0.01,
-                y * TILE_SIZE + TILE_SIZE / 2,
-              ]}
+              position={[x * TILE_SIZE + TILE_SIZE / 2, 0.01, y * TILE_SIZE + TILE_SIZE / 2]}
               rotation={[-Math.PI / 2, 0, 0]}
               onClick={(e) => {
                 e.stopPropagation();
@@ -172,25 +186,25 @@ export function Room({
               onPointerOver={(e) => {
                 if (isHighlight || isPath) {
                   e.stopPropagation();
-                  document.body.style.cursor = "pointer";
+                  document.body.style.cursor = 'pointer';
                 }
               }}
               onPointerOut={() => {
-                document.body.style.cursor = "auto";
+                document.body.style.cursor = 'auto';
               }}
               frustumCulled={false}
               renderOrder={5}
             >
               <planeGeometry args={[TILE_SIZE * 0.95, TILE_SIZE * 0.95]} />
               <meshBasicMaterial
-                color={isPath ? highlightColor : (isHighlight ? highlightColor : "#d4d4d8")}
+                color={isPath ? highlightColor : isHighlight ? highlightColor : '#d4d4d8'}
                 transparent
-                opacity={isPath ? 0.8 : (isHighlight ? 0.4 : 0.1)}
+                opacity={isPath ? 0.8 : isHighlight ? 0.4 : 0.1}
                 depthWrite={false}
               />
             </mesh>
           );
-        }),
+        })
       )}
 
       {/* Furniture */}
@@ -198,17 +212,22 @@ export function Room({
         const fDef = ITEM_DEFINITIONS[f.type];
         const isSurface = !!fDef.surfaceHeight;
         const hasOrnament = surfaceOccupied.has(`${f.x},${f.y}`);
-        const isHighlight =
-          selectedItem && isOrnament && isSurface && !hasOrnament;
+        const isHighlight = selectedItem && isOrnament && isSurface && !hasOrnament;
 
-        const floorItem = f.z > 0 ? gameState.furniture.find(other => other.z === 0 && other.x === f.x && other.y === f.y) : null;
-        const currentSurfaceHeight = f.z === 0 ? 0 : (floorItem ? (ITEM_DEFINITIONS[floorItem.type].surfaceHeight ?? 1) : 1);
+        const floorItem =
+          f.z > 0
+            ? gameState.furniture.find(
+                (other) => other.z === 0 && other.x === f.x && other.y === f.y
+              )
+            : null;
+        const currentSurfaceHeight =
+          f.z === 0 ? 0 : floorItem ? (ITEM_DEFINITIONS[floorItem.type].surfaceHeight ?? 1) : 1;
 
         const conn = connectionsMap.get(f.id);
         const isJoined = conn && (conn.top || conn.right || conn.bottom || conn.left);
-        const isStackedOn = gameState.furniture.some(other => other.z === f.z + 1 && other.x === f.x && other.y === f.y);
 
-        const isStackable = selectedItem &&
+        const isStackable =
+          selectedItem &&
           ITEM_DEFINITIONS[selectedItem].stackable &&
           selectedItem === f.type &&
           f.z === 0 &&
@@ -232,14 +251,20 @@ export function Room({
             onPointerOver={(e) => {
               if (isStackable) {
                 e.stopPropagation();
-                document.body.style.cursor = "pointer";
+                document.body.style.cursor = 'pointer';
               }
             }}
             onPointerOut={() => {
-              document.body.style.cursor = "auto";
+              document.body.style.cursor = 'auto';
             }}
           >
-            <FurnitureModel type={f.type} connections={connectionsMap.get(f.id)} rotation={f.rotation || 0} z={f.z} variant={f.variant} />
+            <FurnitureModel
+              type={f.type}
+              connections={connectionsMap.get(f.id)}
+              rotation={f.rotation || 0}
+              z={f.z}
+              variant={f.variant}
+            />
 
             {/* Surface Highlight for Ornaments */}
             {isSurface && (
@@ -253,11 +278,11 @@ export function Room({
                 onPointerOver={(e) => {
                   if (isHighlight) {
                     e.stopPropagation();
-                    document.body.style.cursor = "pointer";
+                    document.body.style.cursor = 'pointer';
                   }
                 }}
                 onPointerOut={() => {
-                  document.body.style.cursor = "auto";
+                  document.body.style.cursor = 'auto';
                 }}
                 frustumCulled={false}
                 renderOrder={5}

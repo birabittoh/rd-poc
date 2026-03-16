@@ -1,6 +1,9 @@
-import { Connections } from "../types";
+import { Connections } from '../types';
 
-export function getAdjustedConnections(connections: Connections | undefined, rotation: number | undefined): Connections {
+export function getAdjustedConnections(
+  connections: Connections | undefined,
+  rotation: number | undefined
+): Connections {
   const conn = connections || { top: false, right: false, bottom: false, left: false };
   const rotIndex = Math.round((rotation || 0) / (Math.PI / 2));
   const normalizedRot = ((rotIndex % 4) + 4) % 4;

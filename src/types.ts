@@ -1,29 +1,29 @@
 export type ItemType =
-  | "table"
-  | "chair"
-  | "plant"
-  | "lamp"
-  | "vase"
-  | "library"
-  | "floor_lamp"
-  | "laptop"
-  | "book"
-  | "tv"
-  | "bed"
-  | "drawer"
-  | "bedside_table"
-  | "wardrobe"
-  | "coffee_table";
+  | 'table'
+  | 'chair'
+  | 'plant'
+  | 'lamp'
+  | 'vase'
+  | 'library'
+  | 'floor_lamp'
+  | 'laptop'
+  | 'book'
+  | 'tv'
+  | 'bed'
+  | 'drawer'
+  | 'bedside_table'
+  | 'wardrobe'
+  | 'coffee_table';
 
 export interface ItemDefinition {
   type: ItemType;
-  category: "floor" | "surface";
+  category: 'floor' | 'surface';
   size: number;
   stackable?: boolean;
   connectable?: boolean;
   interactable?: boolean;
   surfaceHeight?: number;
-  rotationStrategy?: "faceNearest" | "faceAwayFromWall" | "manual" | "inherit" | "faceInteractable";
+  rotationStrategy?: 'faceNearest' | 'faceAwayFromWall' | 'manual' | 'inherit' | 'faceInteractable';
   facingType?: ItemType;
   variants?: number;
 }
@@ -49,7 +49,7 @@ export interface Ballerina {
 export interface GameState {
   furniture: Furniture[];
   ballerina: Ballerina;
-  status: "playing" | "game_over";
+  status: 'playing' | 'game_over';
 }
 
 export interface Connections {

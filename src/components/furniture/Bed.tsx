@@ -1,6 +1,6 @@
-import React from "react";
-import { Box } from "@react-three/drei";
-import { FurnitureProps } from "../../types";
+import React from 'react';
+import { Box } from '@react-three/drei';
+import { FurnitureProps } from '../../types';
 
 export function Bed({ localConn, variant, z }: FurnitureProps) {
   const showRailLeft = !localConn.left;
@@ -11,21 +11,21 @@ export function Bed({ localConn, variant, z }: FurnitureProps) {
 
   const isTopBunk = (z || 0) > 0;
 
-  let frameColor = "#8b5a2b";
-  let railColor = "#5c3a21";
-  let blanketColor = "#3b82f6";
+  let frameColor = '#8b5a2b';
+  let railColor = '#5c3a21';
+  let blanketColor = '#3b82f6';
   if (variant === 1) {
-    frameColor = "#475569";
-    railColor = "#1e293b";
-    blanketColor = "#ec4899";
+    frameColor = '#475569';
+    railColor = '#1e293b';
+    blanketColor = '#ec4899';
   } else if (variant === 2) {
-    frameColor = "#f8fafc";
-    railColor = "#e2e8f0";
-    blanketColor = "#10b981";
+    frameColor = '#f8fafc';
+    railColor = '#e2e8f0';
+    blanketColor = '#10b981';
   } else if (variant === 3) {
-    frameColor = "#1e2937";
-    railColor = "#0f172a";
-    blanketColor = "#f59e0b";
+    frameColor = '#1e2937';
+    railColor = '#0f172a';
+    blanketColor = '#f59e0b';
   }
 
   return (

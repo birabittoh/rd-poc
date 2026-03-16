@@ -1,7 +1,7 @@
-import React, { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
-import { GRID_SIZE, TILE_SIZE } from "../constants";
+import React, { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+import { GRID_SIZE, TILE_SIZE } from '../constants';
 
 export function DynamicWalls() {
   const mat0 = useRef<THREE.MeshStandardMaterial>(null);
@@ -52,13 +52,7 @@ export function DynamicWalls() {
       {/* Back Wall (z = 0) */}
       <mesh position={[half, wallHeight / 2, 0]} receiveShadow>
         <boxGeometry args={[GRID_SIZE * TILE_SIZE, wallHeight, 0.2]} />
-        <meshStandardMaterial
-          ref={mat0}
-          color="#f4f4f5"
-          transparent
-          opacity={1}
-          roughness={0.4}
-        />
+        <meshStandardMaterial ref={mat0} color="#f4f4f5" transparent opacity={1} roughness={0.4} />
       </mesh>
 
       {/* Right Wall (x = GRID_SIZE) */}
@@ -68,44 +62,19 @@ export function DynamicWalls() {
         receiveShadow
       >
         <boxGeometry args={[GRID_SIZE * TILE_SIZE, wallHeight, 0.2]} />
-        <meshStandardMaterial
-          ref={mat1}
-          color="#f4f4f5"
-          transparent
-          opacity={1}
-          roughness={0.4}
-        />
+        <meshStandardMaterial ref={mat1} color="#f4f4f5" transparent opacity={1} roughness={0.4} />
       </mesh>
 
       {/* Front Wall (z = GRID_SIZE) */}
-      <mesh
-        position={[half, wallHeight / 2, GRID_SIZE * TILE_SIZE]}
-        receiveShadow
-      >
+      <mesh position={[half, wallHeight / 2, GRID_SIZE * TILE_SIZE]} receiveShadow>
         <boxGeometry args={[GRID_SIZE * TILE_SIZE, wallHeight, 0.2]} />
-        <meshStandardMaterial
-          ref={mat2}
-          color="#f4f4f5"
-          transparent
-          opacity={1}
-          roughness={0.4}
-        />
+        <meshStandardMaterial ref={mat2} color="#f4f4f5" transparent opacity={1} roughness={0.4} />
       </mesh>
 
       {/* Left Wall (x = 0) */}
-      <mesh
-        position={[0, wallHeight / 2, half]}
-        rotation={[0, Math.PI / 2, 0]}
-        receiveShadow
-      >
+      <mesh position={[0, wallHeight / 2, half]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <boxGeometry args={[GRID_SIZE * TILE_SIZE, wallHeight, 0.2]} />
-        <meshStandardMaterial
-          ref={mat3}
-          color="#f4f4f5"
-          transparent
-          opacity={1}
-          roughness={0.4}
-        />
+        <meshStandardMaterial ref={mat3} color="#f4f4f5" transparent opacity={1} roughness={0.4} />
       </mesh>
     </group>
   );

@@ -7,6 +7,7 @@ A multiplayer isometric room furnishing game with an AI ballerina.
 **Prerequisites:** Node.js
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```

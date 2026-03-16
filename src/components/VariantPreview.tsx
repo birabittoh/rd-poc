@@ -1,8 +1,8 @@
-import React, { Suspense } from "react";
-import { Canvas } from "@react-three/fiber";
-import { Stage } from "@react-three/drei";
-import { FurnitureModel } from "./FurnitureModel";
-import { ItemType } from "../types";
+import React, { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Stage } from '@react-three/drei';
+import { FurnitureModel } from './FurnitureModel';
+import { ItemType } from '../types';
 
 export function VariantPreview({ type, variant }: { type: ItemType; variant: number }) {
   return (
@@ -10,7 +10,7 @@ export function VariantPreview({ type, variant }: { type: ItemType; variant: num
       <Canvas
         shadows
         camera={{ position: [3, 3, 3], fov: 40 }}
-        style={{ width: "64px", height: "64px" }}
+        style={{ width: '64px', height: '64px' }}
       >
         <Suspense fallback={null}>
           <Stage environment={null} intensity={1} shadows={false} adjustCamera={1.5}>

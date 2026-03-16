@@ -1,6 +1,6 @@
-import React from "react";
-import { Box, Cylinder } from "@react-three/drei";
-import { FurnitureProps } from "../../types";
+import React from 'react';
+import { Box, Cylinder } from '@react-three/drei';
+import { FurnitureProps } from '../../types';
 
 export function CoffeeTable({ localConn, variant }: FurnitureProps) {
   const width = 0.9 + (localConn.right ? 0.05 : 0) + (localConn.left ? 0.05 : 0);
@@ -13,39 +13,29 @@ export function CoffeeTable({ localConn, variant }: FurnitureProps) {
   const showBottomLeft = !localConn.left && !localConn.bottom;
   const showBottomRight = !localConn.right && !localConn.bottom;
 
-  let mainColor = "#8b5a2b";
-  let legColor = "#5c3a21";
+  let mainColor = '#8b5a2b';
+  let legColor = '#5c3a21';
   if (variant === 1) {
-    mainColor = "#e2e8f0";
-    legColor = "#94a3b8";
+    mainColor = '#e2e8f0';
+    legColor = '#94a3b8';
   } else if (variant === 2) {
-    mainColor = "#1f2937";
-    legColor = "#111827";
+    mainColor = '#1f2937';
+    legColor = '#111827';
   } else if (variant === 3) {
-    mainColor = "#d97706";
-    legColor = "#92400e";
+    mainColor = '#d97706';
+    legColor = '#92400e';
   }
 
   const isModern = variant === 1 || variant === 2;
 
   return (
     <group>
-      <Box
-        args={[width, 0.08, depth]}
-        position={[posX, 0.42, posZ]}
-        castShadow
-        receiveShadow
-      >
+      <Box args={[width, 0.08, depth]} position={[posX, 0.42, posZ]} castShadow receiveShadow>
         <meshStandardMaterial color={mainColor} roughness={0.4} />
       </Box>
       {showTopLeft &&
         (isModern ? (
-          <Box
-            args={[0.07, 0.38, 0.07]}
-            position={[-0.4, 0.19, -0.4]}
-            castShadow
-            receiveShadow
-          >
+          <Box args={[0.07, 0.38, 0.07]} position={[-0.4, 0.19, -0.4]} castShadow receiveShadow>
             <meshStandardMaterial color={legColor} roughness={0.4} />
           </Box>
         ) : (
@@ -60,12 +50,7 @@ export function CoffeeTable({ localConn, variant }: FurnitureProps) {
         ))}
       {showTopRight &&
         (isModern ? (
-          <Box
-            args={[0.07, 0.38, 0.07]}
-            position={[0.4, 0.19, -0.4]}
-            castShadow
-            receiveShadow
-          >
+          <Box args={[0.07, 0.38, 0.07]} position={[0.4, 0.19, -0.4]} castShadow receiveShadow>
             <meshStandardMaterial color={legColor} roughness={0.4} />
           </Box>
         ) : (
@@ -80,12 +65,7 @@ export function CoffeeTable({ localConn, variant }: FurnitureProps) {
         ))}
       {showBottomLeft &&
         (isModern ? (
-          <Box
-            args={[0.07, 0.38, 0.07]}
-            position={[-0.4, 0.19, 0.4]}
-            castShadow
-            receiveShadow
-          >
+          <Box args={[0.07, 0.38, 0.07]} position={[-0.4, 0.19, 0.4]} castShadow receiveShadow>
             <meshStandardMaterial color={legColor} roughness={0.4} />
           </Box>
         ) : (
@@ -100,12 +80,7 @@ export function CoffeeTable({ localConn, variant }: FurnitureProps) {
         ))}
       {showBottomRight &&
         (isModern ? (
-          <Box
-            args={[0.07, 0.38, 0.07]}
-            position={[0.4, 0.19, 0.4]}
-            castShadow
-            receiveShadow
-          >
+          <Box args={[0.07, 0.38, 0.07]} position={[0.4, 0.19, 0.4]} castShadow receiveShadow>
             <meshStandardMaterial color={legColor} roughness={0.4} />
           </Box>
         ) : (

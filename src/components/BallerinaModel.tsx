@@ -1,9 +1,9 @@
-import React, { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import { Box, Cylinder, Sphere } from "@react-three/drei";
-import * as THREE from "three";
-import { Ballerina } from "../types";
-import { TILE_SIZE } from "../constants";
+import React, { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Box, Cylinder, Sphere } from '@react-three/drei';
+import * as THREE from 'three';
+import { Ballerina } from '../types';
+import { TILE_SIZE } from '../constants';
 
 export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -19,12 +19,12 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
     groupRef.current.position.x = THREE.MathUtils.lerp(
       groupRef.current.position.x,
       targetX,
-      5 * delta,
+      5 * delta
     );
     groupRef.current.position.z = THREE.MathUtils.lerp(
       groupRef.current.position.z,
       targetZ,
-      5 * delta,
+      5 * delta
     );
 
     // Look at target if moving
@@ -34,12 +34,12 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
     ) {
       const angle = Math.atan2(
         targetX - groupRef.current.position.x,
-        targetZ - groupRef.current.position.z,
+        targetZ - groupRef.current.position.z
       );
       groupRef.current.rotation.y = THREE.MathUtils.lerp(
         groupRef.current.rotation.y,
         angle,
-        10 * delta,
+        10 * delta
       );
     }
 
@@ -52,7 +52,7 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
       groupRef.current.position.y = THREE.MathUtils.lerp(
         groupRef.current.position.y,
         0,
-        10 * delta,
+        10 * delta
       );
     }
   });

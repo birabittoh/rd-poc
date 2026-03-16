@@ -1,12 +1,12 @@
-import React from "react";
-import { Box } from "@react-three/drei";
-import { FurnitureProps } from "../../types";
+import React from 'react';
+import { Box } from '@react-three/drei';
+import { FurnitureProps } from '../../types';
 
 export function BedsideTable({ variant }: FurnitureProps) {
-  let bedsideColor = "#8b5a2b";
-  if (variant === 1) bedsideColor = "#1f2937";
-  else if (variant === 2) bedsideColor = "#f8fafc";
-  else if (variant === 3) bedsideColor = "#4b5563";
+  let bedsideColor = '#8b5a2b';
+  if (variant === 1) bedsideColor = '#1f2937';
+  else if (variant === 2) bedsideColor = '#f8fafc';
+  else if (variant === 3) bedsideColor = '#4b5563';
 
   return (
     <group>

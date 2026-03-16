@@ -1,6 +1,6 @@
-import type { Furniture, GameState, ItemType } from "./types.ts";
-import { ITEM_DEFINITIONS } from "./items.ts";
-import { GRID_SIZE, CENTER } from "./constants.ts";
+import type { Furniture, GameState, ItemType } from './types.ts';
+import { ITEM_DEFINITIONS } from './items.ts';
+import { GRID_SIZE, CENTER } from './constants.ts';
 
 export interface PlacementPayload {
   type: ItemType;
@@ -32,7 +32,13 @@ export function hasHorizontalConnections(item: Furniture, state: GameState): boo
   if (!def.connectable) return false;
   const tiles = getOccupiedTiles(item);
   return state.furniture.some((other) => {
-    if (other.id === item.id || other.type !== item.type || other.z !== item.z || other.rotation !== item.rotation) return false;
+    if (
+      other.id === item.id ||
+      other.type !== item.type ||
+      other.z !== item.z ||
+      other.rotation !== item.rotation
+    )
+      return false;
     const otherTiles = getOccupiedTiles(other);
     return tiles.some((t1) =>
       otherTiles.some((t2) => {
@@ -63,7 +69,7 @@ export function getGridOccupancy(state: GameState): boolean[][] {
 }
 
 export function stepBallerina(state: GameState): GameState {
-  if (state.status !== "playing") return state;
+  if (state.status !== 'playing') return state;
 
   const next: GameState = { ...state, ballerina: { ...state.ballerina } };
   next.ballerina.x = next.ballerina.targetX;
@@ -84,7 +90,7 @@ export function stepBallerina(state: GameState): GameState {
   });
 
   if (possibleMoves.length === 0) {
-    next.status = "game_over";
+    next.status = 'game_over';
     next.ballerina.isDancing = false;
   } else if (Math.random() < 0.5) {
     next.ballerina.isDancing = true;
@@ -99,7 +105,7 @@ export function stepBallerina(state: GameState): GameState {
 }
 
 export function placeFurniture(state: GameState, payload: PlacementPayload): GameState | null {
-  if (state.status !== "playing") return null;
+  if (state.status !== 'playing') return null;
 
   const { type, x, y, z, rotation: manualRotation, variant: payloadVariant } = payload;
   const def = ITEM_DEFINITIONS[type];
@@ -108,21 +114,24 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   let rotation = manualRotation !== undefined ? manualRotation : 0;
 
   // Rotation Strategies
-  if (manualRotation === undefined && def.rotationStrategy === "faceNearest" && def.facingType) {
+  if (manualRotation === undefined && def.rotationStrategy === 'faceNearest' && def.facingType) {
     const targets = state.furniture.filter((f) => f.type === def.facingType);
     if (targets.length > 0) {
       let nearest = targets[0];
       let minDist = Infinity;
       for (const t of targets) {
         const dist = Math.abs(t.x - x) + Math.abs(t.y - y);
-        if (dist < minDist) { minDist = dist; nearest = t; }
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = t;
+        }
       }
       const dx = nearest.x - x;
       const dy = nearest.y - y;
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
     }
-  } else if (manualRotation === undefined && def.rotationStrategy === "faceInteractable") {
+  } else if (manualRotation === undefined && def.rotationStrategy === 'faceInteractable') {
     const targets = state.furniture.filter((f) => ITEM_DEFINITIONS[f.type].interactable);
     if (targets.length > 0) {
       let selected = targets[0];
@@ -137,7 +146,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
           selected = t;
         } else if (dist === minDist) {
           // Conflict resolution: prefer ornaments (surface) over floor furniture
-          if (tDef.category === "surface" && sDef.category === "floor") {
+          if (tDef.category === 'surface' && sDef.category === 'floor') {
             selected = t;
           }
         }
@@ -147,9 +156,11 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
     }
-  } else if (manualRotation === undefined && def.rotationStrategy === "faceAwayFromWall") {
-    const distLeft = x, distRight = GRID_SIZE - 1 - x;
-    const distTop = y, distBottom = GRID_SIZE - 1 - y;
+  } else if (manualRotation === undefined && def.rotationStrategy === 'faceAwayFromWall') {
+    const distLeft = x,
+      distRight = GRID_SIZE - 1 - x;
+    const distTop = y,
+      distBottom = GRID_SIZE - 1 - y;
     const minDist = Math.min(distLeft, distRight, distTop, distBottom);
     if (minDist === distTop) rotation = 0;
     else if (minDist === distBottom) rotation = Math.PI;
@@ -175,7 +186,11 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   if (newTiles.some((t) => t.x < 0 || t.x >= GRID_SIZE || t.y < 0 || t.y >= GRID_SIZE)) return null;
 
   // Check Ballerina
-  if (z === 0 && newTiles.some((t) => t.x === state.ballerina.targetX && t.y === state.ballerina.targetY)) return null;
+  if (
+    z === 0 &&
+    newTiles.some((t) => t.x === state.ballerina.targetX && t.y === state.ballerina.targetY)
+  )
+    return null;
 
   // Check Occupancy & Stacking
   const existingAtLevel = state.furniture.filter((f) => f.z === z);
@@ -189,7 +204,10 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       const baseItem = state.furniture.find((f) => {
         if (f.type !== type || f.z !== z) return false;
         const tiles = getOccupiedTiles(f);
-        return tiles.length === newTiles.length && tiles.every((t1, i) => t1.x === newTiles[i].x && t1.y === newTiles[i].y);
+        return (
+          tiles.length === newTiles.length &&
+          tiles.every((t1, i) => t1.x === newTiles[i].x && t1.y === newTiles[i].y)
+        );
       });
       if (!baseItem) return null;
       if (baseItem.z !== 0) return null;
@@ -239,7 +257,10 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       newItem.variant = adjacentIdentical.variant;
 
       if (def.size > 1) {
-        const matchesFootprint = (tiles1: { x: number; y: number }[], tiles2: { x: number; y: number }[]) => {
+        const matchesFootprint = (
+          tiles1: { x: number; y: number }[],
+          tiles2: { x: number; y: number }[]
+        ) => {
           if (tiles1.length !== tiles2.length) return false;
           const set1 = new Set(tiles1.map((t) => `${t.x},${t.y}`));
           const set2 = new Set(tiles2.map((t) => `${t.x},${t.y}`));
@@ -284,11 +305,15 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   // Adjacency check for floor items
   if (newItem.z === 0) {
     const finalTiles = getOccupiedTiles(newItem);
-    const isAdjacentToWall = finalTiles.some((t) => t.x === 0 || t.x === GRID_SIZE - 1 || t.y === 0 || t.y === GRID_SIZE - 1);
+    const isAdjacentToWall = finalTiles.some(
+      (t) => t.x === 0 || t.x === GRID_SIZE - 1 || t.y === 0 || t.y === GRID_SIZE - 1
+    );
     const isAdjacentToFurniture = state.furniture.some((f) => {
       if (f.z !== 0) return false;
       const tiles = getOccupiedTiles(f);
-      return tiles.some((t1) => finalTiles.some((t2) => Math.abs(t1.x - t2.x) + Math.abs(t1.y - t2.y) === 1));
+      return tiles.some((t1) =>
+        finalTiles.some((t2) => Math.abs(t1.x - t2.x) + Math.abs(t1.y - t2.y) === 1)
+      );
     });
     if (!isAdjacentToWall && !isAdjacentToFurniture) return null;
   }
@@ -298,19 +323,21 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   // Update faceNearest rotations for existing items
   const updatedFurniture = newFurniture.map((item) => {
     const itemDef = ITEM_DEFINITIONS[item.type];
-    if (itemDef.rotationStrategy === "faceNearest" && itemDef.facingType === type) {
+    if (itemDef.rotationStrategy === 'faceNearest' && itemDef.facingType === type) {
       const targets = newFurniture.filter((f) => f.type === type);
       let nearest = targets[0];
       let minDist = Infinity;
       for (const t of targets) {
         const dist = Math.abs(t.x - item.x) + Math.abs(t.y - item.y);
-        if (dist < minDist) { minDist = dist; nearest = t; }
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = t;
+        }
       }
       const dx = nearest.x - item.x;
       const dy = nearest.y - item.y;
-      const newRotation = Math.abs(dx) > Math.abs(dy)
-        ? (dx > 0 ? Math.PI / 2 : -Math.PI / 2)
-        : (dy > 0 ? 0 : Math.PI);
+      const newRotation =
+        Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? Math.PI / 2 : -Math.PI / 2) : dy > 0 ? 0 : Math.PI;
       return { ...item, rotation: newRotation };
     }
     return item;
@@ -329,6 +356,6 @@ export function createInitialState(): GameState {
       targetY: CENTER,
       isDancing: false,
     },
-    status: "playing",
+    status: 'playing',
   };
 }
