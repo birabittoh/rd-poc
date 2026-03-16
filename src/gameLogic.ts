@@ -1,6 +1,6 @@
-import { Furniture, GameState, ItemType } from "./types.ts";
-import { ITEM_DEFINITIONS } from "./items.ts";
-import { GRID_SIZE, CENTER } from "./constants.ts";
+import { Furniture, GameState, ItemType } from "./types";
+import { ITEM_DEFINITIONS } from "./items";
+import { GRID_SIZE, CENTER } from "./constants";
 
 export interface PlacementPayload {
   type: ItemType;

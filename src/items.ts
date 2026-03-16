@@ -1,4 +1,4 @@
-import { ItemType, ItemDefinition } from "./types.ts";
+import { ItemType, ItemDefinition } from "./types";
 
 export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
   table: { type: "table", category: "floor", size: 1, connectable: true },
