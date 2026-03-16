@@ -40,6 +40,7 @@ export default function App() {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState(0);
   const [placementPath, setPlacementPath] = useState<{ x: number, y: number }[]>([]);
   const [cooldown, setCooldown] = useState(0);
 
@@ -120,10 +121,10 @@ export default function App() {
         else if (dy === 1) rotation = 0;
         else if (dy === -1) rotation = Math.PI;
 
-        payload = { type: selectedItem, x: head.x, y: head.y, z, rotation };
+        payload = { type: selectedItem, x: head.x, y: head.y, z, rotation, variant: selectedVariant };
       }
     } else {
-      payload = { type: selectedItem, x, y, z };
+      payload = { type: selectedItem, x, y, z, variant: selectedVariant };
     }
 
     if (!payload) return;
@@ -229,6 +230,7 @@ export default function App() {
                 disabled={isPlacementDisabled}
                 onClick={() => {
                   setSelectedItem(selectedItem === item.type ? null : item.type);
+                  setSelectedVariant(0);
                   setPlacementPath([]);
                 }}
               />
@@ -245,6 +247,7 @@ export default function App() {
                 disabled={isPlacementDisabled}
                 onClick={() => {
                   setSelectedItem(selectedItem === item.type ? null : item.type);
+                  setSelectedVariant(0);
                   setPlacementPath([]);
                 }}
                 isOrnament
@@ -252,6 +255,28 @@ export default function App() {
             ))}
           </ScrollContainer>
         </div>
+
+        {selectedItem && ITEM_DEFINITIONS[selectedItem].variants && ITEM_DEFINITIONS[selectedItem].variants! > 1 && (
+          <div className="mt-2 bg-zinc-800/80 backdrop-blur-xl p-2 rounded-xl shadow-2xl pointer-events-auto border border-white/10 flex items-center gap-2 max-w-2xl w-full justify-center">
+            <span className="text-xs font-bold text-zinc-400 mr-2 uppercase tracking-widest">Variant</span>
+            <div className="flex gap-2">
+              {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants! }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedVariant(i)}
+                  className={cn(
+                    "w-8 h-8 rounded-lg text-xs font-bold transition-all duration-200",
+                    selectedVariant === i
+                      ? "bg-indigo-500 text-white"
+                      : "bg-zinc-700 text-zinc-400 hover:bg-zinc-600 hover:text-white"
+                  )}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="mt-4 relative h-6 flex items-center justify-center w-full">
           <p className={cn(
             "text-sm text-zinc-400 font-medium tracking-wide transition-opacity duration-300",

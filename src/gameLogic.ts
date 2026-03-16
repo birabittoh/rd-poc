@@ -8,6 +8,7 @@ export interface PlacementPayload {
   y: number;
   z: number;
   rotation?: number;
+  variant?: number;
 }
 
 export function getOccupiedTiles(item: Furniture): { x: number; y: number }[] {
@@ -100,7 +101,7 @@ export function stepBallerina(state: GameState): GameState {
 export function placeFurniture(state: GameState, payload: PlacementPayload): GameState | null {
   if (state.status !== "playing") return null;
 
-  const { type, x, y, z, rotation: manualRotation } = payload;
+  const { type, x, y, z, rotation: manualRotation, variant: payloadVariant } = payload;
   const def = ITEM_DEFINITIONS[type];
   if (!def) return null;
 
@@ -156,8 +157,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
     else if (minDist === distRight) rotation = -Math.PI / 2;
   }
 
-  const itemsOfType = state.furniture.filter((f) => f.type === type);
-  const variant = def.variants ? itemsOfType.length % def.variants : 0;
+  const variant = payloadVariant !== undefined ? payloadVariant : 0;
 
   const newItem: Furniture = {
     id: Math.random().toString(36).substring(2, 9),
