@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import http from "http";
 
 import { PLACEMENT_COOLDOWN } from "./src/constants.ts";
-import { GameState } from "./src/types.ts";
+import type { GameState } from "./src/types.ts";
 import { stepBallerina, placeFurniture, createInitialState } from "./src/gameLogic.ts";
 
 const PORT = 3000;
