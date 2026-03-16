@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer } from "lucide-react";
+import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed } from "lucide-react";
 import { GameState, ItemType } from "./types";
+import { ITEM_DEFINITIONS } from "./items";
 import { FurnitureButton, cn } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
 import { ScrollContainer } from "./components/ScrollContainer";
@@ -12,26 +13,28 @@ const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
   : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
 
-const FLOOR_ITEMS: { type: ItemType; icon: React.ReactNode }[] = [
-  { type: "table", icon: <Table /> },
-  { type: "chair", icon: <Armchair /> },
-  { type: "plant", icon: <Sprout /> },
-  { type: "library", icon: <Library /> },
-  { type: "floor_lamp", icon: <Lightbulb /> },
-];
+const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
+  table: <Table />,
+  chair: <Armchair />,
+  plant: <Sprout />,
+  library: <Library />,
+  floor_lamp: <Lightbulb />,
+  bed: <Bed />,
+  laptop: <Laptop />,
+  tv: <Tv />,
+  vase: <Flower2 />,
+  book: <Book />,
+  lamp: <Lamp />,
+};
 
-const SURFACE_ITEMS: { type: ItemType; icon: React.ReactNode }[] = [
-  { type: "laptop", icon: <Laptop /> },
-  { type: "tv", icon: <Tv /> },
-  { type: "vase", icon: <Flower2 /> },
-  { type: "book", icon: <Book /> },
-  { type: "lamp", icon: <Lamp /> },
-];
+const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter(d => d.category === "floor");
+const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS).filter(d => d.category === "surface");
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
+  const [placementPath, setPlacementPath] = useState<{ x: number, y: number }[]>([]);
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
@@ -50,21 +53,58 @@ export default function App() {
     return () => socket.close();
   }, []);
 
-  const handlePlace = (x: number, y: number, z: number) => {
+  const handlePlace = (x: number, y: number, z: number, rotationOverride?: number) => {
     if (!ws || !selectedItem || gameState?.status !== "playing" || cooldown > 0) return;
 
-    // Check if placement is valid
-    const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
-    if (isOrnament && z === 0) return; // Must be on surface
-    if (!isOrnament && z > 0) return; // Must be on floor
+    const def = ITEM_DEFINITIONS[selectedItem];
 
-    ws.send(
-      JSON.stringify({
-        type: "place_furniture",
-        payload: { type: selectedItem, x, y, z },
-      }),
-    );
-    setSelectedItem(null);
+    if (rotationOverride !== undefined) {
+      ws.send(
+        JSON.stringify({
+          type: "place_furniture",
+          payload: { type: selectedItem, x, y, z, rotation: rotationOverride },
+        }),
+      );
+      setSelectedItem(null);
+      setPlacementPath([]);
+      return;
+    }
+
+    if (def.size > 1) {
+      if (placementPath.length === 0) {
+        setPlacementPath([{ x, y }]);
+      } else {
+        const head = placementPath[0];
+        const dx = x - head.x;
+        const dy = y - head.y;
+
+        // Multi-tile items must be placed in a line
+        if (Math.abs(dx) + Math.abs(dy) !== 1) return;
+
+        let rotation = 0;
+        if (dx === 1) rotation = Math.PI / 2;
+        else if (dx === -1) rotation = -Math.PI / 2;
+        else if (dy === 1) rotation = 0;
+        else if (dy === -1) rotation = Math.PI;
+
+        ws.send(
+          JSON.stringify({
+            type: "place_furniture",
+            payload: { type: selectedItem, x: head.x, y: head.y, z, rotation },
+          }),
+        );
+        setSelectedItem(null);
+        setPlacementPath([]);
+      }
+    } else {
+      ws.send(
+        JSON.stringify({
+          type: "place_furniture",
+          payload: { type: selectedItem, x, y, z },
+        }),
+      );
+      setSelectedItem(null);
+    }
   };
 
   const resetGame = () => {
@@ -118,6 +158,7 @@ export default function App() {
           <Room
             gameState={gameState}
             selectedItem={isPlacementDisabled ? null : selectedItem}
+            placementPath={placementPath}
             onPlace={handlePlace}
           />
         </Canvas>
@@ -144,12 +185,13 @@ export default function App() {
               <FurnitureButton
                 key={item.type}
                 type={item.type}
-                icon={item.icon}
+                icon={ITEM_ICONS[item.type]}
                 selected={selectedItem === item.type}
                 disabled={isPlacementDisabled}
-                onClick={() =>
-                  setSelectedItem(selectedItem === item.type ? null : item.type)
-                }
+                onClick={() => {
+                  setSelectedItem(selectedItem === item.type ? null : item.type);
+                  setPlacementPath([]);
+                }}
               />
             ))}
           </ScrollContainer>
@@ -159,12 +201,13 @@ export default function App() {
               <FurnitureButton
                 key={item.type}
                 type={item.type}
-                icon={item.icon}
+                icon={ITEM_ICONS[item.type]}
                 selected={selectedItem === item.type}
                 disabled={isPlacementDisabled}
-                onClick={() =>
-                  setSelectedItem(selectedItem === item.type ? null : item.type)
-                }
+                onClick={() => {
+                  setSelectedItem(selectedItem === item.type ? null : item.type);
+                  setPlacementPath([]);
+                }}
                 isOrnament
               />
             ))}

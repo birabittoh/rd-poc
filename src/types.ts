@@ -8,7 +8,18 @@ export type ItemType =
   | "floor_lamp"
   | "laptop"
   | "book"
-  | "tv";
+  | "tv"
+  | "bed";
+
+export interface ItemDefinition {
+  type: ItemType;
+  category: "floor" | "surface";
+  size: number;
+  stackable?: boolean;
+  connectable?: boolean;
+  rotationStrategy?: "faceNearest" | "faceAwayFromWall" | "manual" | "inherit";
+  facingType?: ItemType;
+}
 
 export interface Furniture {
   id: string;

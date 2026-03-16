@@ -4,47 +4,13 @@ import { WebSocketServer, WebSocket } from "ws";
 import http from "http";
 
 import { PLACEMENT_COOLDOWN } from "./src/constants.ts";
+import { ItemType, Furniture, GameState, Ballerina } from "./src/types.ts";
+import { ITEM_DEFINITIONS } from "./src/items.ts";
 
 const PORT = 3000;
 const GRID_SIZE = 9; // 9x9 grid, center is (4, 4)
 const CENTER = Math.floor(GRID_SIZE / 2);
 const PLACEMENT_COOLDOWN_MS = PLACEMENT_COOLDOWN * 1000;
-
-type ItemType =
-  | "table"
-  | "chair"
-  | "plant"
-  | "lamp"
-  | "vase"
-  | "library"
-  | "floor_lamp"
-  | "laptop"
-  | "book"
-  | "tv";
-type PlacementType = "floor" | "surface";
-
-interface Furniture {
-  id: string;
-  type: ItemType;
-  x: number;
-  y: number;
-  z: number; // 0 for floor, 1 for surface
-  rotation?: number;
-}
-
-interface Ballerina {
-  x: number;
-  y: number;
-  targetX: number;
-  targetY: number;
-  isDancing: boolean;
-}
-
-interface GameState {
-  furniture: Furniture[];
-  ballerina: Ballerina;
-  status: "playing" | "game_over";
-}
 
 let gameState: GameState = {
   furniture: [],
@@ -75,14 +41,55 @@ function broadcastState() {
   }
 }
 
+function getOccupiedTiles(item: Furniture) {
+  const def = ITEM_DEFINITIONS[item.type];
+  const tiles: { x: number; y: number }[] = [{ x: item.x, y: item.y }];
+
+  if (def.size > 1) {
+    const rotation = item.rotation || 0;
+    const dx = Math.round(Math.sin(rotation));
+    const dy = Math.round(Math.cos(rotation));
+
+    for (let i = 1; i < def.size; i++) {
+      tiles.push({
+        x: item.x + dx * i,
+        y: item.y + dy * i,
+      });
+    }
+  }
+  return tiles;
+}
+
+function hasHorizontalConnections(item: Furniture, state: GameState) {
+  const def = ITEM_DEFINITIONS[item.type];
+  if (!def.connectable) return false;
+  const tiles = getOccupiedTiles(item);
+  return state.furniture.some((other) => {
+    if (other.id === item.id || other.type !== item.type || other.z !== item.z || other.rotation !== item.rotation) return false;
+    const otherTiles = getOccupiedTiles(other);
+    return tiles.some((t1) =>
+      otherTiles.some((t2) => {
+        const dx = Math.abs(t1.x - t2.x);
+        const dy = Math.abs(t1.y - t2.y);
+        return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+      })
+    );
+  });
+}
+
 function getGridOccupancy() {
   const grid = Array(GRID_SIZE)
     .fill(null)
     .map(() => Array(GRID_SIZE).fill(false));
-  
+
   for (const item of gameState.furniture) {
     if (item.z === 0) {
-      grid[item.y][item.x] = true;
+      const tiles = getOccupiedTiles(item);
+      for (const tile of tiles) {
+        if (tile.x >= 0 && tile.x < GRID_SIZE && tile.y >= 0 && tile.y < GRID_SIZE) {
+          grid[tile.y][tile.x] = true;
+        }
+      }
     }
   }
   return grid;
@@ -151,7 +158,7 @@ async function startServer() {
         const message = JSON.parse(data.toString());
         if (message.type === "place_furniture") {
           if (gameState.status !== "playing") return;
-          
+
           const ip = clients.get(ws);
           if (!ip) return;
 
@@ -159,152 +166,222 @@ async function startServer() {
           const cooldownEnd = cooldowns.get(ip) || 0;
           if (now < cooldownEnd) return;
 
-          const { type, x, y, z } = message.payload;
-          
-          // Validate placement
-          if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return;
-          
-          // Check if ballerina is there
-          if (z === 0 && x === gameState.ballerina.targetX && y === gameState.ballerina.targetY) return;
+          const { type, x, y, z, rotation: manualRotation } = message.payload;
+          const def = ITEM_DEFINITIONS[type as ItemType];
+          if (!def) return;
 
-          // Check if tile is already occupied
-          const isOccupied = gameState.furniture.some(f => f.x === x && f.y === y && f.z === z);
-          if (isOccupied) return;
+          let rotation = manualRotation || 0;
 
-          // Adjacency check for floor items
-          if (z === 0) {
-            const isAdjacentToWall = x === 0 || x === GRID_SIZE - 1 || y === 0 || y === GRID_SIZE - 1;
-            const isAdjacentToFurniture = gameState.furniture.some(f => f.z === 0 && (Math.abs(f.x - x) + Math.abs(f.y - y) === 1));
-            if (!isAdjacentToWall && !isAdjacentToFurniture) return;
-          }
-
-          let rotation = 0;
-          if (type === "chair") {
-            const tables = gameState.furniture.filter(f => f.type === "table");
-            if (tables.length > 0) {
-              // Find nearest table
-              let nearestTable = tables[0];
+          // Rotation Strategies
+          if (def.rotationStrategy === "faceNearest" && def.facingType) {
+            const targets = gameState.furniture.filter((f) => f.type === def.facingType);
+            if (targets.length > 0) {
+              let nearest = targets[0];
               let minDist = Infinity;
-              for (const t of tables) {
+              for (const t of targets) {
                 const dist = Math.abs(t.x - x) + Math.abs(t.y - y);
                 if (dist < minDist) {
                   minDist = dist;
-                  nearestTable = t;
+                  nearest = t;
                 }
               }
-              
-              const dx = nearestTable.x - x;
-              const dy = nearestTable.y - y;
-              
+              const dx = nearest.x - x;
+              const dy = nearest.y - y;
               if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0) rotation = Math.PI / 2;
-                else rotation = -Math.PI / 2;
+                rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
               } else {
-                if (dy > 0) rotation = 0;
-                else rotation = Math.PI;
+                rotation = dy > 0 ? 0 : Math.PI;
               }
             }
-          } else if (type === "tv" || type === "library" || type === "laptop") {
-            const chairs = gameState.furniture.filter(f => f.type === "chair");
-            if (chairs.length > 0 && type !== "library") {
-              // Face nearest chair
-              let nearestChair = chairs[0];
-              let minDist = Infinity;
-              for (const c of chairs) {
-                const dist = Math.abs(c.x - x) + Math.abs(c.y - y);
-                if (dist < minDist) {
-                  minDist = dist;
-                  nearestChair = c;
-                }
-              }
-              
-              const dx = nearestChair.x - x;
-              const dy = nearestChair.y - y;
-              
-              if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0) rotation = Math.PI / 2;
-                else rotation = -Math.PI / 2;
+          } else if (def.rotationStrategy === "faceAwayFromWall") {
+            const distLeft = x;
+            const distRight = GRID_SIZE - 1 - x;
+            const distTop = y;
+            const distBottom = GRID_SIZE - 1 - y;
+            const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+            if (minDist === distTop) rotation = 0;
+            else if (minDist === distBottom) rotation = Math.PI;
+            else if (minDist === distLeft) rotation = Math.PI / 2;
+            else if (minDist === distRight) rotation = -Math.PI / 2;
+          }
+
+          const newItem: Furniture = {
+            id: Math.random().toString(36).substring(2, 9),
+            type: type as ItemType,
+            x,
+            y,
+            z,
+            rotation,
+          };
+
+          const newTiles = getOccupiedTiles(newItem);
+
+          // Validate bounds
+          if (newTiles.some((t) => t.x < 0 || t.x >= GRID_SIZE || t.y < 0 || t.y >= GRID_SIZE)) return;
+
+          // Check Ballerina
+          if (z === 0 && newTiles.some((t) => t.x === gameState.ballerina.targetX && t.y === gameState.ballerina.targetY)) return;
+
+          // Check Occupancy & Stacking
+          const existingAtLevel = gameState.furniture.filter((f) => f.z === z);
+          const isOccupied = existingAtLevel.some((f) => {
+            const tiles = getOccupiedTiles(f);
+            return tiles.some((t1) => newTiles.some((t2) => t1.x === t2.x && t1.y === t2.y));
+          });
+
+          if (isOccupied) {
+            if (def.stackable) {
+              // Try to stack
+              const baseItem = gameState.furniture.find((f) => {
+                if (f.type !== type || f.z !== z) return false;
+                const tiles = getOccupiedTiles(f);
+                return (
+                  tiles.length === newTiles.length &&
+                  tiles.every((t1, i) => t1.x === newTiles[i].x && t1.y === newTiles[i].y)
+                );
+              });
+              if (baseItem) {
+                // Constraint: Only stack once (max height 2)
+                if (baseItem.z !== 0) return;
+                // Constraint: No horizontal connections allowed if stacking
+                if (hasHorizontalConnections(baseItem, gameState)) return;
+
+                // Stack it
+                newItem.z = baseItem.z + 1;
+                newItem.rotation = baseItem.rotation;
+                // Re-check stacking at new level
+                const occupiedAtNewLevel = gameState.furniture.some((f) => {
+                  if (f.z !== newItem.z) return false;
+                  const tiles = getOccupiedTiles(f);
+                  return tiles.some((t1) => newTiles.some((t2) => t1.x === t2.x && t1.y === t2.y));
+                });
+                if (occupiedAtNewLevel) return;
               } else {
-                if (dy > 0) rotation = 0;
-                else rotation = Math.PI;
+                return;
               }
             } else {
-              // Face away from nearest wall
-              const distLeft = x;
-              const distRight = GRID_SIZE - 1 - x;
-              const distTop = y;
-              const distBottom = GRID_SIZE - 1 - y;
-              const minDist = Math.min(distLeft, distRight, distTop, distBottom);
-              if (minDist === distTop) rotation = 0;
-              else if (minDist === distBottom) rotation = Math.PI;
-              else if (minDist === distLeft) rotation = Math.PI / 2;
-              else if (minDist === distRight) rotation = -Math.PI / 2;
+              return;
             }
           }
 
-          const id = Math.random().toString(36).substring(2, 9);
-          gameState.furniture.push({ id, type, x, y, z, rotation });
-          
+          // Joining Logic (Inherit rotation from identical adjacent item)
+          if (def.connectable && newItem.z === 0) {
+            const adjacentIdentical = gameState.furniture.find((f) => {
+              if (f.type !== type || f.z !== newItem.z) return false;
+
+              // Constraint: Cannot join if the adjacent item has something stacked on top
+              const isStackedOn = gameState.furniture.some((top) => {
+                if (top.z !== f.z + 1) return false;
+                const topTiles = getOccupiedTiles(top);
+                const fTiles = getOccupiedTiles(f);
+                return topTiles.some((t1) => fTiles.some((t2) => t1.x === t2.x && t1.y === t2.y));
+              });
+              if (isStackedOn) return false;
+
+              const tiles = getOccupiedTiles(f);
+              // Check if perfectly aligned longitudinally
+              const isAligned = tiles.some((t1) =>
+                newTiles.some((t2) => {
+                  const dx = Math.abs(t1.x - t2.x);
+                  const dy = Math.abs(t1.y - t2.y);
+                  return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+                }),
+              );
+              return isAligned;
+            });
+
+            if (adjacentIdentical) {
+              const originalRotation = newItem.rotation;
+              newItem.rotation = adjacentIdentical.rotation;
+
+              // When size > 1, the head tile might need to be adjusted if the user clicked "backwards"
+              // but we want to force the same rotation.
+              if (def.size > 1) {
+                const matchesFootprint = (tiles1: { x: number; y: number }[], tiles2: { x: number; y: number }[]) => {
+                  if (tiles1.length !== tiles2.length) return false;
+                  const set1 = new Set(tiles1.map((t) => `${t.x},${t.y}`));
+                  const set2 = new Set(tiles2.map((t) => `${t.x},${t.y}`));
+                  for (const t of set1) if (!set2.has(t)) return false;
+                  return true;
+                };
+
+                // Try both possible head positions for this footprint and forced rotation
+                const possibleHeads = [
+                  { x: newTiles[0].x, y: newTiles[0].y },
+                  { x: newTiles[1].x, y: newTiles[1].y },
+                ];
+
+                let foundValid = false;
+                for (const h of possibleHeads) {
+                  const testItem = { ...newItem, x: h.x, y: h.y };
+                  const testTiles = getOccupiedTiles(testItem as Furniture);
+                  if (matchesFootprint(testTiles, newTiles)) {
+                    newItem.x = h.x;
+                    newItem.y = h.y;
+                    foundValid = true;
+                    break;
+                  }
+                }
+
+                if (!foundValid) {
+                  newItem.rotation = originalRotation;
+                }
+              }
+
+              // Recalculate tiles with inherited rotation/position
+              const updatedTiles = getOccupiedTiles(newItem);
+              // Re-validate occupancy with new rotation
+              const stillOccupied = existingAtLevel.some((f) => {
+                const tiles = getOccupiedTiles(f);
+                return tiles.some((t1) => updatedTiles.some((t2) => t1.x === t2.x && t1.y === t2.y));
+              });
+              if (stillOccupied) {
+                // If it can't join with that rotation, just use original
+                newItem.rotation = originalRotation;
+                newItem.x = x;
+                newItem.y = y;
+              }
+            }
+          }
+
+          // Adjacency check for floor items
+          if (newItem.z === 0) {
+            const isAdjacentToWall = newTiles.some((t) => t.x === 0 || t.x === GRID_SIZE - 1 || t.y === 0 || t.y === GRID_SIZE - 1);
+            const isAdjacentToFurniture = gameState.furniture.some((f) => {
+              if (f.z !== 0) return false;
+              const tiles = getOccupiedTiles(f);
+              return tiles.some((t1) => newTiles.some((t2) => Math.abs(t1.x - t2.x) + Math.abs(t1.y - t2.y) === 1));
+            });
+            if (!isAdjacentToWall && !isAdjacentToFurniture) return;
+          }
+
+          gameState.furniture.push(newItem);
           cooldowns.set(ip, now + PLACEMENT_COOLDOWN_MS);
 
-          // If a table was placed, update all chairs to face their nearest table
-          if (type === "table") {
-            const tables = gameState.furniture.filter(f => f.type === "table");
-            for (const chair of gameState.furniture.filter(f => f.type === "chair")) {
-              let nearestTable = tables[0];
+          // Update related items rotations
+          for (const item of gameState.furniture) {
+            const itemDef = ITEM_DEFINITIONS[item.type];
+            if (itemDef.rotationStrategy === "faceNearest" && itemDef.facingType === type) {
+              const targets = gameState.furniture.filter((f) => f.type === type);
+              let nearest = targets[0];
               let minDist = Infinity;
-              for (const t of tables) {
-                const dist = Math.abs(t.x - chair.x) + Math.abs(t.y - chair.y);
+              for (const t of targets) {
+                const dist = Math.abs(t.x - item.x) + Math.abs(t.y - item.y);
                 if (dist < minDist) {
                   minDist = dist;
-                  nearestTable = t;
+                  nearest = t;
                 }
               }
-              
-              if (nearestTable) {
-                const dx = nearestTable.x - chair.x;
-                const dy = nearestTable.y - chair.y;
-                
-                if (Math.abs(dx) > Math.abs(dy)) {
-                  if (dx > 0) chair.rotation = Math.PI / 2;
-                  else chair.rotation = -Math.PI / 2;
-                } else {
-                  if (dy > 0) chair.rotation = 0;
-                  else chair.rotation = Math.PI;
-                }
+              const dx = nearest.x - item.x;
+              const dy = nearest.y - item.y;
+              if (Math.abs(dx) > Math.abs(dy)) {
+                item.rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
+              } else {
+                item.rotation = dy > 0 ? 0 : Math.PI;
               }
             }
           }
-          
-          // If a chair was placed, update all laptops and TVs to face their nearest chair
-          if (type === "chair") {
-            const chairs = gameState.furniture.filter(f => f.type === "chair");
-            for (const item of gameState.furniture.filter(f => f.type === "laptop" || f.type === "tv")) {
-              let nearestChair = chairs[0];
-              let minDist = Infinity;
-              for (const c of chairs) {
-                const dist = Math.abs(c.x - item.x) + Math.abs(c.y - item.y);
-                if (dist < minDist) {
-                  minDist = dist;
-                  nearestChair = c;
-                }
-              }
-              
-              if (nearestChair) {
-                const dx = nearestChair.x - item.x;
-                const dy = nearestChair.y - item.y;
-                
-                if (Math.abs(dx) > Math.abs(dy)) {
-                  if (dx > 0) item.rotation = Math.PI / 2;
-                  else item.rotation = -Math.PI / 2;
-                } else {
-                  if (dy > 0) item.rotation = 0;
-                  else item.rotation = Math.PI;
-                }
-              }
-            }
-          }
-          
+
           broadcastState();
         } else if (message.type === "reset") {
           gameState = {
