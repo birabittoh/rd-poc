@@ -197,6 +197,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
 
       newItem.z = baseItem.z + 1;
       newItem.rotation = baseItem.rotation;
+      newItem.variant = baseItem.variant;
 
       const occupiedAtNewLevel = state.furniture.some((f) => {
         if (f.z !== newItem.z) return false;
@@ -235,6 +236,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
     if (adjacentIdentical) {
       const originalRotation = newItem.rotation;
       newItem.rotation = adjacentIdentical.rotation;
+      newItem.variant = adjacentIdentical.variant;
 
       if (def.size > 1) {
         const matchesFootprint = (tiles1: { x: number; y: number }[], tiles2: { x: number; y: number }[]) => {
