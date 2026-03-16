@@ -13,8 +13,10 @@ export function VariantPreview({ type, variant }: { type: ItemType; variant: num
         style={{ width: "64px", height: "64px" }}
       >
         <Suspense fallback={null}>
-          <Stage environment={null} intensity={1} shadows={false} adjustCamera={true}>
-            <FurnitureModel type={type} variant={variant} rotation={-Math.PI / 4} />
+          <Stage environment={null} intensity={1} shadows={false} adjustCamera={1.5}>
+            <group rotation={[0, Math.PI / 4, 0]}>
+              <FurnitureModel type={type} variant={variant} />
+            </group>
           </Stage>
         </Suspense>
       </Canvas>

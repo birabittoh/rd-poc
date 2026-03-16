@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed, LayoutGrid, Square, Columns2 } from "lucide-react";
+import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed, LayoutGrid, Square, Columns2, Coffee } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { ITEM_DEFINITIONS } from "./items";
 import { PLACEMENT_COOLDOWN } from "./constants";
@@ -31,6 +31,7 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   drawer: <LayoutGrid />,
   bedside_table: <Square />,
   wardrobe: <Columns2 />,
+  coffee_table: <Coffee />,
 };
 
 const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter(d => d.category === "floor");
@@ -221,9 +222,8 @@ export default function App() {
         )}
 
         {selectedItem && ITEM_DEFINITIONS[selectedItem].variants && ITEM_DEFINITIONS[selectedItem].variants! > 1 && (
-          <div className="mb-3 bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col items-center gap-2 max-w-2xl w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Select Variant</span>
-            <div className="flex gap-4">
+          <div className="mb-3 bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 max-w-2xl w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <ScrollContainer title="Select Variant">
               {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants! }).map((_, i) => (
                 <button
                   key={i}
@@ -241,7 +241,7 @@ export default function App() {
                   )}
                 </button>
               ))}
-            </div>
+            </ScrollContainer>
           </div>
         )}
 

@@ -12,7 +12,8 @@ export type ItemType =
   | "bed"
   | "drawer"
   | "bedside_table"
-  | "wardrobe";
+  | "wardrobe"
+  | "coffee_table";
 
 export interface ItemDefinition {
   type: ItemType;

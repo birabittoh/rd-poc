@@ -10,6 +10,9 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(false);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragScrollLeft = useRef(0);
 
   const checkScroll = () => {
     if (scrollRef.current) {
@@ -25,6 +28,39 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
     return () => window.removeEventListener("resize", checkScroll);
   }, [children]);
 
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!scrollRef.current) return;
+    // If the scroll is primarily horizontal already, let it pass through
+    // Otherwise, redirect vertical wheel to horizontal scroll
+    if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
+      e.preventDefault();
+      scrollRef.current.scrollLeft += e.deltaY;
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    dragStartX.current = e.pageX - scrollRef.current.offsetLeft;
+    dragScrollLeft.current = scrollRef.current.scrollLeft;
+    scrollRef.current.style.cursor = "grabbing";
+    scrollRef.current.style.userSelect = "none";
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = x - dragStartX.current;
+    scrollRef.current.scrollLeft = dragScrollLeft.current - walk;
+  };
+
+  const stopDragging = () => {
+    if (!scrollRef.current) return;
+    isDragging.current = false;
+    scrollRef.current.style.cursor = "grab";
+    scrollRef.current.style.userSelect = "";
+  };
+
   return (
     <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl overflow-hidden">
       <div className="absolute top-2 left-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none z-10">
@@ -34,9 +70,15 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
       <div
         ref={scrollRef}
         onScroll={checkScroll}
-        className="overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={stopDragging}
+        onMouseLeave={stopDragging}
+        className="overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab"
+        style={{ cursor: "grab" }}
       >
-        <div className="flex gap-2 px-4 min-w-full md:justify-center">
+        <div className="flex gap-2 px-4">
           {children}
         </div>
       </div>
