@@ -5,6 +5,8 @@ import { OrthographicCamera, OrbitControls } from "@react-three/drei";
 import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { ITEM_DEFINITIONS } from "./items";
+import { PLACEMENT_COOLDOWN } from "./constants";
+import { PlacementPayload, placeFurniture, stepBallerina, createInitialState } from "./gameLogic";
 import { FurnitureButton, cn } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
 import { ScrollContainer } from "./components/ScrollContainer";
@@ -33,52 +35,80 @@ const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS).filter(d => d.category ===
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
   const [placementPath, setPlacementPath] = useState<{ x: number, y: number }[]>([]);
   const [cooldown, setCooldown] = useState(0);
 
+  // WebSocket connection with demo mode fallback
   useEffect(() => {
+    let enteredDemoMode = false;
+    let receivedState = false;
+
+    const enterDemoMode = () => {
+      if (enteredDemoMode) return;
+      enteredDemoMode = true;
+      setIsDemoMode(true);
+      setGameState(createInitialState());
+    };
+
     const socket = new WebSocket(WS_URL);
     setWs(socket);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "state") {
+        receivedState = true;
         setGameState(data.state);
       } else if (data.type === "cooldown") {
         setCooldown(data.remaining);
       }
     };
 
+    socket.onerror = () => {
+      if (!receivedState) enterDemoMode();
+    };
+
+    socket.onclose = () => {
+      if (!receivedState) enterDemoMode();
+    };
+
     return () => socket.close();
   }, []);
 
+  // Demo mode: run ballerina loop locally
+  useEffect(() => {
+    if (!isDemoMode) return;
+    const interval = setInterval(() => {
+      setGameState(prev => prev ? stepBallerina(prev) : prev);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [isDemoMode]);
+
+  // Demo mode: cooldown countdown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown(c => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
   const handlePlace = (x: number, y: number, z: number, rotationOverride?: number) => {
-    if (!ws || !selectedItem || gameState?.status !== "playing" || cooldown > 0) return;
+    if (!selectedItem || gameState?.status !== "playing" || cooldown > 0) return;
 
     const def = ITEM_DEFINITIONS[selectedItem];
+    let payload: PlacementPayload | null = null;
 
     if (rotationOverride !== undefined) {
-      ws.send(
-        JSON.stringify({
-          type: "place_furniture",
-          payload: { type: selectedItem, x, y, z, rotation: rotationOverride },
-        }),
-      );
-      setSelectedItem(null);
-      setPlacementPath([]);
-      return;
-    }
-
-    if (def.size > 1) {
+      payload = { type: selectedItem, x, y, z, rotation: rotationOverride };
+    } else if (def.size > 1) {
       if (placementPath.length === 0) {
         setPlacementPath([{ x, y }]);
+        return;
       } else {
         const head = placementPath[0];
         const dx = x - head.x;
         const dy = y - head.y;
 
-        // Multi-tile items must be placed in a line
         if (Math.abs(dx) + Math.abs(dy) !== 1) return;
 
         let rotation = 0;
@@ -87,28 +117,29 @@ export default function App() {
         else if (dy === 1) rotation = 0;
         else if (dy === -1) rotation = Math.PI;
 
-        ws.send(
-          JSON.stringify({
-            type: "place_furniture",
-            payload: { type: selectedItem, x: head.x, y: head.y, z, rotation },
-          }),
-        );
-        setSelectedItem(null);
-        setPlacementPath([]);
+        payload = { type: selectedItem, x: head.x, y: head.y, z, rotation };
       }
     } else {
-      ws.send(
-        JSON.stringify({
-          type: "place_furniture",
-          payload: { type: selectedItem, x, y, z },
-        }),
-      );
-      setSelectedItem(null);
+      payload = { type: selectedItem, x, y, z };
+    }
+
+    if (!payload) return;
+
+    setSelectedItem(null);
+    setPlacementPath([]);
+
+    if (isDemoMode) {
+      setGameState(prev => prev ? (placeFurniture(prev, payload!) ?? prev) : prev);
+      setCooldown(PLACEMENT_COOLDOWN);
+    } else if (ws) {
+      ws.send(JSON.stringify({ type: "place_furniture", payload }));
     }
   };
 
   const resetGame = () => {
-    if (ws) {
+    if (isDemoMode) {
+      setGameState(createInitialState());
+    } else if (ws) {
       ws.send(JSON.stringify({ type: "reset" }));
     }
   };
@@ -122,7 +153,6 @@ export default function App() {
   }
 
   const isOrnament = selectedItem === "lamp" || selectedItem === "vase" || selectedItem === "laptop" || selectedItem === "book" || selectedItem === "tv";
-
   const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== "playing");
 
   return (
@@ -163,6 +193,13 @@ export default function App() {
           />
         </Canvas>
       </div>
+
+      {/* Demo mode badge */}
+      {isDemoMode && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500/90 backdrop-blur-md text-black font-bold px-4 py-1.5 rounded-full text-sm tracking-widest shadow-lg pointer-events-none select-none">
+          DEMO
+        </div>
+      )}
 
       {/* UI Overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center pointer-events-none">
