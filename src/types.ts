@@ -20,7 +20,8 @@ export interface ItemDefinition {
   size: number;
   stackable?: boolean;
   connectable?: boolean;
-  rotationStrategy?: "faceNearest" | "faceAwayFromWall" | "manual" | "inherit";
+  interactable?: boolean;
+  rotationStrategy?: "faceNearest" | "faceAwayFromWall" | "manual" | "inherit" | "faceInteractable";
   facingType?: ItemType;
 }
 
