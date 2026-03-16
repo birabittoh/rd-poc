@@ -16,4 +16,5 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
   bedside_table: { type: "bedside_table", category: "floor", size: 1, rotationStrategy: "faceAwayFromWall", surfaceHeight: 0.5, variants: 4 },
   wardrobe: { type: "wardrobe", category: "floor", size: 1, connectable: true, rotationStrategy: "faceAwayFromWall", variants: 4 },
   coffee_table: { type: "coffee_table", category: "floor", size: 1, connectable: true, rotationStrategy: "faceAwayFromWall", interactable: true, surfaceHeight: 0.46, variants: 4 },
+  mirror: { type: "mirror", category: "floor", size: 1, connectable: true, rotationStrategy: "faceAwayFromWall", variants: 4 },
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed, LayoutGrid, Square, Columns2, Coffee, X } from "lucide-react";
+import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed, LayoutGrid, Square, Columns2, Coffee, X, Frame } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { ITEM_DEFINITIONS } from "./items";
 import { PLACEMENT_COOLDOWN } from "./constants";
@@ -33,6 +33,7 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   bedside_table: <Square />,
   wardrobe: <Columns2 />,
   coffee_table: <Coffee />,
+  mirror: <Frame />,
 };
 
 const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter(d => d.category === "floor");
