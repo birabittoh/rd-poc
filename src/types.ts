@@ -51,3 +51,16 @@ export interface GameState {
   ballerina: Ballerina;
   status: "playing" | "game_over";
 }
+
+export interface Connections {
+  top: boolean;
+  right: boolean;
+  bottom: boolean;
+  left: boolean;
+}
+
+export interface FurnitureProps {
+  localConn: Connections;
+  variant?: number;
+  z?: number;
+}
