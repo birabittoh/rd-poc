@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrthographicCamera, OrbitControls } from "@react-three/drei";
-import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed, LayoutGrid, Square, Columns2, Coffee } from "lucide-react";
+import { RotateCcw, Sprout, Lamp, Flower2, Table, Armchair, Book, Laptop, Tv, Library, Lightbulb, Timer, Bed, LayoutGrid, Square, Columns2, Coffee, X } from "lucide-react";
 import { GameState, ItemType } from "./types";
 import { ITEM_DEFINITIONS } from "./items";
 import { PLACEMENT_COOLDOWN } from "./constants";
@@ -11,6 +11,7 @@ import { FurnitureButton, cn } from "./components/FurnitureButton";
 import { Room } from "./components/Room";
 import { ScrollContainer } from "./components/ScrollContainer";
 import { VariantPreview } from "./components/VariantPreview";
+import { motion, AnimatePresence } from "motion/react";
 
 const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace("http", "ws")
@@ -221,65 +222,90 @@ export default function App() {
           </div>
         )}
 
-        {selectedItem && ITEM_DEFINITIONS[selectedItem].variants && ITEM_DEFINITIONS[selectedItem].variants! > 1 && (
-          <div className="mb-3 bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 max-w-2xl w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <ScrollContainer title="Select Variant">
-              {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants! }).map((_, i) => (
+        <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full overflow-hidden">
+          <AnimatePresence mode="wait">
+            {!selectedItem ? (
+              <motion.div
+                key="selection"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col gap-2"
+              >
+                <ScrollContainer title="Floor">
+                  {FLOOR_ITEMS.map((item) => (
+                    <FurnitureButton
+                      key={item.type}
+                      type={item.type}
+                      icon={ITEM_ICONS[item.type]}
+                      selected={selectedItem === item.type}
+                      disabled={isPlacementDisabled}
+                      onClick={() => {
+                        setSelectedItem(item.type);
+                        setSelectedVariant(0);
+                        setPlacementPath([]);
+                      }}
+                    />
+                  ))}
+                </ScrollContainer>
+
+                <ScrollContainer title="Surface">
+                  {SURFACE_ITEMS.map((item) => (
+                    <FurnitureButton
+                      key={item.type}
+                      type={item.type}
+                      icon={ITEM_ICONS[item.type]}
+                      selected={selectedItem === item.type}
+                      disabled={isPlacementDisabled}
+                      onClick={() => {
+                        setSelectedItem(item.type);
+                        setSelectedVariant(0);
+                        setPlacementPath([]);
+                      }}
+                      isOrnament
+                    />
+                  ))}
+                </ScrollContainer>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="variants"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="relative"
+              >
                 <button
-                  key={i}
-                  onClick={() => setSelectedVariant(i)}
-                  className={cn(
-                    "relative rounded-xl transition-all duration-300 overflow-hidden ring-2 ring-inset",
-                    selectedVariant === i
-                      ? "ring-indigo-500 bg-indigo-500/10 scale-110 shadow-lg shadow-indigo-500/20"
-                      : "ring-white/5 bg-zinc-700/30 hover:bg-zinc-700/50 hover:ring-white/10"
-                  )}
+                  onClick={() => setSelectedItem(null)}
+                  className="absolute top-2 right-2 z-20 p-1 rounded-lg bg-zinc-700/50 text-zinc-400 hover:bg-zinc-600 hover:text-white transition-colors"
                 >
-                  <VariantPreview type={selectedItem} variant={i} />
-                  {selectedVariant === i && (
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full" />
-                  )}
+                  <X className="w-4 h-4" />
                 </button>
-              ))}
-            </ScrollContainer>
-          </div>
-        )}
 
-        <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full">
-          <ScrollContainer title="Floor">
-            {FLOOR_ITEMS.map((item) => (
-              <FurnitureButton
-                key={item.type}
-                type={item.type}
-                icon={ITEM_ICONS[item.type]}
-                selected={selectedItem === item.type}
-                disabled={isPlacementDisabled}
-                onClick={() => {
-                  setSelectedItem(selectedItem === item.type ? null : item.type);
-                  setSelectedVariant(0);
-                  setPlacementPath([]);
-                }}
-              />
-            ))}
-          </ScrollContainer>
-
-          <ScrollContainer title="Surface">
-            {SURFACE_ITEMS.map((item) => (
-              <FurnitureButton
-                key={item.type}
-                type={item.type}
-                icon={ITEM_ICONS[item.type]}
-                selected={selectedItem === item.type}
-                disabled={isPlacementDisabled}
-                onClick={() => {
-                  setSelectedItem(selectedItem === item.type ? null : item.type);
-                  setSelectedVariant(0);
-                  setPlacementPath([]);
-                }}
-                isOrnament
-              />
-            ))}
-          </ScrollContainer>
+                <ScrollContainer title={`Select ${selectedItem.replace("_", " ")}`}>
+                  {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants || 1 }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedVariant(i)}
+                      className={cn(
+                        "relative rounded-xl transition-all duration-300 overflow-hidden ring-2 ring-inset",
+                        selectedVariant === i
+                          ? "ring-indigo-500 bg-indigo-500/10 scale-105 shadow-lg shadow-indigo-500/20"
+                          : "ring-white/5 bg-zinc-700/30 hover:bg-zinc-700/50 hover:ring-white/10"
+                      )}
+                    >
+                      <VariantPreview type={selectedItem} variant={i} />
+                      {selectedVariant === i && (
+                        <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full" />
+                      )}
+                    </button>
+                  ))}
+                </ScrollContainer>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         <div className="mt-4 relative h-6 flex items-center justify-center w-full">
           <p className={cn(
