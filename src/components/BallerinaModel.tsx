@@ -35,7 +35,7 @@ function BallerinaGLB() {
     });
   }, [scene]);
 
-  return <primitive object={scene} scale={0.4} position={[0, 0, 0]} />;
+  return <primitive object={scene} scale={2} position={[0, 1, 0]} />;
 }
 
 function BallerinaPrimitive() {
