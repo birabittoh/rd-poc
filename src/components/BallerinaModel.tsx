@@ -73,7 +73,7 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
       ]}
     >
       {/* Scale entire body to fit within one tile unit; y-offset lifts feet to floor level */}
-      <group scale={0.25} position={[0, 0.09, 0]}>
+      <group scale={0.32} position={[0, 0.11, 0]}>
       <group position={[0, 2.5, 0]}>
         {/* Head */}
         <mesh castShadow>
