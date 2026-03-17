@@ -72,6 +72,8 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
         ballerina.y * TILE_SIZE + TILE_SIZE / 2,
       ]}
     >
+      {/* Scale entire body to fit within one tile unit; y-offset lifts feet to floor level */}
+      <group scale={0.25} position={[0, 0.09, 0]}>
       <group position={[0, 2.5, 0]}>
         {/* Head */}
         <mesh castShadow>
@@ -220,6 +222,7 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
         <meshStandardMaterial color={skinColor} />
       </mesh>
       <ContactShadows position={[0, -0.39, 0]} opacity={0.5} scale={5} blur={2} far={4} />
+      </group>{/* end scale wrapper */}
     </group>
   );
 }
