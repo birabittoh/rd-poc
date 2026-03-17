@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { OrthographicCamera, OrbitControls } from '@react-three/drei';
+import { OrthographicCamera, OrbitControls, View } from '@react-three/drei';
 import {
   RotateCcw,
   Sprout,
@@ -62,6 +62,7 @@ const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category ===
 const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'surface');
 
 export default function App() {
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -201,37 +202,34 @@ export default function App() {
   );
 
   return (
-    <div className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
-      {/* 3D Canvas */}
-      <div className="absolute inset-0">
-        <Canvas
-          shadows={{ type: THREE.PCFShadowMap }}
-          dpr={[1, 2]}
-          gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
-        >
-          <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} near={-100} far={100} />
-          <OrbitControls
-            enablePan={false}
-            enableZoom={true}
-            maxPolarAngle={Math.PI / 2.5}
-            minPolarAngle={Math.PI / 6}
-          />
-          <ambientLight intensity={0.5} />
-          <directionalLight
-            position={[10, 20, 10]}
-            intensity={1.5}
-            castShadow
-            shadow-mapSize={[2048, 2048]}
-          />
+    <div
+      ref={containerRef}
+      className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100"
+    >
 
-          <Room
-            gameState={gameState}
-            selectedItem={isPlacementDisabled ? null : selectedItem}
-            placementPath={placementPath}
-            onPlace={handlePlace}
-          />
-        </Canvas>
-      </div>
+      <View className="absolute inset-0">
+        <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} near={-100} far={100} />
+        <OrbitControls
+          enablePan={false}
+          enableZoom={true}
+          maxPolarAngle={Math.PI / 2.5}
+          minPolarAngle={Math.PI / 6}
+        />
+        <ambientLight intensity={0.5} />
+        <directionalLight
+          position={[10, 20, 10]}
+          intensity={1.5}
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+        />
+
+        <Room
+          gameState={gameState}
+          selectedItem={isPlacementDisabled ? null : selectedItem}
+          placementPath={placementPath}
+          onPlace={handlePlace}
+        />
+      </View>
 
       {/* Demo mode badge */}
       {isDemoMode && (
@@ -240,8 +238,19 @@ export default function App() {
         </div>
       )}
 
+      {/* 3D Canvas - Place at the end of the root div to be on top of UI backgrounds */}
+      <Canvas
+        shadows={{ type: THREE.PCFShadowMap }}
+        dpr={[1, 2]}
+        gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
+        className="pointer-events-none !absolute inset-0 z-50"
+        eventSource={containerRef as React.RefObject<HTMLElement>}
+      >
+        <View.Port />
+      </Canvas>
+
       {/* UI Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center pointer-events-none">
+      <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center pointer-events-none z-10">
         {gameState.status === 'game_over' && (
           <div className="mb-8 bg-red-500/90 backdrop-blur-md text-white px-8 py-4 rounded-2xl shadow-2xl pointer-events-auto flex flex-col items-center transform transition-all animate-in fade-in slide-in-from-bottom-4">
             <h2 className="text-3xl font-bold mb-2">Game Over!</h2>
