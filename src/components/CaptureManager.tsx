@@ -19,6 +19,7 @@ function CaptureInternal({
 }) {
   const { gl, scene, camera } = useThree();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [frameCounter, setFrameCounter] = useState(0);
   const captures = useRef<Record<string, string>>({});
 
   const allVariants = React.useMemo(() => {
@@ -37,28 +38,54 @@ function CaptureInternal({
       return;
     }
 
+    // Wait for 3 frames for each variant to ensure Stage has adjusted and components are mounted
+    if (frameCounter < 3) {
+      const timeout = setTimeout(() => {
+        setFrameCounter((c) => c + 1);
+      }, 50);
+      return () => clearTimeout(timeout);
+    }
+
     const { type, variant } = allVariants[currentIndex];
 
-    // Wait for a frame to ensure rendering is complete
-    const timeout = setTimeout(() => {
-      gl.render(scene, camera);
-      const dataURL = gl.domElement.toDataURL('image/png');
-      captures.current[`${type}_${variant}`] = dataURL;
-      onProgress((currentIndex + 1) / allVariants.length);
-      setCurrentIndex((prev) => prev + 1);
-    }, 100);
+    gl.render(scene, camera);
+    const dataURL = gl.domElement.toDataURL('image/png');
+    captures.current[`${type}_${variant}`] = dataURL;
+    onProgress((currentIndex + 1) / allVariants.length);
 
-    return () => clearTimeout(timeout);
-  }, [currentIndex, allVariants, gl, scene, camera, onComplete, onProgress]);
+    setFrameCounter(0);
+    setCurrentIndex((prev) => prev + 1);
+  }, [
+    currentIndex,
+    frameCounter,
+    allVariants,
+    gl,
+    scene,
+    camera,
+    onComplete,
+    onProgress,
+  ]);
 
   if (currentIndex >= allVariants.length) return null;
 
   const { type, variant } = allVariants[currentIndex];
 
   return (
-    <Stage environment={null} intensity={1} shadows={false} adjustCamera={1.5} center={{}}>
+    <Stage
+      environment={null}
+      intensity={3.5}
+      shadows={false}
+      adjustCamera={2.2}
+      center={{}}
+    >
+      <ambientLight intensity={1.5} />
+      <directionalLight position={[5, 5, 5]} intensity={2} />
       <group rotation={[0, Math.PI / 4, 0]}>
-        <FurnitureModel type={type} variant={variant} />
+        <FurnitureModel
+          type={type}
+          variant={variant}
+          connections={{ top: false, right: false, bottom: false, left: false }}
+        />
       </group>
     </Stage>
   );

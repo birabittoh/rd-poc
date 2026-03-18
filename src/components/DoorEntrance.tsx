@@ -60,7 +60,7 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
         ) : (
           <motion.div
             key="door-opening"
-            className="relative"
+            className="fixed inset-0 flex items-center justify-center pointer-events-none"
             style={{ perspective: '1200px' }}
           >
             {/* The actual door flipping open */}
