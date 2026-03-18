@@ -1,5 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, Suspense } from 'react';
 import { motion } from 'motion/react';
+import { Canvas } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import { CaptureManager } from './CaptureManager';
 import { ITEM_DEFINITIONS } from '../items';
 
@@ -32,11 +34,20 @@ function writeCache(captures: Record<string, string>) {
   }
 }
 
+function ModelPreloader({ onReady }: { onReady: () => void }) {
+  useGLTF(`${import.meta.env.BASE_URL}ballerina.glb`);
+  useEffect(() => {
+    onReady();
+  }, [onReady]);
+  return null;
+}
+
 export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   const [cachedCaptures] = useState<Record<string, string> | null>(readCache);
   const [capturesProgress, setCapturesProgress] = useState(cachedCaptures ? 1 : 0);
   const [assetsProgress, setAssetsProgress] = useState(0);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [modelReady, setModelReady] = useState(false);
   const [captures, setCaptures] = useState<Record<string, string> | null>(cachedCaptures);
   const [logoError, setLogoError] = useState(false);
   const [currentItem, setCurrentItem] = useState<{
@@ -72,10 +83,10 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
 
   // Final completion check
   useEffect(() => {
-    if (assetsLoaded && captures) {
+    if (assetsLoaded && modelReady && captures) {
       onLoadingComplete(captures);
     }
-  }, [assetsLoaded, captures, onLoadingComplete]);
+  }, [assetsLoaded, modelReady, captures, onLoadingComplete]);
 
   const handleComplete = useCallback((newCaptures: Record<string, string>) => {
     writeCache(newCaptures);
@@ -95,17 +106,25 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
     ? assetsProgress
     : assetsProgress * 0.3 + capturesProgress * 0.7;
 
-  const done = assetsLoaded && capturesDone;
+  const done = assetsLoaded && modelReady && capturesDone;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-900 font-sans text-white">
+      {/* Hidden canvas for model parsing */}
+      <div style={{ position: 'absolute', top: -1000, left: -1000, pointerEvents: 'none' }}>
+        <Canvas>
+          <Suspense fallback={null}>
+            <ModelPreloader onReady={() => setModelReady(true)} />
+          </Suspense>
+        </Canvas>
+      </div>
       <div className="w-72">
-        <div className="mb-8 text-center flex flex-col items-center">
+        <div className="mb-8 text-center flex flex-col items-center h-12 justify-center">
           {!logoError ? (
             <img
               src={`${import.meta.env.BASE_URL}logo.webp`}
               alt="My Room"
-              className="h-12 w-auto mb-2 opacity-90"
+              className="h-12 w-auto opacity-90"
               onError={() => setLogoError(true)}
             />
           ) : (
