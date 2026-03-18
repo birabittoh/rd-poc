@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { OrthographicCamera, OrbitControls, View } from '@react-three/drei';
+import { OrthographicCamera, OrbitControls, Environment } from '@react-three/drei';
 import {
   RotateCcw,
   Sprout,
@@ -62,7 +62,6 @@ const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category ===
 const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'surface');
 
 export default function App() {
-  const containerRef = React.useRef<HTMLDivElement>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -202,52 +201,45 @@ export default function App() {
   );
 
   return (
-    <div
-      ref={containerRef}
-      className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100"
-    >
+    <div className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
+      {/* Main Room Canvas */}
+      <div className="absolute inset-0 z-0">
+        <Canvas
+          shadows={{ type: THREE.PCFShadowMap }}
+          dpr={[1, 2]}
+          gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
+        >
+          <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} near={-100} far={100} />
+          <OrbitControls
+            enablePan={false}
+            enableZoom={true}
+            maxPolarAngle={Math.PI / 2.5}
+            minPolarAngle={Math.PI / 6}
+          />
+          <ambientLight intensity={0.5} />
+          <directionalLight
+            position={[10, 20, 10]}
+            intensity={1.5}
+            castShadow
+            shadow-mapSize={[2048, 2048]}
+          />
+          <Environment preset="city" />
 
-      <View className="absolute inset-0">
-        <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} near={-100} far={100} />
-        <OrbitControls
-          enablePan={false}
-          enableZoom={true}
-          maxPolarAngle={Math.PI / 2.5}
-          minPolarAngle={Math.PI / 6}
-        />
-        <ambientLight intensity={0.5} />
-        <directionalLight
-          position={[10, 20, 10]}
-          intensity={1.5}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-        />
-
-        <Room
-          gameState={gameState}
-          selectedItem={isPlacementDisabled ? null : selectedItem}
-          placementPath={placementPath}
-          onPlace={handlePlace}
-        />
-      </View>
+          <Room
+            gameState={gameState}
+            selectedItem={isPlacementDisabled ? null : selectedItem}
+            placementPath={placementPath}
+            onPlace={handlePlace}
+          />
+        </Canvas>
+      </div>
 
       {/* Demo mode badge */}
       {isDemoMode && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500/90 backdrop-blur-md text-black font-bold px-4 py-1.5 rounded-full text-sm tracking-widest shadow-lg pointer-events-none select-none">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-amber-500/90 backdrop-blur-md text-black font-bold px-4 py-1.5 rounded-full text-sm tracking-widest shadow-lg pointer-events-none select-none">
           DEMO
         </div>
       )}
-
-      {/* 3D Canvas - Place at the end of the root div to be on top of UI backgrounds */}
-      <Canvas
-        shadows={{ type: THREE.PCFShadowMap }}
-        dpr={[1, 2]}
-        gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
-        className="pointer-events-none !absolute inset-0 z-50"
-        eventSource={containerRef as React.RefObject<HTMLElement>}
-      >
-        <View.Port />
-      </Canvas>
 
       {/* UI Overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center pointer-events-none z-10">
@@ -334,21 +326,14 @@ export default function App() {
                 >
                   {Array.from({ length: ITEM_DEFINITIONS[selectedItem].variants || 1 }).map(
                     (_, i) => (
-                      <button
+                      <VariantPreview
                         key={i}
+                        item={ITEM_DEFINITIONS[selectedItem]}
+                        variant={i}
+                        isSelected={selectedVariant === i}
                         onClick={() => setSelectedVariant(i)}
-                        className={cn(
-                          'relative p-1 rounded-xl transition-all duration-300 overflow-hidden ring-2 ring-inset shrink-0 my-1',
-                          selectedVariant === i
-                            ? 'ring-indigo-500 bg-indigo-500/10 scale-105 shadow-lg shadow-indigo-500/20'
-                            : 'ring-white/5 bg-zinc-700/30 hover:bg-zinc-700/50 hover:ring-white/10'
-                        )}
-                      >
-                        <VariantPreview type={selectedItem} variant={i} />
-                        {selectedVariant === i && (
-                          <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full" />
-                        )}
-                      </button>
+                        label={`Variant ${i + 1}`}
+                      />
                     )
                   )}
                 </ScrollContainer>

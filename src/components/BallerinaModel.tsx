@@ -1,4 +1,4 @@
-import React, { useRef, useState, Suspense, useEffect } from 'react';
+import React, { useRef, Suspense, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { ContactShadows, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
