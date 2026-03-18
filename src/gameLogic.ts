@@ -114,6 +114,18 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   let rotation = manualRotation !== undefined ? manualRotation : 0;
 
   // Rotation Strategies
+  const faceAwayFromNearestWall = () => {
+    const distLeft = x,
+      distRight = GRID_SIZE - 1 - x;
+    const distTop = y,
+      distBottom = GRID_SIZE - 1 - y;
+    const minDist = Math.min(distLeft, distRight, distTop, distBottom);
+    if (minDist === distTop) return 0;
+    else if (minDist === distBottom) return Math.PI;
+    else if (minDist === distLeft) return Math.PI / 2;
+    else return -Math.PI / 2;
+  };
+
   if (manualRotation === undefined && def.rotationStrategy === 'faceNearest' && def.facingType) {
     const targets = state.furniture.filter((f) => f.type === def.facingType);
     if (targets.length > 0) {
@@ -130,6 +142,8 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       const dy = nearest.y - y;
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
+    } else {
+      rotation = faceAwayFromNearestWall();
     }
   } else if (manualRotation === undefined && def.rotationStrategy === 'faceInteractable') {
     const targets = state.furniture.filter((f) => ITEM_DEFINITIONS[f.type].interactable);
@@ -155,17 +169,11 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       const dy = selected.y - y;
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
+    } else {
+      rotation = faceAwayFromNearestWall();
     }
   } else if (manualRotation === undefined && def.rotationStrategy === 'faceAwayFromWall') {
-    const distLeft = x,
-      distRight = GRID_SIZE - 1 - x;
-    const distTop = y,
-      distBottom = GRID_SIZE - 1 - y;
-    const minDist = Math.min(distLeft, distRight, distTop, distBottom);
-    if (minDist === distTop) rotation = 0;
-    else if (minDist === distBottom) rotation = Math.PI;
-    else if (minDist === distLeft) rotation = Math.PI / 2;
-    else if (minDist === distRight) rotation = -Math.PI / 2;
+    rotation = faceAwayFromNearestWall();
   }
 
   const variant = payloadVariant !== undefined ? payloadVariant : 0;
