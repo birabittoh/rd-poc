@@ -63,7 +63,6 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
                         camera={{ position: [5, 5, 5], fov: 25 }}
                         gl={{ antialias: true, alpha: true }}
                         style={{ background: 'transparent' }}
-                        eventSource={containerRef as React.MutableRefObject<HTMLElement>}
                     >
                         <ambientLight intensity={0.7} />
                         <Environment preset="city" />
@@ -85,7 +84,7 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
                     </Canvas>
                 </div>
 
-                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-6">
+                <div className="relative flex items-center gap-3 overflow-x-auto no-scrollbar py-6 z-20">
                     <div className="flex items-center gap-3 px-4 md:justify-center min-w-full">
                         {children}
                     </div>
