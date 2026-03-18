@@ -110,7 +110,7 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
             />
           ) : (
             <h1 className="text-2xl font-bold tracking-widest text-indigo-500 uppercase">
-              Home Decorator
+              MyRoom
             </h1>
           )}
         </div>
