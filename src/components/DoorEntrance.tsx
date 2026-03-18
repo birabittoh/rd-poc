@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface DoorEntranceProps {
@@ -92,7 +92,7 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
               initial={{ scaleX: 0, opacity: 0 }}
               animate={{ scaleX: 2, opacity: 1 }}
               transition={{ duration: 1.2, ease: "easeOut" }}
-              className="absolute inset-0 bg-white/20 blur-3xl z-10 origin-left"
+              className="absolute inset-0 bg-zinc-900/20 blur-3xl z-10 origin-left"
             />
           </motion.div>
         )}
@@ -105,7 +105,7 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.5 }}
-            className="fixed inset-0 bg-white z-50 pointer-events-none"
+            className="fixed inset-0 bg-zinc-900 z-50 pointer-events-none"
           />
         )}
       </AnimatePresence>

@@ -22,7 +22,7 @@ function readCache(): Record<string, string> | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (typeof parsed === 'object' && parsed !== null) return parsed;
-  } catch {}
+  } catch { }
   return null;
 }
 
@@ -119,12 +119,12 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
         </Canvas>
       </div>
       <div className="w-72">
-        <div className="mb-8 text-center flex flex-col items-center h-12 justify-center">
+        <div className="mb-8 text-center flex flex-col items-center h-40 justify-center">
           {!logoError ? (
             <img
               src={`${import.meta.env.BASE_URL}logo.webp`}
-              alt="My Room"
-              className="h-12 w-auto opacity-90"
+              alt="MyRoom logo"
+              className="h-40 w-auto opacity-90"
               onError={() => setLogoError(true)}
             />
           ) : (
