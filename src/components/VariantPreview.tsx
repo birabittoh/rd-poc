@@ -1,25 +1,29 @@
-import React, { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Stage } from '@react-three/drei';
-import { FurnitureModel } from './FurnitureModel';
+import React from 'react';
 import { ItemType } from '../types';
 
-export function VariantPreview({ type, variant }: { type: ItemType; variant: number }) {
+interface VariantPreviewProps {
+  type: ItemType;
+  variant: number;
+  capture?: string;
+}
+
+export function VariantPreview({ type, variant, capture }: VariantPreviewProps) {
+  if (capture) {
+    return (
+      <div className="w-16 h-16 bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center pointer-events-none">
+        <img
+          src={capture}
+          alt={`${type} variant ${variant}`}
+          className="w-full h-full object-contain"
+        />
+      </div>
+    );
+  }
+
+  // Fallback if capture is not yet available
   return (
-    <div className="w-16 h-16 bg-zinc-900 rounded-lg overflow-hidden pointer-events-none">
-      <Canvas
-        shadows
-        camera={{ position: [3, 3, 3], fov: 40 }}
-        style={{ width: '64px', height: '64px' }}
-      >
-        <Suspense fallback={null}>
-          <Stage environment={null} intensity={1} shadows={false} adjustCamera={1.5}>
-            <group rotation={[0, Math.PI / 4, 0]}>
-              <FurnitureModel type={type} variant={variant} />
-            </group>
-          </Stage>
-        </Suspense>
-      </Canvas>
+    <div className="w-16 h-16 bg-zinc-900 rounded-lg overflow-hidden animate-pulse flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full bg-zinc-800" />
     </div>
   );
 }

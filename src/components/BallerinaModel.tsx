@@ -1,4 +1,4 @@
-import React, { useRef, useState, Suspense, useEffect } from 'react';
+import React, { useRef, Suspense, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { ContactShadows, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -23,8 +23,10 @@ class ErrorBoundary extends React.Component<{ fallback: React.ReactNode; childre
   }
 }
 
+const BALLERINA_GLB_URL = `${import.meta.env.BASE_URL}ballerina.glb`;
+
 function BallerinaGLB() {
-  const { scene } = useGLTF('/ballerina.glb');
+  const { scene } = useGLTF(BALLERINA_GLB_URL);
 
   useEffect(() => {
     scene.traverse((child) => {
@@ -204,7 +206,7 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
   const groupRef = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (!groupRef.current) return;
 
     // Interpolate position

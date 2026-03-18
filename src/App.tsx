@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { OrthographicCamera, OrbitControls } from '@react-three/drei';
@@ -32,6 +32,8 @@ import { cn } from './utils/cn';
 import { Room } from './components/Room';
 import { ScrollContainer } from './components/ScrollContainer';
 import { VariantPreview } from './components/VariantPreview';
+import { LoadingScreen } from './components/LoadingScreen';
+import { DoorEntrance } from './components/DoorEntrance';
 import { motion, AnimatePresence } from 'motion/react';
 
 const WS_URL = import.meta.env.VITE_APP_URL
@@ -69,6 +71,9 @@ export default function App() {
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [placementPath, setPlacementPath] = useState<{ x: number; y: number }[]>([]);
   const [cooldown, setCooldown] = useState(0);
+  const [appState, setAppState] = useState<'loading' | 'ready' | 'entering' | 'playing'>('loading');
+  const [variantCaptures, setVariantCaptures] = useState<Record<string, string>>({});
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // WebSocket connection with demo mode fallback
   useEffect(() => {
@@ -180,6 +185,40 @@ export default function App() {
       ws.send(JSON.stringify({ type: 'reset' }));
     }
   };
+
+  const handleLoadingComplete = useCallback((captures: Record<string, string>) => {
+    setVariantCaptures(captures);
+    setAppState('ready');
+  }, []);
+
+  const handleEnter = () => {
+    setAppState('entering');
+    // Start background music
+    const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
+    audio.loop = true;
+    audio.volume = 0.5;
+    audio
+      .play()
+      .then(() => {
+        audioRef.current = audio;
+      })
+      .catch((err) => {
+        console.warn('Audio play failed:', err);
+      });
+
+    // Small delay to allow the flash to peak
+    setTimeout(() => {
+      setAppState('playing');
+    }, 100);
+  };
+
+  if (appState === 'loading') {
+    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+  }
+
+  if (appState === 'ready') {
+    return <DoorEntrance onEnter={handleEnter} />;
+  }
 
   if (!gameState) {
     return (
@@ -335,7 +374,11 @@ export default function App() {
                             : 'ring-white/5 bg-zinc-700/30 hover:bg-zinc-700/50 hover:ring-white/10'
                         )}
                       >
-                        <VariantPreview type={selectedItem} variant={i} />
+                        <VariantPreview
+                          type={selectedItem}
+                          variant={i}
+                          capture={variantCaptures[`${selectedItem}_${i}`]}
+                        />
                         {selectedVariant === i && (
                           <div className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full" />
                         )}
