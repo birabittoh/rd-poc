@@ -187,12 +187,12 @@ export default function App() {
   };
 
   const handleLoadingComplete = useCallback((captures: Record<string, string>) => {
-    setVariantCaptures(captures);
-    setAppState('ready');
+    setVariantCaptures((prev) => (Object.keys(prev).length > 0 ? prev : captures));
+    setAppState((prev) => (prev === 'loading' ? 'ready' : prev));
   }, []);
 
   const handleEnter = () => {
-    setAppState('entering');
+    setAppState((prev) => (prev === 'ready' ? 'entering' : prev));
     // Start background music
     const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
     audio.loop = true;
@@ -208,7 +208,7 @@ export default function App() {
 
     // Small delay to allow the flash to peak
     setTimeout(() => {
-      setAppState('playing');
+      setAppState((prev) => (prev === 'entering' ? 'playing' : prev));
     }, 100);
   };
 
