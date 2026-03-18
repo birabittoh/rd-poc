@@ -18,15 +18,16 @@ export function VariantPreview({ item, variant, isSelected, onClick, label }: Va
 
   useEffect(() => {
     if (context && containerRef.current) {
-      context.register({
+      const registerData = {
         id,
         ref: containerRef,
         item,
         variant
-      })
-      return () => context.unregister(id)
+      };
+      context.register(registerData);
+      return () => context.unregister(id);
     }
-  }, [context, id, item, variant])
+  }, [context, id, item, variant]);
 
   return (
     <motion.button

@@ -1,9 +1,8 @@
-import React, { useRef, createContext, useState, useCallback } from 'react'
+import React, { useRef, createContext, useState, useCallback, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { View, Environment } from '@react-three/drei'
+import { View, Environment, Stage } from '@react-three/drei'
 import { ItemDefinition } from '../types'
-import { FurnitureModel } from './furniture/FurnitureModel'
-import { Stage } from '@react-three/drei'
+import { FurnitureModel } from './FurnitureModel'
 
 interface PreviewData {
     id: string;
@@ -38,14 +37,17 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
 
     const unregister = useCallback((id: string) => {
         setPreviews(prev => {
+            if (!prev.has(id)) return prev;
             const next = new Map(prev);
             next.delete(id);
             return next;
         });
     }, []);
 
+    const contextValue = useMemo(() => ({ register, unregister }), [register, unregister]);
+
     return (
-        <PreviewContext.Provider value={{ register, unregister }}>
+        <PreviewContext.Provider value={contextValue}>
             <div ref={containerRef} className="relative w-full overflow-hidden group">
                 {/* Section Title */}
                 <div className="absolute top-0 left-4 z-20">
@@ -69,12 +71,11 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
                         {/* Render all registered previews for this container */}
                         {Array.from(previews.values()).map((p) => (
                             <View key={p.id} track={p.ref as React.MutableRefObject<HTMLElement>}>
-                                <Stage adjustCamera={true} environment="city" intensity={0.5} center>
+                                <Stage adjustCamera={true} environment="city" intensity={0.5} center={{}}>
                                     <FurnitureModel
-                                        item={p.item}
+                                        type={p.item.type}
                                         variant={p.variant}
-                                        connections={{}}
-                                        isPreview={true}
+                                        connections={{ top: false, right: false, bottom: false, left: false }}
                                     />
                                 </Stage>
                             </View>
