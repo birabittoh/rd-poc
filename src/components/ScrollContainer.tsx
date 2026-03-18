@@ -4,7 +4,7 @@ import { View, Environment, Stage } from '@react-three/drei'
 import { ItemDefinition } from '../types'
 import { FurnitureModel } from './FurnitureModel'
 
-interface PreviewData {
+export interface PreviewData {
     id: string;
     ref: React.RefObject<HTMLElement | null>;
     item: ItemDefinition;
@@ -25,6 +25,7 @@ interface ScrollContainerProps {
 
 export function ScrollContainer({ children, title }: ScrollContainerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
     const [previews, setPreviews] = useState<Map<string, PreviewData>>(new Map());
 
     const register = useCallback((data: PreviewData) => {
@@ -57,35 +58,42 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
                 </div>
 
                 {/* Canvas for Previews - Clipped to this container */}
-                <div className="absolute inset-0 pointer-events-none z-10" style={{ clipPath: 'inset(0)' }}>
-                    <Canvas
-                        shadows
-                        camera={{ position: [5, 5, 5], fov: 25 }}
-                        gl={{ antialias: true, alpha: true }}
-                        style={{ background: 'transparent' }}
-                    >
-                        <ambientLight intensity={0.7} />
-                        <Environment preset="city" />
+                {previews.size > 0 && (
+                    <div className="absolute inset-0 pointer-events-none z-10 touch-action-pan-x" style={{ clipPath: 'inset(0)' }}>
+                        <Canvas
+                            shadows
+                            camera={{ position: [5, 5, 5], fov: 25 }}
+                            gl={{ antialias: true, alpha: true }}
+                            style={{ background: 'transparent' }}
+                            eventSource={scrollRef as React.MutableRefObject<HTMLElement>}
+                            frameloop="always"
+                        >
+                            <ambientLight intensity={0.7} />
+                            <Environment preset="city" />
 
-                        {/* Render all registered previews for this container */}
-                        {Array.from(previews.values()).map((p) => (
-                            <View key={p.id} track={p.ref as React.MutableRefObject<HTMLElement>}>
-                                <Stage adjustCamera={true} environment="city" intensity={0.5} center={{}}>
-                                    <FurnitureModel
-                                        type={p.item.type}
-                                        variant={p.variant}
-                                        connections={{ top: false, right: false, bottom: false, left: false }}
-                                    />
-                                </Stage>
-                            </View>
-                        ))}
+                            {/* Render all registered previews for this container */}
+                            {Array.from(previews.values()).map((p) => (
+                                <View key={p.id} track={p.ref as React.MutableRefObject<HTMLElement>}>
+                                    <Stage adjustCamera={true} environment="city" intensity={0.5} center={{}}>
+                                        <FurnitureModel
+                                            type={p.item.type}
+                                            variant={p.variant}
+                                            connections={{ top: false, right: false, bottom: false, left: false }}
+                                        />
+                                    </Stage>
+                                </View>
+                            ))}
 
-                        <View.Port />
-                    </Canvas>
-                </div>
+                            <View.Port />
+                        </Canvas>
+                    </div>
+                )}
 
-                <div className="relative flex items-center gap-3 overflow-x-auto no-scrollbar py-6 z-20">
-                    <div className="flex items-center gap-3 px-4 md:justify-center min-w-full">
+                <div
+                    ref={scrollRef}
+                    className="relative flex items-center gap-3 overflow-x-auto no-scrollbar py-6 z-20 touch-action-pan-x"
+                >
+                    <div className="relative flex items-center gap-3 px-4 md:justify-center min-w-full">
                         {children}
                     </div>
                 </div>
