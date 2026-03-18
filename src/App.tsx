@@ -24,6 +24,7 @@ import {
   RectangleVertical,
   ScanLine,
 } from 'lucide-react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { GameState, ItemType } from './types';
 import { ITEM_DEFINITIONS } from './items';
 import { PlacementPayload, placeFurniture, stepBallerina, createInitialState } from './gameLogic';
@@ -59,6 +60,23 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   mirror: <RectangleVertical />,
   mirror_ornament: <ScanLine />,
 };
+
+const TARGET_ZOOM = 40;
+const INITIAL_ZOOM = 4;
+
+function CameraZoomIn() {
+  const { camera } = useThree();
+  const zoom = useRef(INITIAL_ZOOM);
+
+  useFrame((_, delta) => {
+    if (zoom.current >= TARGET_ZOOM) return;
+    zoom.current = Math.min(TARGET_ZOOM, zoom.current + delta * 12);
+    camera.zoom = zoom.current;
+    camera.updateProjectionMatrix();
+  });
+
+  return null;
+}
 
 const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'floor');
 const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'surface');
@@ -216,10 +234,6 @@ export default function App() {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
   }
 
-  if (appState === 'ready') {
-    return <DoorEntrance onEnter={handleEnter} />;
-  }
-
   if (!gameState) {
     return (
       <div className="flex h-full items-center justify-center bg-zinc-900 text-white">
@@ -248,7 +262,8 @@ export default function App() {
           dpr={[1, 2]}
           gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
         >
-          <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} near={-100} far={100} />
+          <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={INITIAL_ZOOM} near={-100} far={100} />
+          <CameraZoomIn />
           <OrbitControls
             enablePan={false}
             enableZoom={true}
@@ -414,6 +429,19 @@ export default function App() {
           )}
         </div>
       </div>
+
+      <AnimatePresence>
+        {appState === 'ready' && (
+          <motion.div
+            key="door"
+            className="fixed inset-0 z-40"
+            exit={{ opacity: 0, scale: 10 }}
+            transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <DoorEntrance onEnter={handleEnter} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
