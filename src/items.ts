@@ -29,11 +29,13 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
   },
   library: {
     type: 'library',
+    label: 'bookshelf',
     category: 'floor',
     size: 1,
     connectable: true,
     rotationStrategy: 'faceAwayFromWall',
     variants: 4,
+    previewAdjustCamera: 1.8,
   },
   floor_lamp: {
     type: 'floor_lamp',
@@ -41,6 +43,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     size: 1,
     rotationStrategy: 'faceAwayFromWall',
     variants: 4,
+    previewAdjustCamera: 1.15,
   },
   bed: {
     type: 'bed',
@@ -50,6 +53,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     connectable: true,
     rotationStrategy: 'manual',
     variants: 4,
+    previewAdjustCamera: 1.8,
   },
   laptop: {
     type: 'laptop',
@@ -59,6 +63,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     facingType: 'chair',
     interactable: true,
     variants: 4,
+    previewAdjustCamera: 0.8,
   },
   tv: {
     type: 'tv',
@@ -70,9 +75,16 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     interactable: true,
     variants: 4,
   },
-  vase: { type: 'vase', category: 'surface', size: 1, variants: 4 },
-  book: { type: 'book', category: 'surface', size: 1, interactable: true, variants: 4 },
-  lamp: { type: 'lamp', category: 'surface', size: 1, variants: 4 },
+  vase: { type: 'vase', category: 'surface', size: 1, variants: 4, previewAdjustCamera: 0.8 },
+  book: {
+    type: 'book',
+    category: 'surface',
+    size: 1,
+    interactable: true,
+    variants: 4,
+    previewAdjustCamera: 0.8,
+  },
+  lamp: { type: 'lamp', category: 'surface', size: 1, variants: 4, previewAdjustCamera: 0.8 },
   drawer: {
     type: 'drawer',
     category: 'floor',
@@ -89,6 +101,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     rotationStrategy: 'faceAwayFromWall',
     surfaceHeight: 0.5,
     variants: 4,
+    previewAdjustCamera: 0.9,
   },
   wardrobe: {
     type: 'wardrobe',
@@ -97,6 +110,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     connectable: true,
     rotationStrategy: 'faceAwayFromWall',
     variants: 4,
+    previewAdjustCamera: 1.6,
   },
   coffee_table: {
     type: 'coffee_table',
@@ -115,6 +129,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     connectable: true,
     rotationStrategy: 'faceAwayFromWall',
     variants: 4,
+    previewAdjustCamera: 1.3,
   },
   mirror_ornament: {
     type: 'mirror_ornament',
@@ -124,5 +139,6 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     interactable: true,
     rotationStrategy: 'faceAwayFromWall',
     variants: 4,
+    previewAdjustCamera: 0.8,
   },
 };

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, Suspense } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import React, { useState, useRef, Suspense } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Stage, useGLTF } from '@react-three/drei';
 import { ITEM_DEFINITIONS } from '../items';
 import { FurnitureModel } from './FurnitureModel';
@@ -22,8 +22,8 @@ function CaptureInternal({
 }) {
   const { gl, scene, camera } = useThree();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [frameCounter, setFrameCounter] = useState(0);
   const captures = useRef<Record<string, string>>({});
+  const capturedUpTo = useRef(-1);
 
   const allVariants = React.useMemo(() => {
     const list: { type: ItemType; variant: number }[] = [];
@@ -35,19 +35,10 @@ function CaptureInternal({
     return list;
   }, []);
 
-  useEffect(() => {
-    if (currentIndex >= allVariants.length) {
-      onComplete(captures.current);
-      return;
-    }
-
-    // Wait for 3 frames for each variant to ensure Stage has adjusted and components are mounted
-    if (frameCounter < 3) {
-      const timeout = setTimeout(() => {
-        setFrameCounter((c) => c + 1);
-      }, 50);
-      return () => clearTimeout(timeout);
-    }
+  useFrame(() => {
+    if (currentIndex >= allVariants.length) return;
+    if (capturedUpTo.current >= currentIndex) return;
+    capturedUpTo.current = currentIndex;
 
     const { type, variant } = allVariants[currentIndex];
 
@@ -60,35 +51,29 @@ function CaptureInternal({
     captures.current[`${type}_${variant}`] = dataURL;
     onProgress((currentIndex + 1) / allVariants.length);
 
-    setFrameCounter(0);
-    setCurrentIndex((prev) => prev + 1);
-  }, [
-    currentIndex,
-    frameCounter,
-    allVariants,
-    gl,
-    scene,
-    camera,
-    onComplete,
-    onProgress,
-    onCurrentItem,
-  ]);
+    if (currentIndex + 1 >= allVariants.length) {
+      onComplete(captures.current);
+    } else {
+      setCurrentIndex((prev) => prev + 1);
+    }
+  });
 
   if (currentIndex >= allVariants.length) return null;
 
   const { type, variant } = allVariants[currentIndex];
+  const adjustCamera = ITEM_DEFINITIONS[type].previewAdjustCamera ?? 1.2;
 
   return (
     <Stage
       environment={null}
-      intensity={3.5}
+      intensity={1.0}
       shadows={false}
-      adjustCamera={2.2}
+      adjustCamera={adjustCamera}
       center={{}}
     >
-      <ambientLight intensity={1.5} />
-      <directionalLight position={[5, 5, 5]} intensity={2} />
-      <group rotation={[0, Math.PI / 4, 0]}>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 5, 5]} intensity={0.8} />
+      <group>
         <FurnitureModel
           type={type}
           variant={variant}
@@ -119,11 +104,15 @@ export function CaptureManager({ onComplete, onProgress, onCurrentItem }: Captur
       <Canvas
         shadows
         gl={{ preserveDrawingBuffer: true, antialias: true }}
-        camera={{ position: [3, 3, 3], fov: 40 }}
+        camera={{ position: [3, 2.5, 2], fov: 40 }}
       >
         <Suspense fallback={null}>
           <AssetPreloader />
-          <CaptureInternal onComplete={onComplete} onProgress={onProgress} onCurrentItem={onCurrentItem} />
+          <CaptureInternal
+            onComplete={onComplete}
+            onProgress={onProgress}
+            onCurrentItem={onCurrentItem}
+          />
         </Suspense>
       </Canvas>
     </div>

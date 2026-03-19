@@ -22,7 +22,9 @@ function readCache(): Record<string, string> | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (typeof parsed === 'object' && parsed !== null) return parsed;
-  } catch { }
+  } catch {
+    // Ignore errors when reading cache
+  }
   return null;
 }
 
@@ -128,9 +130,7 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
               onError={() => setLogoError(true)}
             />
           ) : (
-            <h1 className="text-2xl font-bold tracking-widest text-indigo-500 uppercase">
-              MyRoom
-            </h1>
+            <h1 className="text-2xl font-bold tracking-widest text-indigo-500 uppercase">MyRoom</h1>
           )}
         </div>
 

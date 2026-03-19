@@ -30,6 +30,7 @@ export interface ItemDefinition {
   rotationStrategy?: 'faceNearest' | 'faceAwayFromWall' | 'manual' | 'inherit' | 'faceInteractable';
   facingType?: ItemType;
   variants?: number;
+  previewAdjustCamera?: number;
 }
 
 export interface Furniture {

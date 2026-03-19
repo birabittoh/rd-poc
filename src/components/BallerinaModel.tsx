@@ -5,7 +5,10 @@ import * as THREE from 'three';
 import { Ballerina } from '../types';
 import { TILE_SIZE } from '../constants';
 
-class ErrorBoundary extends React.Component<{ fallback: React.ReactNode; children: React.ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends React.Component<
+  { fallback: React.ReactNode; children: React.ReactNode },
+  { hasError: boolean }
+> {
   constructor(props: { fallback: React.ReactNode; children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
@@ -41,12 +44,12 @@ function BallerinaGLB() {
 }
 
 function BallerinaPrimitive() {
-  const skinColor = "#fce2d5";
-  const hairColor = "#b084cc";
-  const shirtColor = "#f4c2d7";
-  const skirtColor = "#3d4b68";
-  const shoeColor = "#2c2b5e";
-  const eyeColor = "#5c3a21";
+  const skinColor = '#fce2d5';
+  const hairColor = '#b084cc';
+  const shirtColor = '#f4c2d7';
+  const skirtColor = '#3d4b68';
+  const shoeColor = '#2c2b5e';
+  const eyeColor = '#5c3a21';
 
   return (
     <group scale={0.32} position={[0, 0.11, 0]}>
@@ -98,11 +101,21 @@ function BallerinaPrimitive() {
           <meshStandardMaterial color={hairColor} />
         </mesh>
         {/* Pigtails */}
-        <mesh position={[-0.8, -0.2, -0.2]} rotation={[0, 0, Math.PI - 0.5]} castShadow receiveShadow>
+        <mesh
+          position={[-0.8, -0.2, -0.2]}
+          rotation={[0, 0, Math.PI - 0.5]}
+          castShadow
+          receiveShadow
+        >
           <coneGeometry args={[0.3, 1.2, 4]} />
           <meshStandardMaterial color={hairColor} />
         </mesh>
-        <mesh position={[0.8, -0.2, -0.2]} rotation={[0, 0, -(Math.PI - 0.5)]} castShadow receiveShadow>
+        <mesh
+          position={[0.8, -0.2, -0.2]}
+          rotation={[0, 0, -(Math.PI - 0.5)]}
+          castShadow
+          receiveShadow
+        >
           <coneGeometry args={[0.3, 1.2, 4]} />
           <meshStandardMaterial color={hairColor} />
         </mesh>

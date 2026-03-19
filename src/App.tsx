@@ -24,7 +24,6 @@ import {
   RectangleVertical,
   ScanLine,
 } from 'lucide-react';
-import { useFrame, useThree } from '@react-three/fiber';
 import { GameState, ItemType } from './types';
 import { ITEM_DEFINITIONS } from './items';
 import { PlacementPayload, placeFurniture, stepBallerina, createInitialState } from './gameLogic';
@@ -36,6 +35,21 @@ import { VariantPreview } from './components/VariantPreview';
 import { LoadingScreen } from './components/LoadingScreen';
 import { DoorEntrance } from './components/DoorEntrance';
 import { motion, AnimatePresence } from 'motion/react';
+
+const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
+
+function loadSavedVariants(): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(VARIANT_STORAGE_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+function saveVariant(type: ItemType, variant: number) {
+  const saved = loadSavedVariants();
+  localStorage.setItem(VARIANT_STORAGE_KEY, JSON.stringify({ ...saved, [type]: variant }));
+}
 
 const WS_URL = import.meta.env.VITE_APP_URL
   ? import.meta.env.VITE_APP_URL.replace('http', 'ws')
@@ -60,23 +74,6 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   mirror: <RectangleVertical />,
   mirror_ornament: <ScanLine />,
 };
-
-const TARGET_ZOOM = 40;
-const INITIAL_ZOOM = 4;
-
-function CameraZoomIn() {
-  const { camera } = useThree();
-  const zoom = useRef(INITIAL_ZOOM);
-
-  useFrame((_, delta) => {
-    if (zoom.current >= TARGET_ZOOM) return;
-    zoom.current = Math.min(TARGET_ZOOM, zoom.current + delta * 12);
-    camera.zoom = zoom.current;
-    camera.updateProjectionMatrix();
-  });
-
-  return null;
-}
 
 const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'floor');
 const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'surface');
@@ -186,6 +183,7 @@ export default function App() {
 
     if (!payload) return;
 
+    if (payload.variant !== undefined) saveVariant(selectedItem, payload.variant);
     setSelectedItem(null);
     setPlacementPath([]);
 
@@ -262,8 +260,7 @@ export default function App() {
           dpr={[1, 2]}
           gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
         >
-          <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={INITIAL_ZOOM} near={-100} far={100} />
-          <CameraZoomIn />
+          <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} near={-100} far={100} />
           <OrbitControls
             enablePan={false}
             enableZoom={true}
@@ -331,7 +328,7 @@ export default function App() {
                       disabled={isPlacementDisabled}
                       onClick={() => {
                         setSelectedItem(item.type);
-                        setSelectedVariant(0);
+                        setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
                         setPlacementPath([]);
                       }}
                     />
@@ -349,7 +346,7 @@ export default function App() {
                       disabled={isPlacementDisabled || !hasFreeSurface}
                       onClick={() => {
                         setSelectedItem(item.type);
-                        setSelectedVariant(0);
+                        setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
                         setPlacementPath([]);
                       }}
                       isOrnament
