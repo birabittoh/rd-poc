@@ -2,22 +2,15 @@ import React from 'react';
 import { Box } from '@react-three/drei';
 import { FurnitureProps } from '../../types';
 
-const BOOKS = [
-  // [xOffset, height, depth]
-  [-0.28, 0.24, 0.18],
-  [-0.18, 0.22, 0.18],
-  [-0.08, 0.26, 0.18],
-  [0.02, 0.2, 0.18],
-  [0.12, 0.23, 0.18],
-  [0.22, 0.21, 0.18],
-  [0.3, 0.25, 0.18],
-];
-
 // Deterministic hue per book using golden ratio, offset per shelf row
 const GOLDEN = 137.508;
-function bookColor(shelfI: number, bookI: number) {
-  const hue = (shelfI * 97 + bookI * GOLDEN) % 360;
+function getBookColor(shelfI: number, x: number) {
+  const hue = (shelfI * 97 + Math.abs(x) * 1000 * GOLDEN) % 360;
   return `hsl(${hue}, 55%, 32%)`;
+}
+
+function getBookHeight(shelfI: number, x: number) {
+  return 0.2 + (Math.sin(shelfI * 13 + x * 20) * 0.05 + 0.05);
 }
 
 export function Library({ localConn, variant }: FurnitureProps) {
@@ -69,19 +62,31 @@ export function Library({ localConn, variant }: FurnitureProps) {
       ))}
 
       {/* Books on each shelf */}
-      {shelfYs.map((shelfY, shelfI) =>
-        BOOKS.map(([xOff, bookH, bookD], i) => (
-          <Box
-            key={`${shelfI}-${i}`}
-            args={[0.075, bookH, bookD]}
-            position={[xOff, shelfY + 0.025 + bookH / 2, 0.12]}
-            castShadow
-            receiveShadow
-          >
-            <meshStandardMaterial color={bookColor(shelfI, i)} roughness={0.5} />
-          </Box>
-        ))
-      )}
+      {shelfYs.map((shelfY, shelfI) => {
+        const bookCount = Math.floor(shelfWidth / 0.07); // Pack them tighter
+        const bookSpacing = shelfWidth / bookCount;
+        const startX = shelfPosX - shelfWidth / 2 + bookSpacing / 2;
+
+        return Array.from({ length: bookCount }).map((_, i) => {
+          const x = startX + i * bookSpacing;
+          const bookH = getBookHeight(shelfI, x);
+          const bookD = 0.18 + (Math.cos(x * 50) * 0.02); // Slight depth variety
+          const tilt = Math.sin(x * 120 + shelfI) * 0.1; // Slight lean for "filled" look
+
+          return (
+            <Box
+              key={`${shelfI}-${i}`}
+              args={[bookSpacing - 0.005, bookH, bookD]}
+              position={[x, shelfY + 0.025 + bookH / 2, 0.12]}
+              rotation={[0, 0, tilt]}
+              castShadow
+              receiveShadow
+            >
+              <meshStandardMaterial color={getBookColor(shelfI, x)} roughness={0.5} />
+            </Box>
+          );
+        });
+      })}
     </group>
   );
 }
