@@ -172,6 +172,30 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
     } else {
       rotation = faceAwayFromNearestWall();
     }
+  } else if (manualRotation === undefined && def.rotationStrategy === 'faceChair') {
+    const targets = state.furniture.filter((f) => {
+      if (f.type !== 'chair') return false;
+      const dx = f.x - x;
+      const dy = f.y - y;
+      return (dx === 0 && Math.abs(dy) <= 2) || (dy === 0 && Math.abs(dx) <= 2);
+    });
+    if (targets.length > 0) {
+      let nearest = targets[0];
+      let minDist = Infinity;
+      for (const t of targets) {
+        const dist = Math.abs(t.x - x) + Math.abs(t.y - y);
+        if (dist < minDist) {
+          minDist = dist;
+          nearest = t;
+        }
+      }
+      const dx = nearest.x - x;
+      const dy = nearest.y - y;
+      if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
+      else rotation = dy > 0 ? 0 : Math.PI;
+    } else {
+      rotation = faceAwayFromNearestWall();
+    }
   } else if (manualRotation === undefined && def.rotationStrategy === 'faceAwayFromWall') {
     rotation = faceAwayFromNearestWall();
   }
@@ -328,7 +352,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
 
   const newFurniture = [...state.furniture, newItem];
 
-  // Update faceNearest rotations for existing items
+  // Update rotations for existing items based on their strategies
   const updatedFurniture = newFurniture.map((item) => {
     const itemDef = ITEM_DEFINITIONS[item.type];
     if (itemDef.rotationStrategy === 'faceNearest' && itemDef.facingType === type) {
@@ -347,6 +371,31 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       const newRotation =
         Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? Math.PI / 2 : -Math.PI / 2) : dy > 0 ? 0 : Math.PI;
       return { ...item, rotation: newRotation };
+    }
+
+    if (itemDef.rotationStrategy === 'faceChair' && type === 'chair') {
+      const targets = newFurniture.filter((f) => {
+        if (f.type !== 'chair') return false;
+        const dx = f.x - item.x;
+        const dy = f.y - item.y;
+        return (dx === 0 && Math.abs(dy) <= 2) || (dy === 0 && Math.abs(dx) <= 2);
+      });
+      if (targets.length > 0) {
+        let nearest = targets[0];
+        let minDist = Infinity;
+        for (const t of targets) {
+          const dist = Math.abs(t.x - item.x) + Math.abs(t.y - item.y);
+          if (dist < minDist) {
+            minDist = dist;
+            nearest = t;
+          }
+        }
+        const dx = nearest.x - item.x;
+        const dy = nearest.y - item.y;
+        const newRotation =
+          Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? Math.PI / 2 : -Math.PI / 2) : dy > 0 ? 0 : Math.PI;
+        return { ...item, rotation: newRotation };
+      }
     }
     return item;
   });

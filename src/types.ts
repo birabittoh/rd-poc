@@ -27,7 +27,13 @@ export interface ItemDefinition {
   surfaceHeight?: number;
   label?: string;
   connectableDirections?: 'sides' | 'all';
-  rotationStrategy?: 'faceNearest' | 'faceAwayFromWall' | 'manual' | 'inherit' | 'faceInteractable';
+  rotationStrategy?:
+    | 'faceNearest'
+    | 'faceAwayFromWall'
+    | 'manual'
+    | 'inherit'
+    | 'faceInteractable'
+    | 'faceChair';
   facingType?: ItemType;
   variants?: number;
   previewAdjustCamera?: number;
