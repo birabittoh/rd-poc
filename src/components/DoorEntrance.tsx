@@ -35,13 +35,13 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
                 style={{ backgroundColor: COLORS.DOOR, borderColor: COLORS.DOOR_BORDER }}
               >
                 {/* Sign image */}
-                <div className="absolute top-12 left-1/2 -translate-x-1/2 w-40 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
                   <img src="/sign.png" alt="My Room Sign" className="w-full h-auto" />
                 </div>
 
                 <svg
                   viewBox="0 0 24 24"
-                  className="w-24 h-24 transition-colors duration-500"
+                  className="w-24 h-24 transition-colors duration-500 mt-48"
                   style={{ color: COLORS.DOOR_BORDER }}
                   fill="none"
                   stroke="currentColor"
@@ -61,14 +61,7 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
               <div className="absolute inset-0 rounded-t-full bg-white/0 group-hover:bg-white/5 blur-2xl transition-all duration-700" />
             </div>
 
-            <motion.p
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 1 }}
-              className="text-sm font-bold tracking-[0.3em] text-zinc-600 uppercase"
-            >
-              Click to Enter
-            </motion.p>
+            <div className="h-6" />
           </motion.div>
         ) : (
           <motion.div
@@ -86,13 +79,13 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
                 style={{ backgroundColor: COLORS.DOOR, borderColor: COLORS.DOOR_BORDER }}
               >
                 {/* Sign image on the opening door */}
-                <div className="absolute top-12 left-1/2 -translate-x-1/2 w-40 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
                   <img src="/sign.png" alt="My Room Sign" className="w-full h-auto" />
                 </div>
 
                 <svg
                   viewBox="0 0 24 24"
-                  className="w-24 h-24"
+                  className="w-24 h-24 transition-colors duration-500 mt-48"
                   style={{ color: COLORS.DOOR_BORDER }}
                   fill="none"
                   stroke="currentColor"
@@ -107,7 +100,7 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
               </motion.div>
 
               {/* Spacer matching "Click to Enter" text height */}
-              <div className="text-sm invisible select-none">Click to Enter</div>
+              <div className="h-6 invisible select-none" />
             </div>
 
             {/* The light spilling from behind the door */}
