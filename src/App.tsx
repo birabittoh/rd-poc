@@ -35,6 +35,7 @@ import { VariantPreview } from './components/VariantPreview';
 import { LoadingScreen } from './components/LoadingScreen';
 import { DoorEntrance } from './components/DoorEntrance';
 import { motion, AnimatePresence } from 'motion/react';
+import { COLORS } from './constants';
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
 
@@ -234,7 +235,10 @@ export default function App() {
 
   if (!gameState) {
     return (
-      <div className="flex h-full items-center justify-center bg-zinc-900 text-white">
+      <div
+        className="flex h-full items-center justify-center text-white"
+        style={{ backgroundColor: COLORS.BACKGROUND }}
+      >
         Connecting to server...
       </div>
     );
@@ -252,7 +256,10 @@ export default function App() {
   );
 
   return (
-    <div className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
+    <div
+      className="relative h-full w-full overflow-hidden font-sans text-zinc-100"
+      style={{ backgroundColor: COLORS.BACKGROUND }}
+    >
       {/* 3D Canvas */}
       <div className="absolute inset-0">
         <Canvas

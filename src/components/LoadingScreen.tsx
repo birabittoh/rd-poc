@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { CaptureManager } from './CaptureManager';
 import { ITEM_DEFINITIONS } from '../items';
+import { COLORS } from '../constants';
 
 interface LoadingScreenProps {
   onLoadingComplete: (captures: Record<string, string>) => void;
@@ -111,7 +112,10 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   const done = assetsLoaded && modelReady && capturesDone;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-900 font-sans text-white">
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center font-sans text-white"
+      style={{ backgroundColor: COLORS.BACKGROUND }}
+    >
       {/* Hidden canvas for model parsing */}
       <div style={{ position: 'absolute', top: -1000, left: -1000, pointerEvents: 'none' }}>
         <Canvas>
