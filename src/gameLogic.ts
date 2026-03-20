@@ -114,16 +114,30 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   let rotation = manualRotation !== undefined ? manualRotation : 0;
 
   // Rotation Strategies
-  const faceAwayFromNearestWall = () => {
-    const distLeft = x,
-      distRight = GRID_SIZE - 1 - x;
-    const distTop = y,
-      distBottom = GRID_SIZE - 1 - y;
+  const getFaceAwayFromWallRotation = (px: number, py: number) => {
+    const distLeft = px,
+      distRight = GRID_SIZE - 1 - px;
+    const distTop = py,
+      distBottom = GRID_SIZE - 1 - py;
     const minDist = Math.min(distLeft, distRight, distTop, distBottom);
     if (minDist === distTop) return 0;
     else if (minDist === distBottom) return Math.PI;
     else if (minDist === distLeft) return Math.PI / 2;
     else return -Math.PI / 2;
+  };
+
+  const isFacing = (chair: Furniture, targetX: number, targetY: number) => {
+    const dx = targetX - chair.x;
+    const dy = targetY - chair.y;
+    const chairFacingX = Math.round(Math.sin(chair.rotation));
+    const chairFacingY = Math.round(Math.cos(chair.rotation));
+    if (dx === 0 && dy !== 0) {
+      return chairFacingX === 0 && Math.sign(chairFacingY) === Math.sign(dy);
+    }
+    if (dy === 0 && dx !== 0) {
+      return chairFacingY === 0 && Math.sign(chairFacingX) === Math.sign(dx);
+    }
+    return false;
   };
 
   if (manualRotation === undefined && def.rotationStrategy === 'faceNearest' && def.facingType) {
@@ -143,7 +157,7 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
     } else {
-      rotation = faceAwayFromNearestWall();
+      rotation = getFaceAwayFromWallRotation(x, y);
     }
   } else if (manualRotation === undefined && def.rotationStrategy === 'faceInteractable') {
     const targets = state.furniture.filter((f) => ITEM_DEFINITIONS[f.type].interactable);
@@ -170,14 +184,15 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
     } else {
-      rotation = faceAwayFromNearestWall();
+      rotation = getFaceAwayFromWallRotation(x, y);
     }
   } else if (manualRotation === undefined && def.rotationStrategy === 'faceChair') {
     const targets = state.furniture.filter((f) => {
       if (f.type !== 'chair') return false;
       const dx = f.x - x;
       const dy = f.y - y;
-      return (dx === 0 && Math.abs(dy) <= 2) || (dy === 0 && Math.abs(dx) <= 2);
+      const inRange = (dx === 0 && Math.abs(dy) <= 2) || (dy === 0 && Math.abs(dx) <= 2);
+      return inRange && isFacing(f, x, y);
     });
     if (targets.length > 0) {
       let nearest = targets[0];
@@ -194,10 +209,10 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       if (Math.abs(dx) > Math.abs(dy)) rotation = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
       else rotation = dy > 0 ? 0 : Math.PI;
     } else {
-      rotation = faceAwayFromNearestWall();
+      rotation = getFaceAwayFromWallRotation(x, y);
     }
   } else if (manualRotation === undefined && def.rotationStrategy === 'faceAwayFromWall') {
-    rotation = faceAwayFromNearestWall();
+    rotation = getFaceAwayFromWallRotation(x, y);
   }
 
   const variant = payloadVariant !== undefined ? payloadVariant : 0;
@@ -378,7 +393,8 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
         if (f.type !== 'chair') return false;
         const dx = f.x - item.x;
         const dy = f.y - item.y;
-        return (dx === 0 && Math.abs(dy) <= 2) || (dy === 0 && Math.abs(dx) <= 2);
+        const inRange = (dx === 0 && Math.abs(dy) <= 2) || (dy === 0 && Math.abs(dx) <= 2);
+        return inRange && isFacing(f, item.x, item.y);
       });
       if (targets.length > 0) {
         let nearest = targets[0];
@@ -395,6 +411,8 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
         const newRotation =
           Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? Math.PI / 2 : -Math.PI / 2) : dy > 0 ? 0 : Math.PI;
         return { ...item, rotation: newRotation };
+      } else {
+        return { ...item, rotation: getFaceAwayFromWallRotation(item.x, item.y) };
       }
     }
     return item;
