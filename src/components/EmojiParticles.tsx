@@ -40,12 +40,15 @@ function ParticleSpan({
   onEnd: () => void;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
+  const onEndRef = useRef(onEnd);
+  onEndRef.current = onEnd;
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const { duration, phase, wobbleFreq, wobbleAmp, drift } = particle;
     const start = performance.now();
-    const durationMs = particle.duration * 1000;
+    const durationMs = duration * 1000;
     let raf: number;
 
     function tick(now: number) {
@@ -56,9 +59,8 @@ function ParticleSpan({
       const y = -t * window.innerHeight;
       // Horizontal: sine wobble + linear drift
       const wobbleX =
-        Math.sin(particle.phase + t * particle.wobbleFreq * Math.PI * 2) *
-        particle.wobbleAmp;
-      const driftX = t * particle.drift;
+        Math.sin(phase + t * wobbleFreq * Math.PI * 2) * wobbleAmp;
+      const driftX = t * drift;
       // Opacity: fully visible until 70%, then fade
       const opacity = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
 
@@ -68,13 +70,14 @@ function ParticleSpan({
       if (t < 1) {
         raf = requestAnimationFrame(tick);
       } else {
-        onEnd();
+        onEndRef.current();
       }
     }
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [particle, onEnd]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <span
