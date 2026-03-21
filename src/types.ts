@@ -83,6 +83,8 @@ export interface WaitingRoomUser {
   uuid: string;
   name: string;
   coins: number;
+  sparkles: number;
+  unlockedEmojis: number[];
   online: boolean;
 }
 

@@ -10,6 +10,11 @@ export function FurnitureButton({
   disabled,
   onClick,
   isOrnament: _isOrnament,
+  price,
+  affordable,
+  remaining,
+  max,
+  sparkleReward,
 }: {
   type: ItemType;
   label?: string;
@@ -18,21 +23,48 @@ export function FurnitureButton({
   disabled?: boolean;
   onClick: () => void;
   isOrnament?: boolean;
+  price?: number;
+  affordable?: boolean;
+  remaining?: number;
+  max?: number;
+  sparkleReward?: number;
 }) {
+  const maxedOut = remaining !== undefined && remaining <= 0;
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0',
+        'relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 min-w-[64px] shrink-0',
         selected
           ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/30 scale-105'
           : 'bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white',
-        disabled && 'opacity-40 cursor-not-allowed grayscale-[0.5]'
+        disabled && 'opacity-40 cursor-not-allowed grayscale-[0.5]',
+        price !== undefined && affordable === false && !disabled && !maxedOut && 'opacity-60'
       )}
     >
+      {sparkleReward !== undefined && !maxedOut && (
+        <span className="absolute top-1 right-1 text-[8px] font-bold text-yellow-400">
+          +{sparkleReward} ✨
+        </span>
+      )}
       <div className="[&>svg]:w-5 [&>svg]:h-5">{icon}</div>
       <span className="text-[10px] font-medium capitalize">{label ?? type.replace('_', ' ')}</span>
+      {price !== undefined && !maxedOut && (
+        <span
+          className={cn(
+            'text-[9px] font-bold',
+            affordable === false ? 'text-red-400' : 'text-amber-400'
+          )}
+        >
+          🪙 {price}
+        </span>
+      )}
+      {remaining !== undefined && max !== undefined && (
+        <span className={cn('text-[8px] font-medium', maxedOut ? 'text-zinc-500' : 'text-zinc-400')}>
+          {maxedOut ? 'MAX' : `${remaining}/${max}`}
+        </span>
+      )}
     </button>
   );
 }

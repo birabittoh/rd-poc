@@ -14,7 +14,6 @@ import {
   Tv,
   Library,
   Lightbulb,
-  Timer,
   Bed,
   LayoutGrid,
   Square,
@@ -28,8 +27,7 @@ import {
   Volume2,
   VolumeX,
   ArrowLeft,
-  ShoppingBag,
-  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
 import { ITEM_DEFINITIONS } from './items';
@@ -46,6 +44,16 @@ import { motion, AnimatePresence } from 'motion/react';
 import { COLORS, EMOJI_LIST } from './constants';
 import { EmojiParticles, createParticle, Particle } from './components/EmojiParticles';
 import { preloadAllSfx, playSfx } from './sfx';
+import {
+  INITIAL_COINS,
+  INITIAL_SPARKLES,
+  DEFAULT_UNLOCKED_EMOJIS,
+  EMOJI_COIN_REWARDS,
+  EMOJI_UNLOCK_COSTS,
+  ITEM_COIN_COSTS,
+  ITEM_SPARKLE_REWARDS,
+  ITEM_MAX_PLACEMENTS,
+} from './economy';
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
 const USER_ID_KEY = 'rd-poc:userId';
@@ -100,7 +108,6 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [placementPath, setPlacementPath] = useState<{ x: number; y: number }[]>([]);
-  const [cooldown, setCooldown] = useState(0);
   const [appState, setAppState] = useState<
     'loading' | 'ready' | 'entering' | 'waiting' | 'playing'
   >('loading');
@@ -109,7 +116,7 @@ export default function App() {
   const [isBgmMuted, setIsBgmMuted] = useState(false);
   const [isSfxMuted, setIsSfxMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [menuView, setMenuView] = useState<'main' | 'purchase' | 'earn'>('main');
+  const [menuView, setMenuView] = useState<'purchase' | 'earn'>('earn');
   const [particles, setParticles] = useState<Particle[]>([]);
   const isSfxMutedRef = useRef(false);
   const bottomPanelRef = useRef<HTMLDivElement>(null);
@@ -120,6 +127,14 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<{ uuid: string; name: string } | null>(null);
   const [released, setReleased] = useState(false);
   const [releaseTimestamp, setReleaseTimestamp] = useState<string>('');
+
+  // Economy state
+  const [coins, setCoins] = useState(INITIAL_COINS);
+  const [sparkles, setSparkles] = useState(INITIAL_SPARKLES);
+  const [unlockedEmojis, setUnlockedEmojis] = useState<number[]>([...DEFAULT_UNLOCKED_EMOJIS]);
+  const [itemPlacements, setItemPlacements] = useState<Record<string, number>>({});
+  const [coinPulse, setCoinPulse] = useState(false);
+  const [sparklePulse, setSparklePulse] = useState(false);
 
   // Keep sfx mute ref in sync
   useEffect(() => {
@@ -160,12 +175,27 @@ export default function App() {
       if (data.type === 'state') {
         receivedState = true;
         setGameState(data.state);
-      } else if (data.type === 'cooldown') {
-        setCooldown(data.remaining);
       } else if (data.type === 'registered') {
         localStorage.setItem(USER_ID_KEY, data.uuid);
         setCurrentUser({ uuid: data.uuid, name: data.name });
         setReleaseTimestamp(data.releaseTimestamp);
+        setCoins(data.coins ?? INITIAL_COINS);
+        setSparkles(data.sparkles ?? INITIAL_SPARKLES);
+        setUnlockedEmojis(data.unlockedEmojis ?? [...DEFAULT_UNLOCKED_EMOJIS]);
+        setItemPlacements(data.itemPlacements ?? {});
+      } else if (data.type === 'currency_update') {
+        setCoins(data.coins);
+        setSparkles(data.sparkles);
+        setUnlockedEmojis(data.unlockedEmojis);
+        setItemPlacements(data.itemPlacements ?? {});
+        if (data.earned?.coins) {
+          setCoinPulse(true);
+          setTimeout(() => setCoinPulse(false), 600);
+        }
+        if (data.earned?.sparkles) {
+          setSparklePulse(true);
+          setTimeout(() => setSparklePulse(false), 600);
+        }
       } else if (data.type === 'user_list') {
         setWaitingUsers(data.users);
       } else if (data.type === 'chat_broadcast') {
@@ -217,15 +247,14 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isDemoMode]);
 
-  // Demo mode: cooldown countdown
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setTimeout(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
-
   const handlePlace = (x: number, y: number, z: number, rotationOverride?: number) => {
-    if (!selectedItem || gameState?.status !== 'playing' || cooldown > 0) return;
+    if (!selectedItem || gameState?.status !== 'playing') return;
+
+    // Check affordability and placement limit
+    const itemCost = ITEM_COIN_COSTS[selectedItem];
+    if (coins < itemCost) return;
+    const maxP = ITEM_MAX_PLACEMENTS[selectedItem];
+    if ((itemPlacements[selectedItem] || 0) >= maxP) return;
 
     const def = ITEM_DEFINITIONS[selectedItem];
     let payload: PlacementPayload | null = null;
@@ -269,7 +298,21 @@ export default function App() {
     setPlacementPath([]);
 
     if (isDemoMode) {
-      setGameState((prev) => (prev ? (placeFurniture(prev, payload!) ?? prev) : prev));
+      const result = placeFurniture(gameState!, payload);
+      if (result) {
+        setGameState(result);
+        // Local economy in demo mode
+        setCoins((c) => c - itemCost);
+        setCoinPulse(false);
+        const sparkleReward = ITEM_SPARKLE_REWARDS[selectedItem];
+        setSparkles((s) => s + sparkleReward);
+        setItemPlacements((prev) => ({
+          ...prev,
+          [selectedItem]: (prev[selectedItem] || 0) + 1,
+        }));
+        setSparklePulse(true);
+        setTimeout(() => setSparklePulse(false), 600);
+      }
     } else if (ws) {
       ws.send(JSON.stringify({ type: 'place_furniture', payload }));
     }
@@ -304,6 +347,7 @@ export default function App() {
   };
 
   const handleEmojiClick = (index: number, e: React.MouseEvent) => {
+    if (!unlockedEmojis.includes(index)) return;
     const entry = EMOJI_LIST[index];
     if (!entry) return;
     // Spawn particle from click position
@@ -316,6 +360,26 @@ export default function App() {
     // Broadcast to server
     if (ws) {
       ws.send(JSON.stringify({ type: 'emoji', index }));
+    }
+    // Demo mode: local coin reward
+    if (isDemoMode) {
+      const reward = EMOJI_COIN_REWARDS[index];
+      setCoins((c) => c + reward);
+      setCoinPulse(true);
+      setTimeout(() => setCoinPulse(false), 600);
+    }
+  };
+
+  const handleEmojiUnlock = (index: number) => {
+    if (unlockedEmojis.includes(index)) return;
+    const cost = EMOJI_UNLOCK_COSTS[index];
+    if (sparkles < cost) return;
+
+    if (isDemoMode) {
+      setSparkles((s) => s - cost);
+      setUnlockedEmojis((prev) => [...prev, index]);
+    } else if (ws) {
+      ws.send(JSON.stringify({ type: 'unlock_emoji', index }));
     }
   };
 
@@ -377,7 +441,7 @@ export default function App() {
   const showRoom = appState === 'playing';
 
   const isOrnament = selectedItem ? ITEM_DEFINITIONS[selectedItem].category === 'surface' : false;
-  const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== 'playing');
+  const isPlacementDisabled = gameState && gameState.status !== 'playing';
 
   const surfaceOccupied = new Set(
     gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)
@@ -393,22 +457,58 @@ export default function App() {
       style={{ backgroundColor: COLORS.BACKGROUND }}
     >
       {/* Mute Buttons */}
-      {appState !== 'loading' && (
-        <div className="absolute top-4 left-4 z-50 flex gap-2">
-          <button
-            onClick={toggleBgmMute}
-            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-            aria-label={isBgmMuted ? 'Unmute BGM' : 'Mute BGM'}
+      <div className="absolute top-4 left-4 z-50 flex gap-2">
+        <button
+          onClick={toggleBgmMute}
+          className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+          aria-label={isBgmMuted ? 'Unmute BGM' : 'Mute BGM'}
+        >
+          {isBgmMuted ? <Music2 className="w-5 h-5 opacity-40" /> : <Music className="w-5 h-5" />}
+        </button>
+        <button
+          onClick={toggleSfxMute}
+          className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+          aria-label={isSfxMuted ? 'Unmute SFX' : 'Mute SFX'}
+        >
+          {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Currency HUD - top right */}
+      {showRoom && (
+        <div className="absolute top-4 right-4 z-50 flex gap-2">
+          <div
+            className={cn(
+              'flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300',
+              sparklePulse && 'ring-2 ring-yellow-400/50 shadow-yellow-400/20'
+            )}
           >
-            {isBgmMuted ? <Music2 className="w-5 h-5 opacity-40" /> : <Music className="w-5 h-5" />}
-          </button>
-          <button
-            onClick={toggleSfxMute}
-            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-            aria-label={isSfxMuted ? 'Unmute SFX' : 'Mute SFX'}
+            <span
+              className={cn(
+                'text-lg transition-transform duration-300',
+                sparklePulse && 'scale-125'
+              )}
+            >
+              ✨
+            </span>
+            <span className="text-sm font-bold text-zinc-100 tabular-nums">{sparkles}</span>
+          </div>
+          <div
+            className={cn(
+              'flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300',
+              coinPulse && 'ring-2 ring-amber-400/50 shadow-amber-400/20'
+            )}
           >
-            {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-          </button>
+            <span
+              className={cn(
+                'text-lg transition-transform duration-300',
+                coinPulse && 'scale-125'
+              )}
+            >
+              🪙
+            </span>
+            <span className="text-sm font-bold text-zinc-100 tabular-nums">{coins}</span>
+          </div>
         </div>
       )}
 
@@ -478,34 +578,6 @@ export default function App() {
 
         <div id="bottom-panel" ref={bottomPanelRef} className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full overflow-hidden">
           <AnimatePresence mode="wait">
-            {/* Main menu */}
-            {menuView === 'main' && !selectedItem && (
-              <motion.div
-                key="main-menu"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ScrollContainer title="Menu">
-                  <button
-                    onClick={() => setMenuView('earn')}
-                    className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white"
-                  >
-                    <div className="[&>svg]:w-5 [&>svg]:h-5"><Sparkles /></div>
-                    <span className="text-[10px] font-medium">Earn</span>
-                  </button>
-                  <button
-                    onClick={() => setMenuView('purchase')}
-                    className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white"
-                  >
-                    <div className="[&>svg]:w-5 [&>svg]:h-5"><ShoppingBag /></div>
-                    <span className="text-[10px] font-medium">Purchase</span>
-                  </button>
-                </ScrollContainer>
-              </motion.div>
-            )}
-
             {/* Purchase menu - furniture lists */}
             {menuView === 'purchase' && !selectedItem && (
               <motion.div
@@ -517,48 +589,70 @@ export default function App() {
                 className="flex flex-col gap-2 relative"
               >
                 <button
-                  onClick={() => setMenuView('main')}
+                  onClick={() => setMenuView('earn')}
                   className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
-                  aria-label="Back"
+                  aria-label="Back to Earn"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" />
                 </button>
 
                 <ScrollContainer title="Floor">
-                  {FLOOR_ITEMS.map((item) => (
-                    <FurnitureButton
-                      key={item.type}
-                      type={item.type}
-                      label={item.label}
-                      icon={ITEM_ICONS[item.type]}
-                      selected={selectedItem === item.type}
-                      disabled={isPlacementDisabled}
-                      onClick={() => {
-                        setSelectedItem(item.type);
-                        setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
-                        setPlacementPath([]);
-                      }}
-                    />
-                  ))}
+                  {FLOOR_ITEMS.map((item) => {
+                    const placed = itemPlacements[item.type] || 0;
+                    const maxP = ITEM_MAX_PLACEMENTS[item.type];
+                    const maxedOut = placed >= maxP;
+                    return (
+                      <FurnitureButton
+                        key={item.type}
+                        type={item.type}
+                        label={item.label}
+                        icon={ITEM_ICONS[item.type]}
+                        selected={selectedItem === item.type}
+                        disabled={isPlacementDisabled || maxedOut}
+                        onClick={() => {
+                          if (maxedOut || coins < ITEM_COIN_COSTS[item.type]) return;
+                          setSelectedItem(item.type);
+                          setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
+                          setPlacementPath([]);
+                        }}
+                        price={ITEM_COIN_COSTS[item.type]}
+                        affordable={coins >= ITEM_COIN_COSTS[item.type]}
+                        remaining={maxP - placed}
+                        max={maxP}
+                        sparkleReward={ITEM_SPARKLE_REWARDS[item.type]}
+                      />
+                    );
+                  })}
                 </ScrollContainer>
 
                 <ScrollContainer title="Surface">
-                  {SURFACE_ITEMS.map((item) => (
-                    <FurnitureButton
-                      key={item.type}
-                      type={item.type}
-                      label={item.label}
-                      icon={ITEM_ICONS[item.type]}
-                      selected={selectedItem === item.type}
-                      disabled={isPlacementDisabled || !hasFreeSurface}
-                      onClick={() => {
-                        setSelectedItem(item.type);
-                        setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
-                        setPlacementPath([]);
-                      }}
-                      isOrnament
-                    />
-                  ))}
+                  {SURFACE_ITEMS.map((item) => {
+                    const placed = itemPlacements[item.type] || 0;
+                    const maxP = ITEM_MAX_PLACEMENTS[item.type];
+                    const maxedOut = placed >= maxP;
+                    return (
+                      <FurnitureButton
+                        key={item.type}
+                        type={item.type}
+                        label={item.label}
+                        icon={ITEM_ICONS[item.type]}
+                        selected={selectedItem === item.type}
+                        disabled={isPlacementDisabled || !hasFreeSurface || maxedOut}
+                        onClick={() => {
+                          if (maxedOut || coins < ITEM_COIN_COSTS[item.type]) return;
+                          setSelectedItem(item.type);
+                          setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
+                          setPlacementPath([]);
+                        }}
+                        isOrnament
+                        price={ITEM_COIN_COSTS[item.type]}
+                        affordable={coins >= ITEM_COIN_COSTS[item.type]}
+                        remaining={maxP - placed}
+                        max={maxP}
+                        sparkleReward={ITEM_SPARKLE_REWARDS[item.type]}
+                      />
+                    );
+                  })}
                 </ScrollContainer>
               </motion.div>
             )}
@@ -622,55 +716,76 @@ export default function App() {
                 className="relative"
               >
                 <button
-                  onClick={() => setMenuView('main')}
+                  onClick={() => setMenuView('purchase')}
                   className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
-                  aria-label="Back"
+                  aria-label="Go to Purchase"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" />
                 </button>
 
                 <ScrollContainer title="Earn">
-                  {EMOJI_LIST.map((entry, i) => (
-                    <button
-                      key={i}
-                      onClick={(e) => handleEmojiClick(i, e)}
-                      className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white active:scale-95"
-                    >
-                      <span className="text-xl">{entry.emoji}</span>
-                      <span className="text-[10px] font-medium capitalize">{entry.sfx}</span>
-                    </button>
-                  ))}
+                  {EMOJI_LIST.map((entry, i) => {
+                    const isUnlocked = unlockedEmojis.includes(i);
+                    const unlockCost = EMOJI_UNLOCK_COSTS[i];
+                    const canAffordUnlock = sparkles >= unlockCost;
+                    const coinReward = EMOJI_COIN_REWARDS[i];
+
+                    return (
+                      <button
+                        key={i}
+                        onClick={(e) => {
+                          if (isUnlocked) {
+                            handleEmojiClick(i, e);
+                          } else {
+                            handleEmojiUnlock(i);
+                          }
+                        }}
+                        className={cn(
+                          'relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 min-w-[64px] shrink-0',
+                          isUnlocked
+                            ? 'bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white active:scale-95'
+                            : canAffordUnlock
+                              ? 'bg-zinc-700/30 text-zinc-400 hover:bg-zinc-600/50 hover:text-zinc-200 border border-dashed border-yellow-500/30'
+                              : 'bg-zinc-800/50 text-zinc-500 opacity-60'
+                        )}
+                      >
+                        <span className="text-xl relative">
+                          {entry.emoji}
+                          {!isUnlocked && (
+                            <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+                          )}
+                        </span>
+                        <span className="text-[10px] font-medium capitalize">{entry.sfx}</span>
+                        {isUnlocked ? (
+                          <span className="text-[9px] font-bold text-amber-400">
+                            +{coinReward} 🪙
+                          </span>
+                        ) : (
+                          <span
+                            className={cn(
+                              'text-[9px] font-bold',
+                              canAffordUnlock ? 'text-yellow-400' : 'text-zinc-500'
+                            )}
+                          >
+                            {unlockCost} ✨
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </ScrollContainer>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
         <div className="mt-4 relative h-6 flex items-center justify-center w-full">
-          <p
-            className={cn(
-              'text-sm text-zinc-400 font-medium tracking-wide transition-opacity duration-300',
-              cooldown > 0 ? 'opacity-0' : 'opacity-100'
-            )}
-          >
+          <p className="text-sm text-zinc-400 font-medium tracking-wide">
             {selectedItem
               ? `Select a ${isOrnament ? 'surface' : 'floor tile'} to place ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`
               : menuView === 'earn'
                 ? 'Tap an emoji to earn coins'
-                : menuView === 'purchase'
-                  ? 'Select an item to place'
-                  : 'Choose an action'}
+                : 'Select an item to place'}
           </p>
-
-          {cooldown > 0 && (
-            <div className="absolute inset-0 flex items-center justify-center animate-in fade-in slide-in-from-bottom-2">
-              <div className="bg-zinc-800/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-xl flex items-center gap-2">
-                <Timer className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                <span className="text-sm font-medium">
-                  Wait {cooldown}s before placing the next item
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       </div>}
 
