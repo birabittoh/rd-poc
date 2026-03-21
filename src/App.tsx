@@ -457,24 +457,22 @@ export default function App() {
       style={{ backgroundColor: COLORS.BACKGROUND }}
     >
       {/* Mute Buttons */}
-      {appState !== 'loading' && (
-        <div className="absolute top-4 left-4 z-50 flex gap-2">
-          <button
-            onClick={toggleBgmMute}
-            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-            aria-label={isBgmMuted ? 'Unmute BGM' : 'Mute BGM'}
-          >
-            {isBgmMuted ? <Music2 className="w-5 h-5 opacity-40" /> : <Music className="w-5 h-5" />}
-          </button>
-          <button
-            onClick={toggleSfxMute}
-            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-            aria-label={isSfxMuted ? 'Unmute SFX' : 'Mute SFX'}
-          >
-            {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-          </button>
-        </div>
-      )}
+      <div className="absolute top-4 left-4 z-50 flex gap-2">
+        <button
+          onClick={toggleBgmMute}
+          className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+          aria-label={isBgmMuted ? 'Unmute BGM' : 'Mute BGM'}
+        >
+          {isBgmMuted ? <Music2 className="w-5 h-5 opacity-40" /> : <Music className="w-5 h-5" />}
+        </button>
+        <button
+          onClick={toggleSfxMute}
+          className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+          aria-label={isSfxMuted ? 'Unmute SFX' : 'Mute SFX'}
+        >
+          {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
+      </div>
 
       {/* Currency HUD - top right */}
       {showRoom && (
@@ -595,7 +593,7 @@ export default function App() {
                   className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
                   aria-label="Back to Earn"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" />
                 </button>
 
                 <ScrollContainer title="Floor">
