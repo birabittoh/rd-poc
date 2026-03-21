@@ -272,7 +272,7 @@ export default function App() {
     // Start background music
     const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
     audio.loop = true;
-    audio.volume = isMuted ? 0 : 0.15;
+    audio.volume = isMuted ? 0 : 0.10;
     audio
       .play()
       .then(() => {
