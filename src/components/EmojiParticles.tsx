@@ -25,7 +25,7 @@ export function createParticle(emoji: string, x: number, y: number): Particle {
     x,
     y,
     drift: (Math.random() - 0.5) * 120,
-    duration: 2.5 + Math.random() * 1.5,
+    duration: 3.5 + Math.random() * 1.5,
     wobbleAmp: 15 + Math.random() * 40,
     wobbleFreq: 1.5 + Math.random() * 3, // 1.5–4.5 full cycles
     phase: Math.random() * Math.PI * 2, // random start phase
@@ -60,9 +60,8 @@ function ParticleSpan({
       const elapsed = now - start;
       const t = Math.min(elapsed / durationMs, 1);
 
-      // Vertical: ease-out rise (travel 40% of viewport height max)
-      const easeOut = 1 - (1 - t) * (1 - t);
-      const y = -easeOut * window.innerHeight * 0.4;
+      // Vertical: linear rise (travel 30% of viewport height max)
+      const y = -t * window.innerHeight * 0.3;
       // Horizontal: sine wobble (subtract initial offset so it starts at 0) + linear drift
       const wobbleX =
         Math.sin(phase + t * wobbleFreq * Math.PI * 2) * wobbleAmp - initialWobbleX;
