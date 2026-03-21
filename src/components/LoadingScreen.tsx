@@ -59,17 +59,28 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
     total: number;
   } | null>(null);
 
-  // Preload core assets
+  // Preload core assets: ballerina.glb, bgm.mp3 and sign.png
   useEffect(() => {
-    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.webp'];
+    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.png'];
     let loadedCount = 0;
 
     const loadAsset = async (name: string) => {
       try {
         const response = await fetch(`${import.meta.env.BASE_URL}${name}`);
         if (!response.ok) throw new Error(`Failed to load ${name}`);
-        // We don't need to do anything with the blob, the browser will cache it
-        await response.blob();
+
+        if (name === 'sign.png') {
+          const blob = await response.blob();
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          setCaptures((prev) => (prev ? { ...prev, sign: dataUrl } : { sign: dataUrl }));
+        } else {
+          // Just blob it for caching purposes
+          await response.blob();
+        }
       } catch (err) {
         console.warn(`Asset preloading failed for ${name}:`, err);
       } finally {
@@ -86,15 +97,21 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
 
   // Final completion check
   useEffect(() => {
-    if (assetsLoaded && modelReady && captures) {
+    if (assetsLoaded && modelReady && capturesDone && captures?.sign) {
       onLoadingComplete(captures);
     }
-  }, [assetsLoaded, modelReady, captures, onLoadingComplete]);
+  }, [assetsLoaded, modelReady, capturesDone, captures, onLoadingComplete]);
 
-  const handleComplete = useCallback((newCaptures: Record<string, string>) => {
-    writeCache(newCaptures);
-    setCaptures(newCaptures);
-  }, []);
+  const handleComplete = useCallback(
+    (newCaptures: Record<string, string>) => {
+      setCaptures((prev) => {
+        const merged = { ...newCaptures, ...prev }; // Keep sign from prev if it exists
+        writeCache(merged);
+        return merged;
+      });
+    },
+    [writeCache]
+  );
 
   const handleCurrentItem = useCallback((label: string, current: number, total: number) => {
     setCurrentItem({ label, current, total });
