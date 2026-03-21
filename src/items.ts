@@ -156,4 +156,14 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     variants: 4,
     previewAdjustCamera: 0.8,
   },
+  boombox: {
+    type: 'boombox',
+    label: 'Boombox',
+    category: 'surface',
+    size: 1,
+    interactable: true,
+    rotationStrategy: 'faceAwayFromWall',
+    variants: 4,
+    previewAdjustCamera: 0.8,
+  },
 };

@@ -4,6 +4,7 @@ import { GRID_SIZE, TILE_SIZE, COLORS } from '../constants';
 import { FurnitureModel } from './FurnitureModel';
 import { BallerinaModel } from './BallerinaModel';
 import { DynamicWalls } from './DynamicWalls';
+import { HangingBulb } from './HangingBulb';
 
 function getOccupiedTiles(item: Furniture) {
   const def = ITEM_DEFINITIONS[item.type];
@@ -310,6 +311,11 @@ export function Room({
 
       {/* Dynamic Walls */}
       <DynamicWalls />
+
+      {/* Hanging Bulb at center */}
+      <group position={[GRID_SIZE / 2, 0, GRID_SIZE / 2]}>
+         <HangingBulb />
+      </group>
     </group>
   );
 }

@@ -23,6 +23,7 @@ import {
   X,
   RectangleVertical,
   ScanLine,
+  Music,
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
 import { ITEM_DEFINITIONS } from './items';
@@ -78,6 +79,7 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   coffee_table: <Coffee />,
   mirror: <RectangleVertical />,
   mirror_ornament: <ScanLine />,
+  boombox: <Music />,
 };
 
 const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'floor');
@@ -512,7 +514,7 @@ export default function App() {
             exit={{ opacity: 0, scale: 10 }}
             transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
           >
-            <DoorEntrance onEnter={handleEnter} signUrl={signUrl ?? '/sign.png'} />
+            <DoorEntrance onEnter={handleEnter} signUrl={signUrl ?? '/sign.webp'} />
           </motion.div>
         )}
       </AnimatePresence>
