@@ -61,7 +61,14 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
               <div className="absolute inset-0 rounded-t-full bg-white/0 group-hover:bg-white/5 blur-2xl transition-all duration-700" />
             </div>
 
-            <div className="h-6" />
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 1 }}
+              className="text-sm font-bold tracking-[0.3em] text-zinc-600 uppercase"
+            >
+              Click to Enter
+            </motion.p>
           </motion.div>
         ) : (
           <motion.div
@@ -100,7 +107,9 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
               </motion.div>
 
               {/* Spacer matching "Click to Enter" text height */}
-              <div className="h-6 invisible select-none" />
+              <div className="text-sm invisible select-none uppercase tracking-[0.3em] font-bold">
+                Click to Enter
+              </div>
             </div>
 
             {/* The light spilling from behind the door */}
