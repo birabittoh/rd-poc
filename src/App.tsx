@@ -14,7 +14,6 @@ import {
   Tv,
   Library,
   Lightbulb,
-  Timer,
   Bed,
   LayoutGrid,
   Square,
@@ -46,6 +45,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import { COLORS, EMOJI_LIST } from './constants';
 import { EmojiParticles, createParticle, Particle } from './components/EmojiParticles';
 import { preloadAllSfx, playSfx } from './sfx';
+import {
+  INITIAL_COINS,
+  INITIAL_SPARKLES,
+  DEFAULT_UNLOCKED_EMOJIS,
+  EMOJI_COIN_REWARDS,
+  EMOJI_UNLOCK_COSTS,
+  ITEM_COIN_COSTS,
+  ITEM_SPARKLE_REWARDS,
+} from './economy';
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
 const USER_ID_KEY = 'rd-poc:userId';
@@ -100,7 +108,6 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [placementPath, setPlacementPath] = useState<{ x: number; y: number }[]>([]);
-  const [cooldown, setCooldown] = useState(0);
   const [appState, setAppState] = useState<
     'loading' | 'ready' | 'entering' | 'waiting' | 'playing'
   >('loading');
@@ -120,6 +127,13 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<{ uuid: string; name: string } | null>(null);
   const [released, setReleased] = useState(false);
   const [releaseTimestamp, setReleaseTimestamp] = useState<string>('');
+
+  // Economy state
+  const [coins, setCoins] = useState(INITIAL_COINS);
+  const [sparkles, setSparkles] = useState(INITIAL_SPARKLES);
+  const [unlockedEmojis, setUnlockedEmojis] = useState<number[]>([...DEFAULT_UNLOCKED_EMOJIS]);
+  const [coinPulse, setCoinPulse] = useState(false);
+  const [sparklePulse, setSparklePulse] = useState(false);
 
   // Keep sfx mute ref in sync
   useEffect(() => {
@@ -160,12 +174,25 @@ export default function App() {
       if (data.type === 'state') {
         receivedState = true;
         setGameState(data.state);
-      } else if (data.type === 'cooldown') {
-        setCooldown(data.remaining);
       } else if (data.type === 'registered') {
         localStorage.setItem(USER_ID_KEY, data.uuid);
         setCurrentUser({ uuid: data.uuid, name: data.name });
         setReleaseTimestamp(data.releaseTimestamp);
+        setCoins(data.coins ?? INITIAL_COINS);
+        setSparkles(data.sparkles ?? INITIAL_SPARKLES);
+        setUnlockedEmojis(data.unlockedEmojis ?? [...DEFAULT_UNLOCKED_EMOJIS]);
+      } else if (data.type === 'currency_update') {
+        setCoins(data.coins);
+        setSparkles(data.sparkles);
+        setUnlockedEmojis(data.unlockedEmojis);
+        if (data.earned?.coins) {
+          setCoinPulse(true);
+          setTimeout(() => setCoinPulse(false), 600);
+        }
+        if (data.earned?.sparkles) {
+          setSparklePulse(true);
+          setTimeout(() => setSparklePulse(false), 600);
+        }
       } else if (data.type === 'user_list') {
         setWaitingUsers(data.users);
       } else if (data.type === 'chat_broadcast') {
@@ -217,15 +244,12 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isDemoMode]);
 
-  // Demo mode: cooldown countdown
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setTimeout(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
-
   const handlePlace = (x: number, y: number, z: number, rotationOverride?: number) => {
-    if (!selectedItem || gameState?.status !== 'playing' || cooldown > 0) return;
+    if (!selectedItem || gameState?.status !== 'playing') return;
+
+    // Check affordability
+    const itemCost = ITEM_COIN_COSTS[selectedItem];
+    if (coins < itemCost) return;
 
     const def = ITEM_DEFINITIONS[selectedItem];
     let payload: PlacementPayload | null = null;
@@ -269,7 +293,17 @@ export default function App() {
     setPlacementPath([]);
 
     if (isDemoMode) {
-      setGameState((prev) => (prev ? (placeFurniture(prev, payload!) ?? prev) : prev));
+      const result = placeFurniture(gameState!, payload);
+      if (result) {
+        setGameState(result);
+        // Local economy in demo mode
+        setCoins((c) => c - itemCost);
+        setCoinPulse(false);
+        const sparkleReward = ITEM_SPARKLE_REWARDS[selectedItem];
+        setSparkles((s) => s + sparkleReward);
+        setSparklePulse(true);
+        setTimeout(() => setSparklePulse(false), 600);
+      }
     } else if (ws) {
       ws.send(JSON.stringify({ type: 'place_furniture', payload }));
     }
@@ -304,6 +338,7 @@ export default function App() {
   };
 
   const handleEmojiClick = (index: number, e: React.MouseEvent) => {
+    if (!unlockedEmojis.includes(index)) return;
     const entry = EMOJI_LIST[index];
     if (!entry) return;
     // Spawn particle from click position
@@ -316,6 +351,26 @@ export default function App() {
     // Broadcast to server
     if (ws) {
       ws.send(JSON.stringify({ type: 'emoji', index }));
+    }
+    // Demo mode: local coin reward
+    if (isDemoMode) {
+      const reward = EMOJI_COIN_REWARDS[index];
+      setCoins((c) => c + reward);
+      setCoinPulse(true);
+      setTimeout(() => setCoinPulse(false), 600);
+    }
+  };
+
+  const handleEmojiUnlock = (index: number) => {
+    if (unlockedEmojis.includes(index)) return;
+    const cost = EMOJI_UNLOCK_COSTS[index];
+    if (sparkles < cost) return;
+
+    if (isDemoMode) {
+      setSparkles((s) => s - cost);
+      setUnlockedEmojis((prev) => [...prev, index]);
+    } else if (ws) {
+      ws.send(JSON.stringify({ type: 'unlock_emoji', index }));
     }
   };
 
@@ -377,7 +432,7 @@ export default function App() {
   const showRoom = appState === 'playing';
 
   const isOrnament = selectedItem ? ITEM_DEFINITIONS[selectedItem].category === 'surface' : false;
-  const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== 'playing');
+  const isPlacementDisabled = gameState && gameState.status !== 'playing';
 
   const surfaceOccupied = new Set(
     gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)
@@ -409,6 +464,44 @@ export default function App() {
           >
             {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
           </button>
+        </div>
+      )}
+
+      {/* Currency HUD - top right */}
+      {showRoom && (
+        <div className="absolute top-4 right-4 z-50 flex gap-2">
+          <div
+            className={cn(
+              'flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300',
+              sparklePulse && 'ring-2 ring-yellow-400/50 shadow-yellow-400/20'
+            )}
+          >
+            <span
+              className={cn(
+                'text-lg transition-transform duration-300',
+                sparklePulse && 'scale-125'
+              )}
+            >
+              ✨
+            </span>
+            <span className="text-sm font-bold text-zinc-100 tabular-nums">{sparkles}</span>
+          </div>
+          <div
+            className={cn(
+              'flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300',
+              coinPulse && 'ring-2 ring-amber-400/50 shadow-amber-400/20'
+            )}
+          >
+            <span
+              className={cn(
+                'text-lg transition-transform duration-300',
+                coinPulse && 'scale-125'
+              )}
+            >
+              🪙
+            </span>
+            <span className="text-sm font-bold text-zinc-100 tabular-nums">{coins}</span>
+          </div>
         </div>
       )}
 
@@ -532,12 +625,15 @@ export default function App() {
                       label={item.label}
                       icon={ITEM_ICONS[item.type]}
                       selected={selectedItem === item.type}
-                      disabled={isPlacementDisabled}
+                      disabled={isPlacementDisabled || false}
                       onClick={() => {
+                        if (coins < ITEM_COIN_COSTS[item.type]) return;
                         setSelectedItem(item.type);
                         setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
                         setPlacementPath([]);
                       }}
+                      price={ITEM_COIN_COSTS[item.type]}
+                      affordable={coins >= ITEM_COIN_COSTS[item.type]}
                     />
                   ))}
                 </ScrollContainer>
@@ -552,11 +648,14 @@ export default function App() {
                       selected={selectedItem === item.type}
                       disabled={isPlacementDisabled || !hasFreeSurface}
                       onClick={() => {
+                        if (coins < ITEM_COIN_COSTS[item.type]) return;
                         setSelectedItem(item.type);
                         setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
                         setPlacementPath([]);
                       }}
                       isOrnament
+                      price={ITEM_COIN_COSTS[item.type]}
+                      affordable={coins >= ITEM_COIN_COSTS[item.type]}
                     />
                   ))}
                 </ScrollContainer>
@@ -630,28 +729,62 @@ export default function App() {
                 </button>
 
                 <ScrollContainer title="Earn">
-                  {EMOJI_LIST.map((entry, i) => (
-                    <button
-                      key={i}
-                      onClick={(e) => handleEmojiClick(i, e)}
-                      className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white active:scale-95"
-                    >
-                      <span className="text-xl">{entry.emoji}</span>
-                      <span className="text-[10px] font-medium capitalize">{entry.sfx}</span>
-                    </button>
-                  ))}
+                  {EMOJI_LIST.map((entry, i) => {
+                    const isUnlocked = unlockedEmojis.includes(i);
+                    const unlockCost = EMOJI_UNLOCK_COSTS[i];
+                    const canAffordUnlock = sparkles >= unlockCost;
+                    const coinReward = EMOJI_COIN_REWARDS[i];
+
+                    return (
+                      <button
+                        key={i}
+                        onClick={(e) => {
+                          if (isUnlocked) {
+                            handleEmojiClick(i, e);
+                          } else {
+                            handleEmojiUnlock(i);
+                          }
+                        }}
+                        className={cn(
+                          'relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 min-w-[64px] shrink-0',
+                          isUnlocked
+                            ? 'bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white active:scale-95'
+                            : canAffordUnlock
+                              ? 'bg-zinc-700/30 text-zinc-400 hover:bg-zinc-600/50 hover:text-zinc-200 border border-dashed border-yellow-500/30'
+                              : 'bg-zinc-800/50 text-zinc-500 opacity-60'
+                        )}
+                      >
+                        <span className="text-xl relative">
+                          {entry.emoji}
+                          {!isUnlocked && (
+                            <span className="absolute -top-1 -right-1 text-xs">🔒</span>
+                          )}
+                        </span>
+                        <span className="text-[10px] font-medium capitalize">{entry.sfx}</span>
+                        {isUnlocked ? (
+                          <span className="text-[9px] font-bold text-amber-400">
+                            +{coinReward} 🪙
+                          </span>
+                        ) : (
+                          <span
+                            className={cn(
+                              'text-[9px] font-bold',
+                              canAffordUnlock ? 'text-yellow-400' : 'text-zinc-500'
+                            )}
+                          >
+                            {unlockCost} ✨
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </ScrollContainer>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
         <div className="mt-4 relative h-6 flex items-center justify-center w-full">
-          <p
-            className={cn(
-              'text-sm text-zinc-400 font-medium tracking-wide transition-opacity duration-300',
-              cooldown > 0 ? 'opacity-0' : 'opacity-100'
-            )}
-          >
+          <p className="text-sm text-zinc-400 font-medium tracking-wide">
             {selectedItem
               ? `Select a ${isOrnament ? 'surface' : 'floor tile'} to place ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`
               : menuView === 'earn'
@@ -660,17 +793,6 @@ export default function App() {
                   ? 'Select an item to place'
                   : 'Choose an action'}
           </p>
-
-          {cooldown > 0 && (
-            <div className="absolute inset-0 flex items-center justify-center animate-in fade-in slide-in-from-bottom-2">
-              <div className="bg-zinc-800/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 shadow-xl flex items-center gap-2">
-                <Timer className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-                <span className="text-sm font-medium">
-                  Wait {cooldown}s before placing the next item
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       </div>}
 

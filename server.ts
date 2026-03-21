@@ -4,13 +4,22 @@ import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
 
-import { PLACEMENT_COOLDOWN, PREMADE_MESSAGES, CHAT_COOLDOWN, EMOJI_LIST } from './src/constants.ts';
+import { PREMADE_MESSAGES, CHAT_COOLDOWN, EMOJI_LIST, EMOJI_COOLDOWN } from './src/constants.ts';
 import type { GameState, ChatMessage } from './src/types.ts';
 import { stepBallerina, placeFurniture, createInitialState } from './src/gameLogic.ts';
+import {
+  INITIAL_COINS,
+  INITIAL_SPARKLES,
+  DEFAULT_UNLOCKED_EMOJIS,
+  EMOJI_COIN_REWARDS,
+  EMOJI_UNLOCK_COSTS,
+  ITEM_COIN_COSTS,
+  ITEM_SPARKLE_REWARDS,
+} from './src/economy.ts';
 
 const PORT = 3000;
-const PLACEMENT_COOLDOWN_MS = PLACEMENT_COOLDOWN * 1000;
 const CHAT_COOLDOWN_MS = CHAT_COOLDOWN * 1000;
+const EMOJI_COOLDOWN_MS = EMOJI_COOLDOWN * 1000;
 const MAX_CHAT_HISTORY = 100;
 
 // Release timestamp (optional)
@@ -30,13 +39,14 @@ if (RELEASE_TIMESTAMP !== null) {
 let gameState: GameState = createInitialState();
 
 const clients = new Map<WebSocket, string>(); // ws -> ip
-const cooldowns = new Map<string, number>(); // ip -> cooldown end timestamp
 
 // --- Waiting room state ---
 interface ServerUser {
   uuid: string;
   name: string;
   coins: number;
+  sparkles: number;
+  unlockedEmojis: number[];
   online: boolean;
   ws: WebSocket | null;
 }
@@ -47,6 +57,7 @@ let userCounter = 0;
 let released = false;
 const chatHistory: ChatMessage[] = [];
 const chatCooldowns = new Map<string, number>(); // uuid -> last chat timestamp
+const emojiCooldowns = new Map<string, number>(); // uuid -> last emoji timestamp
 
 function generateChatId(): string {
   return crypto.randomUUID();
@@ -76,6 +87,24 @@ function broadcastChatMessage(msg: ChatMessage) {
   broadcastToAll(JSON.stringify({ type: 'chat_broadcast', message: msg }));
 }
 
+function sendCurrencyUpdate(
+  ws: WebSocket,
+  user: ServerUser,
+  earned?: { coins?: number; sparkles?: number },
+  emojiUnlocked?: number
+) {
+  ws.send(
+    JSON.stringify({
+      type: 'currency_update',
+      coins: user.coins,
+      sparkles: user.sparkles,
+      unlockedEmojis: user.unlockedEmojis,
+      ...(earned && { earned }),
+      ...(emojiUnlocked !== undefined && { emojiUnlocked }),
+    })
+  );
+}
+
 function handleRegister(ws: WebSocket, incomingUuid: string | null) {
   let user: ServerUser | undefined;
 
@@ -96,7 +125,15 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
     // New user
     const uuid = crypto.randomUUID();
     const name = `user${String(userCounter++).padStart(4, '0')}`;
-    user = { uuid, name, coins: 100, online: true, ws };
+    user = {
+      uuid,
+      name,
+      coins: INITIAL_COINS,
+      sparkles: INITIAL_SPARKLES,
+      unlockedEmojis: [...DEFAULT_UNLOCKED_EMOJIS],
+      online: true,
+      ws,
+    };
     waitingRoomUsers.set(uuid, user);
     wsToUuid.set(ws, uuid);
   }
@@ -108,6 +145,8 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
       uuid: user.uuid,
       name: user.name,
       coins: user.coins,
+      sparkles: user.sparkles,
+      unlockedEmojis: user.unlockedEmojis,
       releaseTimestamp: RELEASE_TIMESTAMP_STR,
     })
   );
@@ -184,14 +223,9 @@ function handleDisconnect(ws: WebSocket) {
 
 function broadcastState() {
   const stateMessage = JSON.stringify({ type: 'state', state: gameState });
-  const now = Date.now();
-  for (const [client, ip] of clients.entries()) {
+  for (const [client] of clients.entries()) {
     if (client.readyState === WebSocket.OPEN) {
       client.send(stateMessage);
-
-      const cooldownEnd = cooldowns.get(ip) || 0;
-      const remaining = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
-      client.send(JSON.stringify({ type: 'cooldown', remaining }));
     }
   }
 }
@@ -232,28 +266,37 @@ async function startServer() {
 
     // Send initial game state
     ws.send(JSON.stringify({ type: 'state', state: gameState }));
-    const now = Date.now();
-    const cooldownEnd = cooldowns.get(ip) || 0;
-    const remaining = Math.max(0, Math.ceil((cooldownEnd - now) / 1000));
-    ws.send(JSON.stringify({ type: 'cooldown', remaining }));
 
     ws.on('message', (data) => {
       try {
         const message = JSON.parse(data.toString());
         if (message.type === 'place_furniture') {
-          const ip = clients.get(ws);
-          if (!ip) return;
+          // Look up user for economy
+          const uuid = wsToUuid.get(ws);
+          if (!uuid) return;
+          const user = waitingRoomUsers.get(uuid);
+          if (!user) return;
 
-          const now = Date.now();
-          const cooldownEnd = cooldowns.get(ip) || 0;
-          if (now < cooldownEnd) return;
+          const itemType = message.payload?.type;
+          if (!itemType || !(itemType in ITEM_COIN_COSTS)) return;
+
+          const cost = ITEM_COIN_COSTS[itemType as keyof typeof ITEM_COIN_COSTS];
+          if (user.coins < cost) {
+            ws.send(JSON.stringify({ type: 'transaction_failed', reason: 'insufficient_coins' }));
+            return;
+          }
 
           const newState = placeFurniture(gameState, message.payload);
           if (!newState) return;
 
+          // Deduct coins, award sparkles
+          user.coins -= cost;
+          const sparkleReward = ITEM_SPARKLE_REWARDS[itemType as keyof typeof ITEM_SPARKLE_REWARDS];
+          user.sparkles += sparkleReward;
+
           gameState = newState;
-          cooldowns.set(ip, now + PLACEMENT_COOLDOWN_MS);
           broadcastState();
+          sendCurrencyUpdate(ws, user, { sparkles: sparkleReward });
         } else if (message.type === 'reset') {
           gameState = createInitialState();
           broadcastState();
@@ -264,12 +307,57 @@ async function startServer() {
         } else if (message.type === 'emoji') {
           const emojiIndex = message.index;
           if (typeof emojiIndex !== 'number' || emojiIndex < 0 || emojiIndex >= EMOJI_LIST.length) return;
+
+          // Look up user for economy
+          const uuid = wsToUuid.get(ws);
+          if (!uuid) return;
+          const user = waitingRoomUsers.get(uuid);
+          if (!user) return;
+
+          // Validate emoji is unlocked
+          if (!user.unlockedEmojis.includes(emojiIndex)) return;
+
+          // Enforce emoji cooldown
+          const now = Date.now();
+          const lastEmoji = emojiCooldowns.get(uuid) || 0;
+          if (now - lastEmoji < EMOJI_COOLDOWN_MS) return;
+          emojiCooldowns.set(uuid, now);
+
+          // Award coins
+          const coinReward = EMOJI_COIN_REWARDS[emojiIndex];
+          user.coins += coinReward;
+          sendCurrencyUpdate(ws, user, { coins: coinReward });
+
+          // Broadcast emoji to other clients
           const broadcastMsg = JSON.stringify({ type: 'emoji_broadcast', index: emojiIndex });
           for (const [client] of clients.entries()) {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
               client.send(broadcastMsg);
             }
           }
+        } else if (message.type === 'unlock_emoji') {
+          const emojiIndex = message.index;
+          if (typeof emojiIndex !== 'number' || emojiIndex < 0 || emojiIndex >= EMOJI_LIST.length) return;
+
+          const uuid = wsToUuid.get(ws);
+          if (!uuid) return;
+          const user = waitingRoomUsers.get(uuid);
+          if (!user) return;
+
+          // Already unlocked?
+          if (user.unlockedEmojis.includes(emojiIndex)) return;
+
+          // Check sparkles
+          const cost = EMOJI_UNLOCK_COSTS[emojiIndex];
+          if (user.sparkles < cost) {
+            ws.send(JSON.stringify({ type: 'transaction_failed', reason: 'insufficient_sparkles' }));
+            return;
+          }
+
+          // Deduct sparkles, unlock emoji
+          user.sparkles -= cost;
+          user.unlockedEmojis.push(emojiIndex);
+          sendCurrencyUpdate(ws, user, undefined, emojiIndex);
         }
       } catch (e) {
         console.error('Invalid message', e);
