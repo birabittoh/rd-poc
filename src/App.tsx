@@ -309,7 +309,7 @@ export default function App() {
     // Spawn particle from button position
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = rect.left + rect.width / 2;
-    const y = rect.top;
+    const y = rect.top + rect.height / 2;
     setParticles((prev) => [...prev, createParticle(entry.emoji, x, y)]);
     if (!isSfxMuted) {
       playSfx(entry.sfx, 0.3);

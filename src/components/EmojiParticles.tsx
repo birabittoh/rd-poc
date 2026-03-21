@@ -60,8 +60,8 @@ function ParticleSpan({
       const elapsed = now - start;
       const t = Math.min(elapsed / durationMs, 1);
 
-      // Vertical: linear rise (travel 40% of viewport height max)
-      const y = -t * window.innerHeight * 0.4;
+      // Vertical: linear rise (travel 45% of viewport height max)
+      const y = -t * window.innerHeight * 0.45;
       // Horizontal: sine wobble (subtract initial offset so it starts at 0) + linear drift
       const wobbleX =
         Math.sin(phase + t * wobbleFreq * Math.PI * 2) * wobbleAmp - initialWobbleX;
