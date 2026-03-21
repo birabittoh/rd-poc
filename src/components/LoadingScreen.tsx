@@ -92,9 +92,9 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
     initCache();
   }, []);
 
-  // Preload core assets: ballerina.glb, bgm.mp3, sign.png and logo.webp
+  // Preload core assets
   useEffect(() => {
-    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.png', 'logo.webp'];
+    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.webp', 'logo.webp'];
     let loadedCount = 0;
 
     const loadAsset = async (name: string) => {
@@ -102,14 +102,14 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
         const response = await fetch(`${import.meta.env.BASE_URL}${name}`);
         if (!response.ok) throw new Error(`Failed to load ${name}`);
 
-        if (name === 'sign.png' || name === 'logo.webp') {
+        if (name === 'sign.webp' || name === 'logo.webp') {
           const blob = await response.blob();
           const dataUrl = await new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result as string);
             reader.readAsDataURL(blob);
           });
-          const key = name === 'sign.png' ? 'sign' : 'logo';
+          const key = name === 'sign.webp' ? 'sign' : 'logo';
           setCaptures((prev) => (prev ? { ...prev, [key]: dataUrl } : { [key]: dataUrl }));
         } else {
           // Just blob it for caching purposes

@@ -446,7 +446,7 @@ export default function App() {
             exit={{ opacity: 0, scale: 10 }}
             transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
           >
-            <DoorEntrance onEnter={handleEnter} signUrl={signUrl ?? '/sign.png'} />
+            <DoorEntrance onEnter={handleEnter} signUrl={signUrl ?? '/sign.webp'} />
           </motion.div>
         )}
       </AnimatePresence>
