@@ -1,23 +1,24 @@
 import React, { useRef, useMemo } from 'react';
-import { Box, Sphere, useSVG } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { Box, Sphere } from '@react-three/drei';
+import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
+import { SVGLoader } from 'three-stdlib';
 import { FurnitureProps } from '../../types';
 
 // Musical note SVG paths
 const NOTE_SVGS = [
   // Eighth note
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M70,10 L70,70 C70,81 61,90 50,90 C39,90 30,81 30,70 C30,59 39,50 50,50 L50,20 L70,20 L70,10 Z" fill="white"/></svg>',
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M70,10 L70,70 C70,81 61,90 50,90 C39,90 30,81 30,70 C30,59 39,50 50,50 L50,20 L70,20 L70,10 Z" fill="white"/></svg>',
   // Two beamed eighth notes
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 L80,10 L80,70 C80,81 71,90 60,90 C49,90 40,81 40,70 C40,59 49,50 60,50 L60,30 L40,35 L40,75 C40,86 31,95 20,95 C9,95 0,86 0,75 C0,64 9,55 20,55 L20,20 Z" fill="white"/></svg>',
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 L80,10 L80,70 C80,81 71,90 60,90 C49,90 40,81 40,70 C40,59 49,50 60,50 L60,30 L40,35 L40,75 C40,86 31,95 20,95 C9,95 0,86 0,75 C0,64 9,55 20,55 L20,20 Z" fill="white"/></svg>',
 ];
 
 function NoteParticle({ color, type, phase, offset, scale }: { color: string, type: number, phase: number, offset: number, scale: number }) {
   const meshRef = useRef<THREE.Group>(null);
-  const svg = useSVG(NOTE_SVGS[type]);
+  const svg = useLoader(SVGLoader, `data:image/svg+xml;utf8,${NOTE_SVGS[type]}`);
 
   const shapes = useMemo(() => {
-    return svg.paths.map(p => p.toShapes(true)[0]);
+    return svg.paths.flatMap(p => SVGLoader.createShapes(p));
   }, [svg]);
 
   useFrame((state) => {
