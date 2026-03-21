@@ -47,6 +47,11 @@ function ParticleSpan({
     const el = ref.current;
     if (!el) return;
     const { duration, phase, wobbleFreq, wobbleAmp, drift } = particle;
+    // Measure emoji size to center it on the spawn point
+    const halfW = el.offsetWidth / 2;
+    const halfH = el.offsetHeight / 2;
+    // Initial wobble offset so first frame starts at (0,0) visually
+    const initialWobbleX = Math.sin(phase) * wobbleAmp;
     const start = performance.now();
     const durationMs = duration * 1000;
     let raf: number;
@@ -57,14 +62,14 @@ function ParticleSpan({
 
       // Vertical: ease-out rise
       const y = -t * window.innerHeight;
-      // Horizontal: sine wobble + linear drift
+      // Horizontal: sine wobble (subtract initial offset so it starts at 0) + linear drift
       const wobbleX =
-        Math.sin(phase + t * wobbleFreq * Math.PI * 2) * wobbleAmp;
+        Math.sin(phase + t * wobbleFreq * Math.PI * 2) * wobbleAmp - initialWobbleX;
       const driftX = t * drift;
-      // Opacity: fully visible until 70%, then fade
-      const opacity = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
+      // Opacity: fully visible until 60%, then fade out
+      const opacity = t > 0.6 ? 1 - (t - 0.6) / 0.4 : 1;
 
-      el.style.transform = `translate(${wobbleX + driftX}px, ${y}px)`;
+      el.style.transform = `translate(${wobbleX + driftX - halfW}px, ${y - halfH}px)`;
       el.style.opacity = String(opacity);
 
       if (t < 1) {
@@ -82,7 +87,7 @@ function ParticleSpan({
   return (
     <span
       ref={ref}
-      className="absolute pointer-events-none select-none text-2xl -translate-x-1/2"
+      className="absolute pointer-events-none select-none text-2xl"
       style={{
         left: particle.x,
         top: particle.y,
