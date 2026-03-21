@@ -63,23 +63,33 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
 
   // Initialize cache
   useEffect(() => {
-    // Cleanup old versions of the cache
-    caches.keys().then((keys) => {
-      keys.forEach((key) => {
-        if (key.startsWith('hd_captures_v') && key !== CACHE_NAME) {
-          caches.delete(key);
-        }
-      });
-    });
+    const initCache = async () => {
+      // Check if this is a reload (F5 or Ctrl+Shift+R)
+      const navEntries = performance.getEntriesByType('navigation');
+      const isReload = navEntries.length > 0 && (navEntries[0] as PerformanceNavigationTiming).type === 'reload';
 
-    readCache().then((cached) => {
+      if (isReload) {
+        await caches.delete(CACHE_NAME);
+      }
+
+      // Cleanup old versions of the cache
+      const keys = await caches.keys();
+      for (const key of keys) {
+        if (key.startsWith('hd_captures_v') && key !== CACHE_NAME) {
+          await caches.delete(key);
+        }
+      }
+
+      const cached = await readCache();
       if (cached) {
         setCachedCaptures(cached);
         setCaptures(cached);
         setCapturesProgress(1);
       }
       setIsCacheLoading(false);
-    });
+    };
+
+    initCache();
   }, []);
 
   // Preload core assets: ballerina.glb, bgm.mp3, sign.png and logo.webp
