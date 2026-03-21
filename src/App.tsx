@@ -35,6 +35,7 @@ import { VariantPreview } from './components/VariantPreview';
 import { LoadingScreen } from './components/LoadingScreen';
 import { DoorEntrance } from './components/DoorEntrance';
 import { motion, AnimatePresence } from 'motion/react';
+import { COLORS } from './constants';
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
 
@@ -88,6 +89,7 @@ export default function App() {
   const [cooldown, setCooldown] = useState(0);
   const [appState, setAppState] = useState<'loading' | 'ready' | 'entering' | 'playing'>('loading');
   const [variantCaptures, setVariantCaptures] = useState<Record<string, string>>({});
+  const [signUrl, setSignUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // WebSocket connection with demo mode fallback
@@ -203,6 +205,7 @@ export default function App() {
   };
 
   const handleLoadingComplete = useCallback((captures: Record<string, string>) => {
+    if (captures.sign) setSignUrl(captures.sign);
     setVariantCaptures((prev) => (Object.keys(prev).length > 0 ? prev : captures));
     setAppState((prev) => (prev === 'loading' ? 'ready' : prev));
   }, []);
@@ -234,7 +237,10 @@ export default function App() {
 
   if (!gameState) {
     return (
-      <div className="flex h-full items-center justify-center bg-zinc-900 text-white">
+      <div
+        className="flex h-full items-center justify-center text-white"
+        style={{ backgroundColor: COLORS.BACKGROUND }}
+      >
         Connecting to server...
       </div>
     );
@@ -252,7 +258,10 @@ export default function App() {
   );
 
   return (
-    <div className="relative h-full w-full bg-zinc-900 overflow-hidden font-sans text-zinc-100">
+    <div
+      className="relative h-full w-full overflow-hidden font-sans text-zinc-100"
+      style={{ backgroundColor: COLORS.BACKGROUND }}
+    >
       {/* 3D Canvas */}
       <div className="absolute inset-0">
         <Canvas
@@ -435,7 +444,7 @@ export default function App() {
             exit={{ opacity: 0, scale: 10 }}
             transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
           >
-            <DoorEntrance onEnter={handleEnter} />
+            <DoorEntrance onEnter={handleEnter} signUrl={signUrl ?? '/sign.png'} />
           </motion.div>
         )}
       </AnimatePresence>

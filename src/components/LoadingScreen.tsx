@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { CaptureManager } from './CaptureManager';
 import { ITEM_DEFINITIONS } from '../items';
+import { COLORS } from '../constants';
 
 interface LoadingScreenProps {
   onLoadingComplete: (captures: Record<string, string>) => void;
@@ -58,17 +59,28 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
     total: number;
   } | null>(null);
 
-  // Preload core assets: ballerina.glb and bgm.mp3
+  // Preload core assets: ballerina.glb, bgm.mp3 and sign.png
   useEffect(() => {
-    const assets = ['ballerina.glb', 'bgm.mp3'];
+    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.png'];
     let loadedCount = 0;
 
     const loadAsset = async (name: string) => {
       try {
         const response = await fetch(`${import.meta.env.BASE_URL}${name}`);
         if (!response.ok) throw new Error(`Failed to load ${name}`);
-        // We don't need to do anything with the blob, the browser will cache it
-        await response.blob();
+
+        if (name === 'sign.png') {
+          const blob = await response.blob();
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          setCaptures((prev) => (prev ? { ...prev, sign: dataUrl } : { sign: dataUrl }));
+        } else {
+          // Just blob it for caching purposes
+          await response.blob();
+        }
       } catch (err) {
         console.warn(`Asset preloading failed for ${name}:`, err);
       } finally {
@@ -83,23 +95,29 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
     assets.forEach(loadAsset);
   }, []);
 
+  const capturesDone = capturesProgress >= 1;
+
   // Final completion check
   useEffect(() => {
-    if (assetsLoaded && modelReady && captures) {
+    if (assetsLoaded && modelReady && capturesDone && captures?.sign) {
       onLoadingComplete(captures);
     }
-  }, [assetsLoaded, modelReady, captures, onLoadingComplete]);
+  }, [assetsLoaded, modelReady, capturesDone, captures, onLoadingComplete]);
 
-  const handleComplete = useCallback((newCaptures: Record<string, string>) => {
-    writeCache(newCaptures);
-    setCaptures(newCaptures);
-  }, []);
+  const handleComplete = useCallback(
+    (newCaptures: Record<string, string>) => {
+      setCaptures((prev) => {
+        const merged = { ...newCaptures, ...prev }; // Keep sign from prev if it exists
+        writeCache(merged);
+        return merged;
+      });
+    },
+    [writeCache]
+  );
 
   const handleCurrentItem = useCallback((label: string, current: number, total: number) => {
     setCurrentItem({ label, current, total });
   }, []);
-
-  const capturesDone = capturesProgress >= 1;
 
   // Calculate overall progress:
   // If captures are cached (100%), overall progress should be assetsProgress
@@ -111,7 +129,10 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   const done = assetsLoaded && modelReady && capturesDone;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-900 font-sans text-white">
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center font-sans text-white"
+      style={{ backgroundColor: COLORS.BACKGROUND }}
+    >
       {/* Hidden canvas for model parsing */}
       <div style={{ position: 'absolute', top: -1000, left: -1000, pointerEvents: 'none' }}>
         <Canvas>

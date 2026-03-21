@@ -1,6 +1,6 @@
 import { GameState, ItemType, Furniture } from '../types';
 import { ITEM_DEFINITIONS } from '../items';
-import { GRID_SIZE, TILE_SIZE } from '../constants';
+import { GRID_SIZE, TILE_SIZE, COLORS } from '../constants';
 import { FurnitureModel } from './FurnitureModel';
 import { BallerinaModel } from './BallerinaModel';
 import { DynamicWalls } from './DynamicWalls';
@@ -133,7 +133,7 @@ export function Room({
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[GRID_SIZE * TILE_SIZE, GRID_SIZE * TILE_SIZE]} />
-        <meshStandardMaterial color="#e4e4e7" roughness={0.1} metalness={0.2} />
+        <meshStandardMaterial color={COLORS.FLOOR} roughness={0.1} metalness={0.2} />
       </mesh>
 
       {/* Grid Tiles */}
