@@ -10,28 +10,29 @@ interface LoadingScreenProps {
   onLoadingComplete: (captures: Record<string, string>) => void;
 }
 
-// Cache key versioned by total variant count — auto-invalidates when items change
+// Cache name versioned by total variant count — auto-invalidates when items change
 const TOTAL_VARIANTS = Object.values(ITEM_DEFINITIONS).reduce(
   (sum, def) => sum + (def.variants || 1),
   0
 );
-const CACHE_KEY = `hd_captures_v${TOTAL_VARIANTS}`;
+const CACHE_NAME = `hd_captures_v${TOTAL_VARIANTS}`;
+const CACHE_URL = `${import.meta.env.BASE_URL}captures.json`;
 
-function readCache(): Record<string, string> | null {
+async function readCache(): Promise<Record<string, string> | null> {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (typeof parsed === 'object' && parsed !== null) return parsed;
+    const cache = await caches.open(CACHE_NAME);
+    const response = await cache.match(CACHE_URL);
+    if (!response) return null;
+    return await response.json();
   } catch {
-    // Ignore errors when reading cache
+    return null;
   }
-  return null;
 }
 
-function writeCache(captures: Record<string, string>) {
+async function writeCache(captures: Record<string, string>) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(captures));
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(CACHE_URL, new Response(JSON.stringify(captures)));
   } catch {
     // Storage full or unavailable — silently skip
   }
@@ -46,12 +47,13 @@ function ModelPreloader({ onReady }: { onReady: () => void }) {
 }
 
 export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
-  const [cachedCaptures] = useState<Record<string, string> | null>(readCache);
-  const [capturesProgress, setCapturesProgress] = useState(cachedCaptures ? 1 : 0);
+  const [cachedCaptures, setCachedCaptures] = useState<Record<string, string> | null>(null);
+  const [isCacheLoading, setIsCacheLoading] = useState(true);
+  const [capturesProgress, setCapturesProgress] = useState(0);
   const [assetsProgress, setAssetsProgress] = useState(0);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [modelReady, setModelReady] = useState(false);
-  const [captures, setCaptures] = useState<Record<string, string> | null>(cachedCaptures);
+  const [captures, setCaptures] = useState<Record<string, string> | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [currentItem, setCurrentItem] = useState<{
     label: string;
@@ -59,9 +61,30 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
     total: number;
   } | null>(null);
 
-  // Preload core assets: ballerina.glb, bgm.mp3 and sign.png
+  // Initialize cache
   useEffect(() => {
-    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.png'];
+    // Cleanup old versions of the cache
+    caches.keys().then((keys) => {
+      keys.forEach((key) => {
+        if (key.startsWith('hd_captures_v') && key !== CACHE_NAME) {
+          caches.delete(key);
+        }
+      });
+    });
+
+    readCache().then((cached) => {
+      if (cached) {
+        setCachedCaptures(cached);
+        setCaptures(cached);
+        setCapturesProgress(1);
+      }
+      setIsCacheLoading(false);
+    });
+  }, []);
+
+  // Preload core assets: ballerina.glb, bgm.mp3, sign.png and logo.webp
+  useEffect(() => {
+    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.png', 'logo.webp'];
     let loadedCount = 0;
 
     const loadAsset = async (name: string) => {
@@ -69,14 +92,15 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
         const response = await fetch(`${import.meta.env.BASE_URL}${name}`);
         if (!response.ok) throw new Error(`Failed to load ${name}`);
 
-        if (name === 'sign.png') {
+        if (name === 'sign.png' || name === 'logo.webp') {
           const blob = await response.blob();
           const dataUrl = await new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result as string);
             reader.readAsDataURL(blob);
           });
-          setCaptures((prev) => (prev ? { ...prev, sign: dataUrl } : { sign: dataUrl }));
+          const key = name === 'sign.png' ? 'sign' : 'logo';
+          setCaptures((prev) => (prev ? { ...prev, [key]: dataUrl } : { [key]: dataUrl }));
         } else {
           // Just blob it for caching purposes
           await response.blob();
@@ -99,21 +123,21 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
 
   // Final completion check
   useEffect(() => {
-    if (assetsLoaded && modelReady && capturesDone && captures?.sign) {
+    if (!isCacheLoading && assetsLoaded && modelReady && capturesDone && captures?.sign) {
       onLoadingComplete(captures);
     }
-  }, [assetsLoaded, modelReady, capturesDone, captures, onLoadingComplete]);
+  }, [isCacheLoading, assetsLoaded, modelReady, capturesDone, captures, onLoadingComplete]);
 
-  const handleComplete = useCallback(
-    (newCaptures: Record<string, string>) => {
-      setCaptures((prev) => {
-        const merged = { ...newCaptures, ...prev }; // Keep sign from prev if it exists
-        writeCache(merged);
-        return merged;
-      });
-    },
-    [writeCache]
-  );
+  const handleComplete = useCallback((newCaptures: Record<string, string>) => {
+    setCaptures((prev) => ({ ...newCaptures, ...prev }));
+  }, []);
+
+  // Persist captures to cache once rendering is complete
+  useEffect(() => {
+    if (capturesDone && captures && !cachedCaptures && !isCacheLoading) {
+      writeCache(captures);
+    }
+  }, [capturesDone, captures, cachedCaptures, isCacheLoading]);
 
   const handleCurrentItem = useCallback((label: string, current: number, total: number) => {
     setCurrentItem({ label, current, total });
@@ -122,11 +146,12 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   // Calculate overall progress:
   // If captures are cached (100%), overall progress should be assetsProgress
   // If not cached, it should be weighted average
-  const overallProgress = cachedCaptures
-    ? assetsProgress
-    : assetsProgress * 0.3 + capturesProgress * 0.7;
+  const overallProgress =
+    isCacheLoading || cachedCaptures
+      ? assetsProgress
+      : assetsProgress * 0.3 + capturesProgress * 0.7;
 
-  const done = assetsLoaded && modelReady && capturesDone;
+  const done = !isCacheLoading && assetsLoaded && modelReady && capturesDone;
 
   return (
     <div
@@ -145,7 +170,7 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
         <div className="mb-8 text-center flex flex-col items-center h-40 justify-center">
           {!logoError ? (
             <img
-              src={`${import.meta.env.BASE_URL}logo.webp`}
+              src={captures?.logo || `${import.meta.env.BASE_URL}logo.webp`}
               alt="MyRoom logo"
               className="h-40 w-auto opacity-90"
               onError={() => setLogoError(true)}
