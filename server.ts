@@ -316,7 +316,7 @@ async function startServer() {
         } else if (message.type === 'reset') {
           gameState = createInitialState();
           broadcastState();
-        } else if (message.type === 'register' && RELEASE_TIMESTAMP !== null) {
+        } else if (message.type === 'register') {
           handleRegister(ws, message.uuid ?? null);
         } else if (message.type === 'chat' && RELEASE_TIMESTAMP !== null) {
           handleChat(ws, message.messageIndex);

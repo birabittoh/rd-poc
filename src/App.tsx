@@ -163,11 +163,8 @@ export default function App() {
     setWs(socket);
 
     socket.onopen = () => {
-      // Register for waiting room if enabled
-      if (HAS_WAITING_ROOM) {
-        const savedUuid = localStorage.getItem(USER_ID_KEY);
-        socket.send(JSON.stringify({ type: 'register', uuid: savedUuid }));
-      }
+      const savedUuid = localStorage.getItem(USER_ID_KEY);
+      socket.send(JSON.stringify({ type: 'register', uuid: savedUuid }));
     };
 
     socket.onmessage = (event) => {
