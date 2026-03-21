@@ -424,12 +424,13 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
 export function createInitialState(): GameState {
   return {
     furniture: [
-      { id: 'initial-1', type: 'bed', x: 0, y: 0, z: 0, rotation: 0, variant: 0 },
+      { id: 'initial-1', type: 'bed', x: 0, y: 0, z: 0, rotation: 0, variant: 1 },
       { id: 'initial-2', type: 'bedside_table', x: 1, y: 0, z: 0, rotation: 0, variant: 0 },
-      { id: 'initial-3', type: 'drawer', x: 8, y: 8, z: 0, rotation: Math.PI, variant: 0 },
-      { id: 'initial-4', type: 'boombox', x: 8, y: 8, z: 1, rotation: Math.PI, variant: 3 },
-      { id: 'initial-5', type: 'table', x: 8, y: 3, z: 0, rotation: -Math.PI / 2, variant: 0 },
-      { id: 'initial-6', type: 'chair', x: 7, y: 3, z: 0, rotation: Math.PI / 2, variant: 0 },
+      { id: 'initial-3', type: 'book', x: 1, y: 0, z: 1, rotation: 0, variant: 3 },
+      { id: 'initial-4', type: 'drawer', x: 8, y: 8, z: 0, rotation: Math.PI, variant: 0 },
+      { id: 'initial-5', type: 'boombox', x: 8, y: 8, z: 1, rotation: Math.PI, variant: 3 },
+      { id: 'initial-6', type: 'table', x: 8, y: 3, z: 0, rotation: -Math.PI / 2, variant: 0 },
+      { id: 'initial-7', type: 'chair', x: 7, y: 3, z: 0, rotation: Math.PI / 2, variant: 0 },
     ],
     ballerina: {
       x: CENTER,
