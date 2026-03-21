@@ -4,7 +4,7 @@ import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
 
-import { PREMADE_MESSAGES, CHAT_COOLDOWN, EMOJI_LIST, EMOJI_COOLDOWN } from './src/constants.ts';
+import { PREMADE_MESSAGES, CHAT_COOLDOWN, EMOJI_LIST } from './src/constants.ts';
 import type { GameState, ChatMessage } from './src/types.ts';
 import { stepBallerina, placeFurniture, createInitialState } from './src/gameLogic.ts';
 import {
@@ -21,7 +21,6 @@ import type { ItemType } from './src/types.ts';
 
 const PORT = 3000;
 const CHAT_COOLDOWN_MS = CHAT_COOLDOWN * 1000;
-const EMOJI_COOLDOWN_MS = EMOJI_COOLDOWN * 1000;
 const MAX_CHAT_HISTORY = 100;
 
 // Release timestamp (optional)
@@ -60,7 +59,6 @@ let userCounter = 0;
 let released = false;
 const chatHistory: ChatMessage[] = [];
 const chatCooldowns = new Map<string, number>(); // uuid -> last chat timestamp
-const emojiCooldowns = new Map<string, number>(); // uuid -> last emoji timestamp
 
 function generateChatId(): string {
   return crypto.randomUUID();
@@ -332,12 +330,6 @@ async function startServer() {
 
           // Validate emoji is unlocked
           if (!user.unlockedEmojis.includes(emojiIndex)) return;
-
-          // Enforce emoji cooldown
-          const now = Date.now();
-          const lastEmoji = emojiCooldowns.get(uuid) || 0;
-          if (now - lastEmoji < EMOJI_COOLDOWN_MS) return;
-          emojiCooldowns.set(uuid, now);
 
           // Award coins
           const coinReward = EMOJI_COIN_REWARDS[emojiIndex];

@@ -9,7 +9,8 @@
     "clean": "rm -rf dist",
     "lint": "eslint . && tsc --noEmit",
     "lint:fix": "eslint . --fix && prettier --write .",
-    "start": "node --experimental-strip-types server.ts"
+    "start": "node --experimental-strip-types server.ts",
+    "start:prod": "npm run build && NODE_ENV=production node --experimental-strip-types server.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.3",

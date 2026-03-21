@@ -39,5 +39,3 @@ export const EMOJI_LIST = [
   { emoji: '📣', sfx: 'airhorn' },
   { emoji: '👏', sfx: 'applause' },
 ] as const;
-
-export const EMOJI_COOLDOWN = 1; // seconds
