@@ -69,7 +69,7 @@ export function Boombox({ variant }: FurnitureProps) {
     return Array.from({ length: 6 }).map((_, i) => ({
       type: i % 2,
       offset: (i * Math.PI * 0.33),
-      scale: 0.15 + (i * 0.02),
+      scale: 0.3 + (i * 0.04),
       phase: (i * Math.PI * 0.4),
     }));
   }, []);
