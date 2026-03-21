@@ -95,6 +95,8 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
     assets.forEach(loadAsset);
   }, []);
 
+  const capturesDone = capturesProgress >= 1;
+
   // Final completion check
   useEffect(() => {
     if (assetsLoaded && modelReady && capturesDone && captures?.sign) {
@@ -116,8 +118,6 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   const handleCurrentItem = useCallback((label: string, current: number, total: number) => {
     setCurrentItem({ label, current, total });
   }, []);
-
-  const capturesDone = capturesProgress >= 1;
 
   // Calculate overall progress:
   // If captures are cached (100%), overall progress should be assetsProgress
