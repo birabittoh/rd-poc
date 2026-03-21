@@ -57,6 +57,8 @@ import {
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
 const USER_ID_KEY = 'rd-poc:userId';
+const BGM_MUTE_KEY = 'rd-poc:bgmMuted';
+const SFX_MUTE_KEY = 'rd-poc:sfxMuted';
 
 const HAS_WAITING_ROOM = !!import.meta.env.VITE_RELEASE_TIMESTAMP;
 
@@ -113,8 +115,8 @@ export default function App() {
   >('loading');
   const [variantCaptures, setVariantCaptures] = useState<Record<string, string>>({});
   const [signUrl, setSignUrl] = useState<string | null>(null);
-  const [isBgmMuted, setIsBgmMuted] = useState(false);
-  const [isSfxMuted, setIsSfxMuted] = useState(false);
+  const [isBgmMuted, setIsBgmMuted] = useState(() => localStorage.getItem(BGM_MUTE_KEY) === 'true');
+  const [isSfxMuted, setIsSfxMuted] = useState(() => localStorage.getItem(SFX_MUTE_KEY) === 'true');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [menuView, setMenuView] = useState<'purchase' | 'earn'>('earn');
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -233,10 +235,24 @@ export default function App() {
       // Small delay for the fade animation
       const timer = setTimeout(() => {
         setAppState('playing');
+        // Start background music when transitioning from waiting to playing
+        if (!audioRef.current) {
+          const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
+          audio.loop = true;
+          audio.volume = isBgmMuted ? 0 : 0.10;
+          audio
+            .play()
+            .then(() => {
+              audioRef.current = audio;
+            })
+            .catch((err) => {
+              console.warn('Audio play failed:', err);
+            });
+        }
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [released, appState]);
+  }, [released, appState, isBgmMuted]);
 
   // Demo mode: run ballerina loop locally
   useEffect(() => {
@@ -335,6 +351,7 @@ export default function App() {
   const toggleBgmMute = () => {
     setIsBgmMuted((prev) => {
       const next = !prev;
+      localStorage.setItem(BGM_MUTE_KEY, String(next));
       if (audioRef.current) {
         audioRef.current.volume = next ? 0 : 0.10;
       }
@@ -343,7 +360,11 @@ export default function App() {
   };
 
   const toggleSfxMute = () => {
-    setIsSfxMuted((prev) => !prev);
+    setIsSfxMuted((prev) => {
+      const next = !prev;
+      localStorage.setItem(SFX_MUTE_KEY, String(next));
+      return next;
+    });
   };
 
   const handleEmojiClick = (index: number, e: React.MouseEvent) => {
@@ -389,18 +410,6 @@ export default function App() {
 
   const handleEnter = () => {
     setAppState((prev) => (prev === 'ready' ? 'entering' : prev));
-    // Start background music
-    const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
-    audio.loop = true;
-    audio.volume = isBgmMuted ? 0 : 0.10;
-    audio
-      .play()
-      .then(() => {
-        audioRef.current = audio;
-      })
-      .catch((err) => {
-        console.warn('Audio play failed:', err);
-      });
 
     // Small delay to allow the flash to peak
     setTimeout(() => {
@@ -410,6 +419,22 @@ export default function App() {
         if (HAS_WAITING_ROOM && !released) {
           return 'waiting';
         }
+
+        // Start background music if we're going straight to playing
+        if (!audioRef.current) {
+          const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
+          audio.loop = true;
+          audio.volume = isBgmMuted ? 0 : 0.10;
+          audio
+            .play()
+            .then(() => {
+              audioRef.current = audio;
+            })
+            .catch((err) => {
+              console.warn('Audio play failed:', err);
+            });
+        }
+
         return 'playing';
       });
     }, 100);
@@ -457,22 +482,24 @@ export default function App() {
       style={{ backgroundColor: COLORS.BACKGROUND }}
     >
       {/* Mute Buttons */}
-      <div className="absolute top-4 left-4 z-50 flex gap-2">
-        <button
-          onClick={toggleBgmMute}
-          className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-          aria-label={isBgmMuted ? 'Unmute BGM' : 'Mute BGM'}
-        >
-          {isBgmMuted ? <Music2 className="w-5 h-5 opacity-40" /> : <Music className="w-5 h-5" />}
-        </button>
-        <button
-          onClick={toggleSfxMute}
-          className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-          aria-label={isSfxMuted ? 'Unmute SFX' : 'Mute SFX'}
-        >
-          {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </button>
-      </div>
+      {appState !== 'waiting' && (
+        <div className="absolute top-4 left-4 z-50 flex gap-2">
+          <button
+            onClick={toggleBgmMute}
+            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+            aria-label={isBgmMuted ? 'Unmute BGM' : 'Mute BGM'}
+          >
+            {isBgmMuted ? <Music2 className="w-5 h-5 opacity-40" /> : <Music className="w-5 h-5" />}
+          </button>
+          <button
+            onClick={toggleSfxMute}
+            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+            aria-label={isSfxMuted ? 'Unmute SFX' : 'Mute SFX'}
+          >
+            {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </button>
+        </div>
+      )}
 
       {/* Currency HUD - top right */}
       {showRoom && (
