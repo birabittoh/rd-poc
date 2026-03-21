@@ -162,7 +162,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     category: 'surface',
     size: 1,
     interactable: true,
-    rotationStrategy: 'faceChair',
+    rotationStrategy: 'faceAwayFromWall',
     variants: 4,
     previewAdjustCamera: 0.8,
   },

@@ -1,8 +1,50 @@
 import React, { useRef, useMemo } from 'react';
-import { Box, Sphere } from '@react-three/drei';
+import { Box, Sphere, useSVG } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { FurnitureProps } from '../../types';
+
+// Musical note SVG paths
+const NOTE_SVGS = [
+  // Eighth note
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M70,10 L70,70 C70,81 61,90 50,90 C39,90 30,81 30,70 C30,59 39,50 50,50 L50,20 L70,20 L70,10 Z" fill="white"/></svg>',
+  // Two beamed eighth notes
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M30,20 L80,10 L80,70 C80,81 71,90 60,90 C49,90 40,81 40,70 C40,59 49,50 60,50 L60,30 L40,35 L40,75 C40,86 31,95 20,95 C9,95 0,86 0,75 C0,64 9,55 20,55 L20,20 Z" fill="white"/></svg>',
+];
+
+function NoteParticle({ color, type, phase, offset, scale }: { color: string, type: number, phase: number, offset: number, scale: number }) {
+  const meshRef = useRef<THREE.Group>(null);
+  const svg = useSVG(NOTE_SVGS[type]);
+
+  const shapes = useMemo(() => {
+    return svg.paths.map(p => p.toShapes(true)[0]);
+  }, [svg]);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    const t = state.clock.getElapsedTime();
+    const localT = (t + phase) % 2;
+    const progress = localT / 2;
+
+    meshRef.current.position.y = 0.2 + progress * 0.8;
+    meshRef.current.position.x = Math.sin(t * 3 + offset) * 0.3;
+    meshRef.current.position.z = Math.cos(t * 3 + offset) * 0.3;
+    meshRef.current.scale.setScalar(scale * (1 - progress));
+    meshRef.current.rotation.y = t * 2;
+    meshRef.current.visible = progress < 1;
+  });
+
+  return (
+    <group ref={meshRef}>
+      {shapes.map((shape, i) => (
+        <mesh key={i} rotation={[Math.PI, 0, 0]} scale={0.005} position={[-0.25, 0.25, 0]}>
+          <shapeGeometry args={[shape]} />
+          <meshStandardMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.8} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 
 export function Boombox({ variant }: FurnitureProps) {
   const groupRef = useRef<THREE.Group>(null);
@@ -23,12 +65,11 @@ export function Boombox({ variant }: FurnitureProps) {
 
   // Particle data for musical notes
   const notes = useMemo(() => {
-    return Array.from({ length: 5 }).map((_, i) => ({
-      pos: new THREE.Vector3(0, 0.2, 0),
-      speed: 0.01 + (i * 0.005),
-      offset: (i * Math.PI * 0.4),
-      scale: 0.1 + (i * 0.02),
-      phase: (i * Math.PI * 0.5),
+    return Array.from({ length: 6 }).map((_, i) => ({
+      type: i % 2,
+      offset: (i * Math.PI * 0.33),
+      scale: 0.15 + (i * 0.02),
+      phase: (i * Math.PI * 0.4),
     }));
   }, []);
 
@@ -39,22 +80,6 @@ export function Boombox({ variant }: FurnitureProps) {
     if (groupRef.current) {
       const pulse = 1 + Math.sin(t * 10) * 0.05;
       groupRef.current.scale.set(pulse, pulse, pulse);
-    }
-
-    // Particle animation
-    if (notesRef.current) {
-      notesRef.current.children.forEach((child, i) => {
-        const note = notes[i];
-        const localT = (t + note.phase) % 2;
-        const progress = localT / 2;
-
-        child.position.y = 0.2 + progress * 0.5;
-        child.position.x = Math.sin(t * 5 + note.offset) * 0.2;
-        child.position.z = Math.cos(t * 5 + note.offset) * 0.2;
-        child.scale.setScalar(note.scale * (1 - progress));
-        child.rotation.y = t * 2;
-        child.visible = progress < 1;
-      });
     }
   });
 
@@ -87,19 +112,15 @@ export function Boombox({ variant }: FurnitureProps) {
 
       {/* Musical Note Particles */}
       <group ref={notesRef}>
-        {notes.map((_, i) => (
-          <group key={i}>
-             {/* Simple musical note representation using two boxes */}
-            <Box args={[0.02, 0.15, 0.02]} position={[0.04, 0, 0]}>
-              <meshStandardMaterial color={accentColor} />
-            </Box>
-            <Box args={[0.08, 0.02, 0.02]} position={[0, 0.06, 0]}>
-              <meshStandardMaterial color={accentColor} />
-            </Box>
-            <Sphere args={[0.03, 8, 8]} position={[-0.01, -0.06, 0]}>
-              <meshStandardMaterial color={accentColor} />
-            </Sphere>
-          </group>
+        {notes.map((note, i) => (
+          <NoteParticle
+            key={i}
+            color={accentColor}
+            type={note.type}
+            phase={note.phase}
+            offset={note.offset}
+            scale={note.scale}
+          />
         ))}
       </group>
     </group>
