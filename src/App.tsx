@@ -303,6 +303,8 @@ export default function App() {
     );
   }
 
+  const showRoom = appState === 'playing';
+
   const isOrnament = selectedItem ? ITEM_DEFINITIONS[selectedItem].category === 'surface' : false;
   const isPlacementDisabled = cooldown > 0 || (gameState && gameState.status !== 'playing');
 
@@ -319,46 +321,54 @@ export default function App() {
       className="relative h-full w-full overflow-hidden font-sans text-zinc-100"
       style={{ backgroundColor: COLORS.BACKGROUND }}
     >
-      {/* 3D Canvas */}
-      <div className="absolute inset-0">
-        <Canvas
-          shadows={{ type: THREE.PCFShadowMap }}
-          dpr={[1, 2]}
-          gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
-        >
-          <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} near={-100} far={100} />
-          <OrbitControls
-            enablePan={false}
-            enableZoom={true}
-            maxPolarAngle={Math.PI / 2.5}
-            minPolarAngle={Math.PI / 6}
-          />
-          <ambientLight intensity={0.5} />
-          <directionalLight
-            position={[10, 20, 10]}
-            intensity={1.5}
-            castShadow
-            shadow-mapSize={[2048, 2048]}
-          />
+      {/* 3D Canvas - only rendered when playing */}
+      {showRoom && (
+        <div className="absolute inset-0">
+          <Canvas
+            shadows={{ type: THREE.PCFShadowMap }}
+            dpr={[1, 2]}
+            gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
+          >
+            <OrthographicCamera
+              makeDefault
+              position={[10, 10, 10]}
+              zoom={40}
+              near={-100}
+              far={100}
+            />
+            <OrbitControls
+              enablePan={false}
+              enableZoom={true}
+              maxPolarAngle={Math.PI / 2.5}
+              minPolarAngle={Math.PI / 6}
+            />
+            <ambientLight intensity={0.5} />
+            <directionalLight
+              position={[10, 20, 10]}
+              intensity={1.5}
+              castShadow
+              shadow-mapSize={[2048, 2048]}
+            />
 
-          <Room
-            gameState={gameState}
-            selectedItem={isPlacementDisabled ? null : selectedItem}
-            placementPath={placementPath}
-            onPlace={handlePlace}
-          />
-        </Canvas>
-      </div>
+            <Room
+              gameState={gameState}
+              selectedItem={isPlacementDisabled ? null : selectedItem}
+              placementPath={placementPath}
+              onPlace={handlePlace}
+            />
+          </Canvas>
+        </div>
+      )}
 
       {/* Demo mode badge */}
-      {isDemoMode && (
+      {isDemoMode && showRoom && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500/90 backdrop-blur-md text-black font-bold px-4 py-1.5 rounded-full text-sm tracking-widest shadow-lg pointer-events-none select-none">
           DEMO
         </div>
       )}
 
-      {/* UI Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center pointer-events-none">
+      {/* UI Overlay - only when playing */}
+      {showRoom && <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center pointer-events-none">
         {gameState.status === 'game_over' && (
           <div className="mb-8 bg-red-500/90 backdrop-blur-md text-white px-8 py-4 rounded-2xl shadow-2xl pointer-events-auto flex flex-col items-center transform transition-all animate-in fade-in slide-in-from-bottom-4">
             <h2 className="text-3xl font-bold mb-2">Game Over!</h2>
@@ -491,7 +501,7 @@ export default function App() {
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* Door entrance overlay */}
       <AnimatePresence>

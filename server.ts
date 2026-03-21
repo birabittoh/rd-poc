@@ -196,9 +196,11 @@ function broadcastState() {
   }
 }
 
-// Game loop
+// Game loop - only step ballerina when released (or when no waiting room)
 setInterval(() => {
-  gameState = stepBallerina(gameState);
+  if (!RELEASE_TIMESTAMP || released) {
+    gameState = stepBallerina(gameState);
+  }
   broadcastState();
 }, 2000);
 
