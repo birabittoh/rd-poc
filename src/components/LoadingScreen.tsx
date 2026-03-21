@@ -59,9 +59,9 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
     total: number;
   } | null>(null);
 
-  // Preload core assets: ballerina.glb, bgm.mp3 and sign.png
+  // Preload core assets
   useEffect(() => {
-    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.png'];
+    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.webp'];
     let loadedCount = 0;
 
     const loadAsset = async (name: string) => {

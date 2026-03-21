@@ -36,7 +36,7 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
               >
                 {/* Sign image */}
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
-                  <img src="/sign.png" alt="My Room Sign" className="w-full h-auto" />
+                  <img src="/sign.webp" alt="My Room Sign" className="w-full h-auto" />
                 </div>
 
                 <svg
@@ -87,7 +87,7 @@ export function DoorEntrance({ onEnter }: DoorEntranceProps) {
               >
                 {/* Sign image on the opening door */}
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
-                  <img src="/sign.png" alt="My Room Sign" className="w-full h-auto" />
+                  <img src="/sign.webp" alt="My Room Sign" className="w-full h-auto" />
                 </div>
 
                 <svg
