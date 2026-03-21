@@ -32,11 +32,11 @@ export const EMOJI_LIST = [
   { emoji: '🐰', sfx: 'jump' },
   { emoji: '✨', sfx: 'sparkle' },
   { emoji: '👀', sfx: 'ooh' },
+  { emoji: '💋', sfx: 'kiss' },
   { emoji: '🎉', sfx: 'firecracker' },
   { emoji: '👹', sfx: 'neighbor' },
   { emoji: '👻', sfx: 'ghost' },
   { emoji: '👽', sfx: 'alien' },
-  { emoji: '💋', sfx: 'kiss' },
   { emoji: '📣', sfx: 'airhorn' },
   { emoji: '👏', sfx: 'applause' },
 ] as const;
