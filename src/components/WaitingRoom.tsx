@@ -11,6 +11,8 @@ interface WaitingRoomProps {
   released: boolean;
 }
 
+type MobileTab = 'chat' | 'users';
+
 export function WaitingRoom({
   users,
   messages,
@@ -22,6 +24,7 @@ export function WaitingRoom({
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [remaining, setRemaining] = useState('');
   const [chatCooldown, setChatCooldown] = useState(false);
+  const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
 
   // Countdown timer
   useEffect(() => {
@@ -63,6 +66,35 @@ export function WaitingRoom({
     return a.name.localeCompare(b.name);
   });
 
+  const onlineCount = users.filter((u) => u.online).length;
+
+  const userListContent = (
+    <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+      {sortedUsers.map((user) => (
+        <div
+          key={user.name}
+          className="flex items-center gap-2 rounded px-2 py-1 text-xs"
+          style={{
+            color: user.online ? '#e4e4e7' : '#71717a',
+          }}
+        >
+          <span
+            className="inline-block h-2 w-2 rounded-full shrink-0"
+            style={{
+              backgroundColor: user.online ? COLORS.WALL : '#52525b',
+            }}
+          />
+          <span className="truncate">
+            {user.name}
+            {currentUser && user.name === currentUser.name && (
+              <span className="opacity-50"> (you)</span>
+            )}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div
       className="flex h-full w-full flex-col font-mono"
@@ -73,11 +105,17 @@ export function WaitingRoom({
         className="flex items-center justify-between border-b px-4 py-3"
         style={{ borderColor: COLORS.DOOR_BORDER + '40' }}
       >
-        <h1 className="text-sm font-bold tracking-widest uppercase" style={{ color: COLORS.DOOR_BORDER }}>
+        <h1
+          className="text-sm font-bold tracking-widest uppercase"
+          style={{ color: COLORS.DOOR_BORDER }}
+        >
           Waiting Room
         </h1>
         {!released && remaining && (
-          <div className="flex items-center gap-2 text-sm" style={{ color: COLORS.DOOR_HANDLE }}>
+          <div
+            className="flex items-center gap-2 text-sm"
+            style={{ color: COLORS.DOOR_HANDLE }}
+          >
             <span className="opacity-60">opens in</span>
             <span className="font-bold tabular-nums">{remaining}</span>
           </div>
@@ -89,10 +127,37 @@ export function WaitingRoom({
         )}
       </div>
 
+      {/* Mobile tab bar */}
+      <div
+        className="flex md:hidden border-b"
+        style={{ borderColor: COLORS.DOOR_BORDER + '40' }}
+      >
+        <button
+          onClick={() => setMobileTab('chat')}
+          className="flex-1 py-2 text-xs font-bold tracking-widest uppercase text-center transition-colors"
+          style={{
+            color: mobileTab === 'chat' ? COLORS.DOOR_BORDER : '#71717a',
+            borderBottom: mobileTab === 'chat' ? `2px solid ${COLORS.DOOR}` : '2px solid transparent',
+          }}
+        >
+          Chat
+        </button>
+        <button
+          onClick={() => setMobileTab('users')}
+          className="flex-1 py-2 text-xs font-bold tracking-widest uppercase text-center transition-colors"
+          style={{
+            color: mobileTab === 'users' ? COLORS.DOOR_BORDER : '#71717a',
+            borderBottom: mobileTab === 'users' ? `2px solid ${COLORS.DOOR}` : '2px solid transparent',
+          }}
+        >
+          Users ({onlineCount}/{users.length})
+        </button>
+      </div>
+
       {/* Main content */}
       <div className="flex flex-1 min-h-0">
-        {/* Chat panel */}
-        <div className="flex flex-1 flex-col min-w-0">
+        {/* Chat panel - hidden on mobile when users tab is active */}
+        <div className={`flex-1 flex-col min-w-0 ${mobileTab === 'chat' ? 'flex' : 'hidden md:flex'}`}>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-1">
             {messages.length === 0 && (
@@ -163,46 +228,28 @@ export function WaitingRoom({
           </div>
         </div>
 
-        {/* User list sidebar */}
+        {/* User list - mobile: full width when users tab active; desktop: sidebar */}
         <div
-          className="w-48 shrink-0 border-l flex flex-col"
+          className={`flex-col ${
+            mobileTab === 'users'
+              ? 'flex flex-1 md:flex-none md:w-48 md:shrink-0'
+              : 'hidden md:flex md:w-48 md:shrink-0'
+          } md:border-l`}
           style={{ borderColor: COLORS.DOOR_BORDER + '40' }}
         >
+          {/* Desktop header (hidden on mobile since tab bar shows counts) */}
           <div
-            className="border-b px-3 py-2"
+            className="hidden md:block border-b px-3 py-2"
             style={{ borderColor: COLORS.DOOR_BORDER + '40' }}
           >
             <h2
               className="text-xs font-bold tracking-widest uppercase"
               style={{ color: COLORS.DOOR_BORDER + '80' }}
             >
-              Users ({users.filter((u) => u.online).length}/{users.length})
+              Users ({onlineCount}/{users.length})
             </h2>
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-            {sortedUsers.map((user) => (
-              <div
-                key={user.name}
-                className="flex items-center gap-2 rounded px-2 py-1 text-xs"
-                style={{
-                  color: user.online ? '#e4e4e7' : '#71717a',
-                }}
-              >
-                <span
-                  className="inline-block h-2 w-2 rounded-full shrink-0"
-                  style={{
-                    backgroundColor: user.online ? COLORS.WALL : '#52525b',
-                  }}
-                />
-                <span className="truncate">
-                  {user.name}
-                  {currentUser && user.name === currentUser.name && (
-                    <span className="opacity-50"> (you)</span>
-                  )}
-                </span>
-              </div>
-            ))}
-          </div>
+          {userListContent}
         </div>
       </div>
     </div>
