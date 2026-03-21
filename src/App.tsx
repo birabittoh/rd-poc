@@ -27,8 +27,7 @@ import {
   Volume2,
   VolumeX,
   ArrowLeft,
-  ShoppingBag,
-  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
 import { ITEM_DEFINITIONS } from './items';
@@ -117,7 +116,7 @@ export default function App() {
   const [isBgmMuted, setIsBgmMuted] = useState(false);
   const [isSfxMuted, setIsSfxMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [menuView, setMenuView] = useState<'main' | 'purchase' | 'earn'>('main');
+  const [menuView, setMenuView] = useState<'purchase' | 'earn'>('earn');
   const [particles, setParticles] = useState<Particle[]>([]);
   const isSfxMutedRef = useRef(false);
   const bottomPanelRef = useRef<HTMLDivElement>(null);
@@ -581,34 +580,6 @@ export default function App() {
 
         <div id="bottom-panel" ref={bottomPanelRef} className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full overflow-hidden">
           <AnimatePresence mode="wait">
-            {/* Main menu */}
-            {menuView === 'main' && !selectedItem && (
-              <motion.div
-                key="main-menu"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ScrollContainer title="Menu">
-                  <button
-                    onClick={() => setMenuView('earn')}
-                    className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white"
-                  >
-                    <div className="[&>svg]:w-5 [&>svg]:h-5"><Sparkles /></div>
-                    <span className="text-[10px] font-medium">Earn</span>
-                  </button>
-                  <button
-                    onClick={() => setMenuView('purchase')}
-                    className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white"
-                  >
-                    <div className="[&>svg]:w-5 [&>svg]:h-5"><ShoppingBag /></div>
-                    <span className="text-[10px] font-medium">Purchase</span>
-                  </button>
-                </ScrollContainer>
-              </motion.div>
-            )}
-
             {/* Purchase menu - furniture lists */}
             {menuView === 'purchase' && !selectedItem && (
               <motion.div
@@ -620,9 +591,9 @@ export default function App() {
                 className="flex flex-col gap-2 relative"
               >
                 <button
-                  onClick={() => setMenuView('main')}
-                  className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
-                  aria-label="Back"
+                  onClick={() => setMenuView('earn')}
+                  className="absolute top-1.5 left-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
+                  aria-label="Back to Earn"
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
@@ -747,11 +718,11 @@ export default function App() {
                 className="relative"
               >
                 <button
-                  onClick={() => setMenuView('main')}
+                  onClick={() => setMenuView('purchase')}
                   className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
-                  aria-label="Back"
+                  aria-label="Go to Purchase"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" />
                 </button>
 
                 <ScrollContainer title="Earn">
@@ -815,9 +786,7 @@ export default function App() {
               ? `Select a ${isOrnament ? 'surface' : 'floor tile'} to place ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`
               : menuView === 'earn'
                 ? 'Tap an emoji to earn coins'
-                : menuView === 'purchase'
-                  ? 'Select an item to place'
-                  : 'Choose an action'}
+                : 'Select an item to place'}
           </p>
         </div>
       </div>}
