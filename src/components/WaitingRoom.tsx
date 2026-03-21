@@ -188,7 +188,7 @@ export function WaitingRoom({
             style={{ borderColor: COLORS.DOOR_BORDER + '40' }}
           >
             <div
-              className="flex items-center gap-2 rounded-lg border px-3 py-2 overflow-x-auto"
+              className="flex flex-wrap gap-2 rounded-lg border px-3 py-2"
               style={{
                 borderColor: COLORS.DOOR_BORDER + '30',
                 backgroundColor: COLORS.BACKGROUND,
