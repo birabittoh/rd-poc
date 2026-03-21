@@ -47,7 +47,7 @@ function ParticleSpan({
   return (
     <span
       ref={ref}
-      className="absolute pointer-events-none select-none text-2xl"
+      className="absolute pointer-events-none select-none text-2xl -translate-x-1/2"
       style={{
         left: particle.x,
         top: particle.y,
