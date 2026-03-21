@@ -45,15 +45,15 @@ NUM_TIERS = 6
 
 # Emoji coin rewards: coins earned per click
 COIN_BASE = 1
-COIN_GROWTH = 1.4
+COIN_GROWTH = 1.6
 
 # Emoji unlock costs (in sparkles)
-UNLOCK_BASE = 6
-UNLOCK_GROWTH = 1.7
+UNLOCK_BASE = 10
+UNLOCK_GROWTH = 1.8
 
 # Item coin costs (to place)
-ITEM_COST_BASE = 20
-ITEM_COST_GROWTH = 1.7
+ITEM_COST_BASE = 25
+ITEM_COST_GROWTH = 1.75
 
 # Item sparkle rewards (earned on placement)
 SPARKLE_BASE = 2
@@ -65,10 +65,10 @@ INITIAL_SPARKLES = 0
 
 
 def compute():
-    # Emoji coin rewards
+    # Emoji coin rewards — guaranteed strictly increasing via max(i+1, exponential)
     emoji_coin_rewards = []
     for i in range(len(EMOJIS)):
-        reward = max(1, math.floor(COIN_BASE * (COIN_GROWTH ** i)))
+        reward = max(i + 1, math.floor(COIN_BASE * (COIN_GROWTH ** i)))
         emoji_coin_rewards.append(reward)
 
     # Emoji unlock costs (sparkles)

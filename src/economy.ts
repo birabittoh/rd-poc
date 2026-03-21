@@ -5,29 +5,29 @@ export const INITIAL_COINS = 0;
 export const INITIAL_SPARKLES = 0;
 export const DEFAULT_UNLOCKED_EMOJIS: number[] = [0];
 
-export const EMOJI_COIN_REWARDS: number[] = [1, 1, 1, 2, 3, 5, 7, 10, 14, 20, 28, 40, 56];
+export const EMOJI_COIN_REWARDS: number[] = [1, 2, 3, 4, 6, 10, 16, 26, 42, 68, 109, 175, 281];
 
-export const EMOJI_UNLOCK_COSTS: number[] = [0, 6, 10, 17, 29, 50, 85, 144, 246, 418, 711, 1209, 2056];
+export const EMOJI_UNLOCK_COSTS: number[] = [0, 10, 18, 32, 58, 104, 188, 340, 612, 1101, 1983, 3570, 6426];
 
 export const ITEM_COIN_COSTS: Record<ItemType, number> = {
-  plant: 20,
-  chair: 20,
-  bedside_table: 34,
-  coffee_table: 34,
-  lamp: 34,
-  table: 57,
-  vase: 57,
-  book: 57,
-  drawer: 98,
-  floor_lamp: 98,
-  laptop: 98,
-  mirror: 167,
-  mirror_ornament: 167,
-  boombox: 167,
-  library: 283,
-  tv: 283,
-  wardrobe: 283,
-  bed: 283,
+  plant: 25,
+  chair: 25,
+  bedside_table: 43,
+  coffee_table: 43,
+  lamp: 43,
+  table: 76,
+  vase: 76,
+  book: 76,
+  drawer: 133,
+  floor_lamp: 133,
+  laptop: 133,
+  mirror: 234,
+  mirror_ornament: 234,
+  boombox: 234,
+  library: 410,
+  tv: 410,
+  wardrobe: 410,
+  bed: 410,
 };
 
 export const ITEM_SPARKLE_REWARDS: Record<ItemType, number> = {
