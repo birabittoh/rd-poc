@@ -650,6 +650,7 @@ export default function App() {
                         affordable={coins >= ITEM_COIN_COSTS[item.type]}
                         remaining={maxP - placed}
                         max={maxP}
+                        sparkleReward={ITEM_SPARKLE_REWARDS[item.type]}
                       />
                     );
                   })}
@@ -679,6 +680,7 @@ export default function App() {
                         affordable={coins >= ITEM_COIN_COSTS[item.type]}
                         remaining={maxP - placed}
                         max={maxP}
+                        sparkleReward={ITEM_SPARKLE_REWARDS[item.type]}
                       />
                     );
                   })}

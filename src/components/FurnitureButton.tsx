@@ -14,6 +14,7 @@ export function FurnitureButton({
   affordable,
   remaining,
   max,
+  sparkleReward,
 }: {
   type: ItemType;
   label?: string;
@@ -26,6 +27,7 @@ export function FurnitureButton({
   affordable?: boolean;
   remaining?: number;
   max?: number;
+  sparkleReward?: number;
 }) {
   const maxedOut = remaining !== undefined && remaining <= 0;
   return (
@@ -41,6 +43,11 @@ export function FurnitureButton({
         price !== undefined && affordable === false && !disabled && !maxedOut && 'opacity-60'
       )}
     >
+      {sparkleReward !== undefined && !maxedOut && (
+        <span className="absolute top-1 right-1 text-[8px] font-bold text-yellow-400">
+          +{sparkleReward} ✨
+        </span>
+      )}
       <div className="[&>svg]:w-5 [&>svg]:h-5">{icon}</div>
       <span className="text-[10px] font-medium capitalize">{label ?? type.replace('_', ' ')}</span>
       {price !== undefined && !maxedOut && (
