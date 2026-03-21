@@ -24,6 +24,8 @@ import {
   RectangleVertical,
   ScanLine,
   Music,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
 import { ITEM_DEFINITIONS } from './items';
@@ -98,6 +100,7 @@ export default function App() {
   >('loading');
   const [variantCaptures, setVariantCaptures] = useState<Record<string, string>>({});
   const [signUrl, setSignUrl] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Waiting room state
@@ -254,12 +257,22 @@ export default function App() {
     setAppState((prev) => (prev === 'loading' ? 'ready' : prev));
   }, []);
 
+  const toggleMute = () => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      if (audioRef.current) {
+        audioRef.current.volume = next ? 0 : 0.15;
+      }
+      return next;
+    });
+  };
+
   const handleEnter = () => {
     setAppState((prev) => (prev === 'ready' ? 'entering' : prev));
     // Start background music
     const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
     audio.loop = true;
-    audio.volume = 0.5;
+    audio.volume = isMuted ? 0 : 0.15;
     audio
       .play()
       .then(() => {
@@ -323,6 +336,17 @@ export default function App() {
       className="relative h-full w-full overflow-hidden font-sans text-zinc-100"
       style={{ backgroundColor: COLORS.BACKGROUND }}
     >
+      {/* Mute Button */}
+      {appState !== 'loading' && (
+        <button
+          onClick={toggleMute}
+          className="absolute top-4 left-4 z-50 p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+          aria-label={isMuted ? 'Unmute' : 'Mute'}
+        >
+          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+        </button>
+      )}
+
       {/* 3D Canvas - only rendered when playing */}
       {showRoom && (
         <div className="absolute inset-0">
