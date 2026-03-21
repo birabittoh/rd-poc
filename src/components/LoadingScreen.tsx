@@ -4,7 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { CaptureManager } from './CaptureManager';
 import { ITEM_DEFINITIONS } from '../items';
-import { COLORS } from '../constants';
+import { COLORS, EMOJI_LIST } from '../constants';
 
 interface LoadingScreenProps {
   onLoadingComplete: (captures: Record<string, string>) => void;
@@ -94,7 +94,8 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
 
   // Preload core assets
   useEffect(() => {
-    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.webp', 'logo.webp'];
+    const sfxAssets = EMOJI_LIST.map((e) => `sfx/${e.sfx}.mp3`);
+    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.webp', 'logo.webp', ...sfxAssets];
     let loadedCount = 0;
 
     const loadAsset = async (name: string) => {

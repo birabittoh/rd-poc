@@ -24,8 +24,12 @@ import {
   RectangleVertical,
   ScanLine,
   Music,
+  Music2,
   Volume2,
   VolumeX,
+  ArrowLeft,
+  ShoppingBag,
+  Sparkles,
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
 import { ITEM_DEFINITIONS } from './items';
@@ -39,7 +43,9 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { DoorEntrance } from './components/DoorEntrance';
 import { WaitingRoom } from './components/WaitingRoom';
 import { motion, AnimatePresence } from 'motion/react';
-import { COLORS } from './constants';
+import { COLORS, EMOJI_LIST } from './constants';
+import { EmojiParticles, createParticle, Particle } from './components/EmojiParticles';
+import { preloadAllSfx, playSfx } from './sfx';
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
 const USER_ID_KEY = 'rd-poc:userId';
@@ -100,8 +106,13 @@ export default function App() {
   >('loading');
   const [variantCaptures, setVariantCaptures] = useState<Record<string, string>>({});
   const [signUrl, setSignUrl] = useState<string | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isBgmMuted, setIsBgmMuted] = useState(false);
+  const [isSfxMuted, setIsSfxMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [menuView, setMenuView] = useState<'main' | 'purchase' | 'earn'>('main');
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const isSfxMutedRef = useRef(false);
+  const bottomPanelRef = useRef<HTMLDivElement>(null);
 
   // Waiting room state
   const [waitingUsers, setWaitingUsers] = useState<{ name: string; online: boolean }[]>([]);
@@ -109,6 +120,16 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<{ uuid: string; name: string } | null>(null);
   const [released, setReleased] = useState(false);
   const [releaseTimestamp, setReleaseTimestamp] = useState<string>('');
+
+  // Keep sfx mute ref in sync
+  useEffect(() => {
+    isSfxMutedRef.current = isSfxMuted;
+  }, [isSfxMuted]);
+
+  // Preload SFX audio
+  useEffect(() => {
+    preloadAllSfx();
+  }, []);
 
   // WebSocket connection with demo mode fallback
   useEffect(() => {
@@ -151,6 +172,17 @@ export default function App() {
         setChatMessages((prev) => [...prev, data.message]);
       } else if (data.type === 'release') {
         setReleased(true);
+      } else if (data.type === 'emoji_broadcast') {
+        const entry = EMOJI_LIST[data.index];
+        if (!entry) return;
+        // Spawn particle from fixed receive point (upper-left of bottom panel area)
+        const panelEl = document.getElementById('bottom-panel');
+        const rx = panelEl ? panelEl.getBoundingClientRect().left + 40 : 80;
+        const ry = panelEl ? panelEl.getBoundingClientRect().top + 20 : window.innerHeight - 200;
+        setParticles((prev) => [...prev, createParticle(entry.emoji, rx, ry)]);
+        if (!isSfxMutedRef.current) {
+          playSfx(entry.sfx, 0.3);
+        }
       }
     };
 
@@ -257,22 +289,46 @@ export default function App() {
     setAppState((prev) => (prev === 'loading' ? 'ready' : prev));
   }, []);
 
-  const toggleMute = () => {
-    setIsMuted((prev) => {
+  const toggleBgmMute = () => {
+    setIsBgmMuted((prev) => {
       const next = !prev;
       if (audioRef.current) {
-        audioRef.current.volume = next ? 0 : 0.15;
+        audioRef.current.volume = next ? 0 : 0.10;
       }
       return next;
     });
   };
+
+  const toggleSfxMute = () => {
+    setIsSfxMuted((prev) => !prev);
+  };
+
+  const handleEmojiClick = (index: number, e: React.MouseEvent) => {
+    const entry = EMOJI_LIST[index];
+    if (!entry) return;
+    // Spawn particle from click position
+    const x = e.clientX;
+    const y = e.clientY;
+    setParticles((prev) => [...prev, createParticle(entry.emoji, x, y)]);
+    if (!isSfxMuted) {
+      playSfx(entry.sfx, 0.3);
+    }
+    // Broadcast to server
+    if (ws) {
+      ws.send(JSON.stringify({ type: 'emoji', index }));
+    }
+  };
+
+  const handleParticleEnd = useCallback((id: string) => {
+    setParticles((prev) => prev.filter((p) => p.id !== id));
+  }, []);
 
   const handleEnter = () => {
     setAppState((prev) => (prev === 'ready' ? 'entering' : prev));
     // Start background music
     const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
     audio.loop = true;
-    audio.volume = isMuted ? 0 : 0.10;
+    audio.volume = isBgmMuted ? 0 : 0.10;
     audio
       .play()
       .then(() => {
@@ -336,15 +392,24 @@ export default function App() {
       className="relative h-full w-full overflow-hidden font-sans text-zinc-100"
       style={{ backgroundColor: COLORS.BACKGROUND }}
     >
-      {/* Mute Button */}
+      {/* Mute Buttons */}
       {appState !== 'loading' && (
-        <button
-          onClick={toggleMute}
-          className="absolute top-4 left-4 z-50 p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-          aria-label={isMuted ? 'Unmute' : 'Mute'}
-        >
-          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </button>
+        <div className="absolute top-4 left-4 z-50 flex gap-2">
+          <button
+            onClick={toggleBgmMute}
+            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+            aria-label={isBgmMuted ? 'Unmute BGM' : 'Mute BGM'}
+          >
+            {isBgmMuted ? <Music2 className="w-5 h-5 opacity-40" /> : <Music className="w-5 h-5" />}
+          </button>
+          <button
+            onClick={toggleSfxMute}
+            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
+            aria-label={isSfxMuted ? 'Unmute SFX' : 'Mute SFX'}
+          >
+            {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </button>
+        </div>
       )}
 
       {/* 3D Canvas - only rendered when playing */}
@@ -393,6 +458,9 @@ export default function App() {
         </div>
       )}
 
+      {/* Emoji Particles Overlay */}
+      <EmojiParticles particles={particles} onParticleEnd={handleParticleEnd} />
+
       {/* UI Overlay - only when playing */}
       {showRoom && <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center pointer-events-none">
         {gameState.status === 'game_over' && (
@@ -408,17 +476,54 @@ export default function App() {
           </div>
         )}
 
-        <div className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full overflow-hidden">
+        <div id="bottom-panel" ref={bottomPanelRef} className="bg-zinc-800/80 backdrop-blur-xl p-3 rounded-2xl shadow-2xl pointer-events-auto border border-white/10 flex flex-col gap-2 max-w-2xl w-full overflow-hidden">
           <AnimatePresence mode="wait">
-            {!selectedItem ? (
+            {/* Main menu */}
+            {menuView === 'main' && !selectedItem && (
               <motion.div
-                key="selection"
+                key="main-menu"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="flex flex-col gap-2"
               >
+                <ScrollContainer title="Menu">
+                  <button
+                    onClick={() => setMenuView('earn')}
+                    className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white"
+                  >
+                    <div className="[&>svg]:w-5 [&>svg]:h-5"><Sparkles /></div>
+                    <span className="text-[10px] font-medium">Earn</span>
+                  </button>
+                  <button
+                    onClick={() => setMenuView('purchase')}
+                    className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white"
+                  >
+                    <div className="[&>svg]:w-5 [&>svg]:h-5"><ShoppingBag /></div>
+                    <span className="text-[10px] font-medium">Purchase</span>
+                  </button>
+                </ScrollContainer>
+              </motion.div>
+            )}
+
+            {/* Purchase menu - furniture lists */}
+            {menuView === 'purchase' && !selectedItem && (
+              <motion.div
+                key="purchase-menu"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col gap-2 relative"
+              >
+                <button
+                  onClick={() => setMenuView('main')}
+                  className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+
                 <ScrollContainer title="Floor">
                   {FLOOR_ITEMS.map((item) => (
                     <FurnitureButton
@@ -456,7 +561,10 @@ export default function App() {
                   ))}
                 </ScrollContainer>
               </motion.div>
-            ) : (
+            )}
+
+            {/* Variant picker (from purchase) */}
+            {selectedItem && (
               <motion.div
                 key="variants"
                 initial={{ opacity: 0, y: 20 }}
@@ -502,6 +610,39 @@ export default function App() {
                 </ScrollContainer>
               </motion.div>
             )}
+
+            {/* Earn menu - emoji buttons */}
+            {menuView === 'earn' && !selectedItem && (
+              <motion.div
+                key="earn-menu"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="relative"
+              >
+                <button
+                  onClick={() => setMenuView('main')}
+                  className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+
+                <ScrollContainer title="Earn">
+                  {EMOJI_LIST.map((entry, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => handleEmojiClick(i, e)}
+                      className="relative p-2.5 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 min-w-[64px] shrink-0 bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white active:scale-95"
+                    >
+                      <span className="text-xl">{entry.emoji}</span>
+                      <span className="text-[10px] font-medium capitalize">{entry.sfx}</span>
+                    </button>
+                  ))}
+                </ScrollContainer>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
         <div className="mt-4 relative h-6 flex items-center justify-center w-full">
@@ -513,7 +654,11 @@ export default function App() {
           >
             {selectedItem
               ? `Select a ${isOrnament ? 'surface' : 'floor tile'} to place ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`
-              : 'Select an item to place'}
+              : menuView === 'earn'
+                ? 'Tap an emoji to earn coins'
+                : menuView === 'purchase'
+                  ? 'Select an item to place'
+                  : 'Choose an action'}
           </p>
 
           {cooldown > 0 && (

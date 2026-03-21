@@ -4,7 +4,7 @@ import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
 
-import { PLACEMENT_COOLDOWN, PREMADE_MESSAGES, CHAT_COOLDOWN } from './src/constants.ts';
+import { PLACEMENT_COOLDOWN, PREMADE_MESSAGES, CHAT_COOLDOWN, EMOJI_LIST } from './src/constants.ts';
 import type { GameState, ChatMessage } from './src/types.ts';
 import { stepBallerina, placeFurniture, createInitialState } from './src/gameLogic.ts';
 
@@ -261,6 +261,15 @@ async function startServer() {
           handleRegister(ws, message.uuid ?? null);
         } else if (message.type === 'chat' && RELEASE_TIMESTAMP !== null) {
           handleChat(ws, message.messageIndex);
+        } else if (message.type === 'emoji') {
+          const emojiIndex = message.index;
+          if (typeof emojiIndex !== 'number' || emojiIndex < 0 || emojiIndex >= EMOJI_LIST.length) return;
+          const broadcastMsg = JSON.stringify({ type: 'emoji_broadcast', index: emojiIndex });
+          for (const [client] of clients.entries()) {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+              client.send(broadcastMsg);
+            }
+          }
         }
       } catch (e) {
         console.error('Invalid message', e);

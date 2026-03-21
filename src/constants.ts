@@ -24,3 +24,21 @@ export const PREMADE_MESSAGES = [
 ];
 
 export const CHAT_COOLDOWN = 2; // seconds
+
+export const EMOJI_LIST = [
+  { emoji: '💖', sfx: 'pop' },
+  { emoji: '🥳', sfx: 'squee' },
+  { emoji: '😍', sfx: 'aww' },
+  { emoji: '🐰', sfx: 'jump' },
+  { emoji: '✨', sfx: 'sparkle' },
+  { emoji: '👀', sfx: 'ooh' },
+  { emoji: '🎉', sfx: 'firecracker' },
+  { emoji: '👹', sfx: 'neighbor' },
+  { emoji: '👻', sfx: 'ghost' },
+  { emoji: '👽', sfx: 'alien' },
+  { emoji: '💋', sfx: 'kiss' },
+  { emoji: '📣', sfx: 'airhorn' },
+  { emoji: '👏', sfx: 'applause' },
+] as const;
+
+export const EMOJI_COOLDOWN = 1; // seconds
