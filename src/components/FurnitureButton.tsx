@@ -12,6 +12,8 @@ export function FurnitureButton({
   isOrnament: _isOrnament,
   price,
   affordable,
+  remaining,
+  max,
 }: {
   type: ItemType;
   label?: string;
@@ -22,7 +24,10 @@ export function FurnitureButton({
   isOrnament?: boolean;
   price?: number;
   affordable?: boolean;
+  remaining?: number;
+  max?: number;
 }) {
+  const maxedOut = remaining !== undefined && remaining <= 0;
   return (
     <button
       onClick={onClick}
@@ -33,12 +38,12 @@ export function FurnitureButton({
           ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/30 scale-105'
           : 'bg-zinc-700/50 text-zinc-300 hover:bg-zinc-600 hover:text-white',
         disabled && 'opacity-40 cursor-not-allowed grayscale-[0.5]',
-        price !== undefined && affordable === false && !disabled && 'opacity-60'
+        price !== undefined && affordable === false && !disabled && !maxedOut && 'opacity-60'
       )}
     >
       <div className="[&>svg]:w-5 [&>svg]:h-5">{icon}</div>
       <span className="text-[10px] font-medium capitalize">{label ?? type.replace('_', ' ')}</span>
-      {price !== undefined && (
+      {price !== undefined && !maxedOut && (
         <span
           className={cn(
             'text-[9px] font-bold',
@@ -46,6 +51,11 @@ export function FurnitureButton({
           )}
         >
           🪙 {price}
+        </span>
+      )}
+      {remaining !== undefined && max !== undefined && (
+        <span className={cn('text-[8px] font-medium', maxedOut ? 'text-zinc-500' : 'text-zinc-400')}>
+          {maxedOut ? 'MAX' : `${remaining}/${max}`}
         </span>
       )}
     </button>

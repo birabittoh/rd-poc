@@ -15,7 +15,9 @@ import {
   EMOJI_UNLOCK_COSTS,
   ITEM_COIN_COSTS,
   ITEM_SPARKLE_REWARDS,
+  ITEM_MAX_PLACEMENTS,
 } from './src/economy.ts';
+import type { ItemType } from './src/types.ts';
 
 const PORT = 3000;
 const CHAT_COOLDOWN_MS = CHAT_COOLDOWN * 1000;
@@ -47,6 +49,7 @@ interface ServerUser {
   coins: number;
   sparkles: number;
   unlockedEmojis: number[];
+  itemPlacements: Record<string, number>; // itemType -> count placed by this user
   online: boolean;
   ws: WebSocket | null;
 }
@@ -99,6 +102,7 @@ function sendCurrencyUpdate(
       coins: user.coins,
       sparkles: user.sparkles,
       unlockedEmojis: user.unlockedEmojis,
+      itemPlacements: user.itemPlacements,
       ...(earned && { earned }),
       ...(emojiUnlocked !== undefined && { emojiUnlocked }),
     })
@@ -131,6 +135,7 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
       coins: INITIAL_COINS,
       sparkles: INITIAL_SPARKLES,
       unlockedEmojis: [...DEFAULT_UNLOCKED_EMOJIS],
+      itemPlacements: {},
       online: true,
       ws,
     };
@@ -147,6 +152,7 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
       coins: user.coins,
       sparkles: user.sparkles,
       unlockedEmojis: user.unlockedEmojis,
+      itemPlacements: user.itemPlacements,
       releaseTimestamp: RELEASE_TIMESTAMP_STR,
     })
   );
@@ -280,18 +286,28 @@ async function startServer() {
           const itemType = message.payload?.type;
           if (!itemType || !(itemType in ITEM_COIN_COSTS)) return;
 
-          const cost = ITEM_COIN_COSTS[itemType as keyof typeof ITEM_COIN_COSTS];
+          const typedItemType = itemType as ItemType;
+          const cost = ITEM_COIN_COSTS[typedItemType];
           if (user.coins < cost) {
             ws.send(JSON.stringify({ type: 'transaction_failed', reason: 'insufficient_coins' }));
+            return;
+          }
+
+          // Enforce per-user placement limit
+          const maxPlacements = ITEM_MAX_PLACEMENTS[typedItemType];
+          const currentPlacements = user.itemPlacements[typedItemType] || 0;
+          if (currentPlacements >= maxPlacements) {
+            ws.send(JSON.stringify({ type: 'transaction_failed', reason: 'placement_limit_reached' }));
             return;
           }
 
           const newState = placeFurniture(gameState, message.payload);
           if (!newState) return;
 
-          // Deduct coins, award sparkles
+          // Deduct coins, award sparkles, track placement
           user.coins -= cost;
-          const sparkleReward = ITEM_SPARKLE_REWARDS[itemType as keyof typeof ITEM_SPARKLE_REWARDS];
+          user.itemPlacements[typedItemType] = currentPlacements + 1;
+          const sparkleReward = ITEM_SPARKLE_REWARDS[typedItemType];
           user.sparkles += sparkleReward;
 
           gameState = newState;

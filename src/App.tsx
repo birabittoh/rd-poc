@@ -53,6 +53,7 @@ import {
   EMOJI_UNLOCK_COSTS,
   ITEM_COIN_COSTS,
   ITEM_SPARKLE_REWARDS,
+  ITEM_MAX_PLACEMENTS,
 } from './economy';
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
@@ -132,6 +133,7 @@ export default function App() {
   const [coins, setCoins] = useState(INITIAL_COINS);
   const [sparkles, setSparkles] = useState(INITIAL_SPARKLES);
   const [unlockedEmojis, setUnlockedEmojis] = useState<number[]>([...DEFAULT_UNLOCKED_EMOJIS]);
+  const [itemPlacements, setItemPlacements] = useState<Record<string, number>>({});
   const [coinPulse, setCoinPulse] = useState(false);
   const [sparklePulse, setSparklePulse] = useState(false);
 
@@ -181,10 +183,12 @@ export default function App() {
         setCoins(data.coins ?? INITIAL_COINS);
         setSparkles(data.sparkles ?? INITIAL_SPARKLES);
         setUnlockedEmojis(data.unlockedEmojis ?? [...DEFAULT_UNLOCKED_EMOJIS]);
+        setItemPlacements(data.itemPlacements ?? {});
       } else if (data.type === 'currency_update') {
         setCoins(data.coins);
         setSparkles(data.sparkles);
         setUnlockedEmojis(data.unlockedEmojis);
+        setItemPlacements(data.itemPlacements ?? {});
         if (data.earned?.coins) {
           setCoinPulse(true);
           setTimeout(() => setCoinPulse(false), 600);
@@ -247,9 +251,11 @@ export default function App() {
   const handlePlace = (x: number, y: number, z: number, rotationOverride?: number) => {
     if (!selectedItem || gameState?.status !== 'playing') return;
 
-    // Check affordability
+    // Check affordability and placement limit
     const itemCost = ITEM_COIN_COSTS[selectedItem];
     if (coins < itemCost) return;
+    const maxP = ITEM_MAX_PLACEMENTS[selectedItem];
+    if ((itemPlacements[selectedItem] || 0) >= maxP) return;
 
     const def = ITEM_DEFINITIONS[selectedItem];
     let payload: PlacementPayload | null = null;
@@ -301,6 +307,10 @@ export default function App() {
         setCoinPulse(false);
         const sparkleReward = ITEM_SPARKLE_REWARDS[selectedItem];
         setSparkles((s) => s + sparkleReward);
+        setItemPlacements((prev) => ({
+          ...prev,
+          [selectedItem]: (prev[selectedItem] || 0) + 1,
+        }));
         setSparklePulse(true);
         setTimeout(() => setSparklePulse(false), 600);
       }
@@ -618,46 +628,60 @@ export default function App() {
                 </button>
 
                 <ScrollContainer title="Floor">
-                  {FLOOR_ITEMS.map((item) => (
-                    <FurnitureButton
-                      key={item.type}
-                      type={item.type}
-                      label={item.label}
-                      icon={ITEM_ICONS[item.type]}
-                      selected={selectedItem === item.type}
-                      disabled={isPlacementDisabled || false}
-                      onClick={() => {
-                        if (coins < ITEM_COIN_COSTS[item.type]) return;
-                        setSelectedItem(item.type);
-                        setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
-                        setPlacementPath([]);
-                      }}
-                      price={ITEM_COIN_COSTS[item.type]}
-                      affordable={coins >= ITEM_COIN_COSTS[item.type]}
-                    />
-                  ))}
+                  {FLOOR_ITEMS.map((item) => {
+                    const placed = itemPlacements[item.type] || 0;
+                    const maxP = ITEM_MAX_PLACEMENTS[item.type];
+                    const maxedOut = placed >= maxP;
+                    return (
+                      <FurnitureButton
+                        key={item.type}
+                        type={item.type}
+                        label={item.label}
+                        icon={ITEM_ICONS[item.type]}
+                        selected={selectedItem === item.type}
+                        disabled={isPlacementDisabled || maxedOut}
+                        onClick={() => {
+                          if (maxedOut || coins < ITEM_COIN_COSTS[item.type]) return;
+                          setSelectedItem(item.type);
+                          setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
+                          setPlacementPath([]);
+                        }}
+                        price={ITEM_COIN_COSTS[item.type]}
+                        affordable={coins >= ITEM_COIN_COSTS[item.type]}
+                        remaining={maxP - placed}
+                        max={maxP}
+                      />
+                    );
+                  })}
                 </ScrollContainer>
 
                 <ScrollContainer title="Surface">
-                  {SURFACE_ITEMS.map((item) => (
-                    <FurnitureButton
-                      key={item.type}
-                      type={item.type}
-                      label={item.label}
-                      icon={ITEM_ICONS[item.type]}
-                      selected={selectedItem === item.type}
-                      disabled={isPlacementDisabled || !hasFreeSurface}
-                      onClick={() => {
-                        if (coins < ITEM_COIN_COSTS[item.type]) return;
-                        setSelectedItem(item.type);
-                        setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
-                        setPlacementPath([]);
-                      }}
-                      isOrnament
-                      price={ITEM_COIN_COSTS[item.type]}
-                      affordable={coins >= ITEM_COIN_COSTS[item.type]}
-                    />
-                  ))}
+                  {SURFACE_ITEMS.map((item) => {
+                    const placed = itemPlacements[item.type] || 0;
+                    const maxP = ITEM_MAX_PLACEMENTS[item.type];
+                    const maxedOut = placed >= maxP;
+                    return (
+                      <FurnitureButton
+                        key={item.type}
+                        type={item.type}
+                        label={item.label}
+                        icon={ITEM_ICONS[item.type]}
+                        selected={selectedItem === item.type}
+                        disabled={isPlacementDisabled || !hasFreeSurface || maxedOut}
+                        onClick={() => {
+                          if (maxedOut || coins < ITEM_COIN_COSTS[item.type]) return;
+                          setSelectedItem(item.type);
+                          setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
+                          setPlacementPath([]);
+                        }}
+                        isOrnament
+                        price={ITEM_COIN_COSTS[item.type]}
+                        affordable={coins >= ITEM_COIN_COSTS[item.type]}
+                        remaining={maxP - placed}
+                        max={maxP}
+                      />
+                    );
+                  })}
                 </ScrollContainer>
               </motion.div>
             )}
