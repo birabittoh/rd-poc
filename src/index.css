@@ -10,34 +10,3 @@ body {
   height: 100%;
 }
 
-@keyframes emoji-float {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh);
-    opacity: 0;
-  }
-}
-
-@keyframes emoji-wobble {
-  0% {
-    margin-left: 0;
-  }
-  25% {
-    margin-left: var(--wobble-amp);
-  }
-  50% {
-    margin-left: 0;
-  }
-  75% {
-    margin-left: calc(var(--wobble-amp) * -1);
-  }
-  100% {
-    margin-left: var(--drift);
-  }
-}

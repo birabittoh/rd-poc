@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export interface Particle {
   id: string;
@@ -8,6 +8,8 @@ export interface Particle {
   drift: number;
   duration: number;
   wobbleAmp: number;
+  wobbleFreq: number;
+  phase: number;
 }
 
 interface EmojiParticlesProps {
@@ -25,6 +27,8 @@ export function createParticle(emoji: string, x: number, y: number): Particle {
     drift: (Math.random() - 0.5) * 120,
     duration: 2.5 + Math.random() * 1.5,
     wobbleAmp: 15 + Math.random() * 40,
+    wobbleFreq: 1.5 + Math.random() * 3, // 1.5–4.5 full cycles
+    phase: Math.random() * Math.PI * 2, // random start phase
   };
 }
 
@@ -40,9 +44,37 @@ function ParticleSpan({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const timer = setTimeout(onEnd, particle.duration * 1000);
-    return () => clearTimeout(timer);
-  }, [particle.duration, onEnd]);
+    const start = performance.now();
+    const durationMs = particle.duration * 1000;
+    let raf: number;
+
+    function tick(now: number) {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / durationMs, 1);
+
+      // Vertical: ease-out rise
+      const y = -t * window.innerHeight;
+      // Horizontal: sine wobble + linear drift
+      const wobbleX =
+        Math.sin(particle.phase + t * particle.wobbleFreq * Math.PI * 2) *
+        particle.wobbleAmp;
+      const driftX = t * particle.drift;
+      // Opacity: fully visible until 70%, then fade
+      const opacity = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
+
+      el.style.transform = `translate(${wobbleX + driftX}px, ${y}px)`;
+      el.style.opacity = String(opacity);
+
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        onEnd();
+      }
+    }
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [particle, onEnd]);
 
   return (
     <span
@@ -51,11 +83,7 @@ function ParticleSpan({
       style={{
         left: particle.x,
         top: particle.y,
-        '--drift': `${particle.drift}px`,
-        '--wobble-amp': `${particle.wobbleAmp}px`,
-        '--float-duration': `${particle.duration}s`,
-        animation: `emoji-float var(--float-duration) ease-out forwards, emoji-wobble var(--float-duration) ease-in-out forwards`,
-      } as React.CSSProperties}
+      }}
     >
       {particle.emoji}
     </span>
