@@ -48,12 +48,12 @@ COIN_BASE = 1
 COIN_GROWTH = 1.6
 
 # Emoji unlock costs (in sparkles)
-UNLOCK_BASE = 10
-UNLOCK_GROWTH = 1.8
+UNLOCK_BASE = 7
+UNLOCK_GROWTH = 1.75
 
 # Item coin costs (to place)
-ITEM_COST_BASE = 25
-ITEM_COST_GROWTH = 1.75
+ITEM_COST_BASE = 21
+ITEM_COST_GROWTH = 1.73
 
 # Item sparkle rewards (earned on placement)
 SPARKLE_BASE = 2

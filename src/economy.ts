@@ -7,27 +7,27 @@ export const DEFAULT_UNLOCKED_EMOJIS: number[] = [0];
 
 export const EMOJI_COIN_REWARDS: number[] = [1, 2, 3, 4, 6, 10, 16, 26, 42, 68, 109, 175, 281];
 
-export const EMOJI_UNLOCK_COSTS: number[] = [0, 10, 18, 32, 58, 104, 188, 340, 612, 1101, 1983, 3570, 6426];
+export const EMOJI_UNLOCK_COSTS: number[] = [0, 7, 12, 21, 37, 65, 114, 201, 351, 615, 1077, 1885, 3300];
 
 export const ITEM_COIN_COSTS: Record<ItemType, number> = {
-  plant: 25,
-  chair: 25,
-  bedside_table: 43,
-  coffee_table: 43,
-  lamp: 43,
-  table: 76,
-  vase: 76,
-  book: 76,
-  drawer: 133,
-  floor_lamp: 133,
-  laptop: 133,
-  mirror: 234,
-  mirror_ornament: 234,
-  boombox: 234,
-  library: 410,
-  tv: 410,
-  wardrobe: 410,
-  bed: 410,
+  plant: 21,
+  chair: 21,
+  bedside_table: 36,
+  coffee_table: 36,
+  lamp: 36,
+  table: 62,
+  vase: 62,
+  book: 62,
+  drawer: 108,
+  floor_lamp: 108,
+  laptop: 108,
+  mirror: 188,
+  mirror_ornament: 188,
+  boombox: 188,
+  library: 325,
+  tv: 325,
+  wardrobe: 325,
+  bed: 325,
 };
 
 export const ITEM_SPARKLE_REWARDS: Record<ItemType, number> = {
