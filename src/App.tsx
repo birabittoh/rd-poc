@@ -23,6 +23,7 @@ import {
   X,
   RectangleVertical,
   ScanLine,
+  Music,
 } from 'lucide-react';
 import { GameState, ItemType } from './types';
 import { ITEM_DEFINITIONS } from './items';
@@ -74,6 +75,7 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   coffee_table: <Coffee />,
   mirror: <RectangleVertical />,
   mirror_ornament: <ScanLine />,
+  boombox: <Music />,
 };
 
 const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'floor');

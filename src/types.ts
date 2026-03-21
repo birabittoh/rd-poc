@@ -15,7 +15,8 @@ export type ItemType =
   | 'wardrobe'
   | 'coffee_table'
   | 'mirror'
-  | 'mirror_ornament';
+  | 'mirror_ornament'
+  | 'boombox';
 
 export interface ItemDefinition {
   type: ItemType;
