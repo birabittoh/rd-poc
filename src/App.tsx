@@ -592,7 +592,7 @@ export default function App() {
               >
                 <button
                   onClick={() => setMenuView('earn')}
-                  className="absolute top-1.5 left-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
+                  className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
                   aria-label="Back to Earn"
                 >
                   <ArrowLeft className="w-4 h-4" />
