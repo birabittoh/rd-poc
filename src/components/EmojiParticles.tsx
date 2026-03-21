@@ -60,14 +60,15 @@ function ParticleSpan({
       const elapsed = now - start;
       const t = Math.min(elapsed / durationMs, 1);
 
-      // Vertical: ease-out rise
-      const y = -t * window.innerHeight;
+      // Vertical: ease-out rise (travel 40% of viewport height max)
+      const easeOut = 1 - (1 - t) * (1 - t);
+      const y = -easeOut * window.innerHeight * 0.4;
       // Horizontal: sine wobble (subtract initial offset so it starts at 0) + linear drift
       const wobbleX =
         Math.sin(phase + t * wobbleFreq * Math.PI * 2) * wobbleAmp - initialWobbleX;
       const driftX = t * drift;
-      // Opacity: fully visible until 60%, then fade out
-      const opacity = t > 0.6 ? 1 - (t - 0.6) / 0.4 : 1;
+      // Opacity: fully visible until 40%, then fade out
+      const opacity = t > 0.4 ? 1 - (t - 0.4) / 0.6 : 1;
 
       el.style.transform = `translate(${wobbleX + driftX - halfW}px, ${y - halfH}px)`;
       el.style.opacity = String(opacity);
