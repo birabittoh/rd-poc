@@ -306,10 +306,9 @@ export default function App() {
   const handleEmojiClick = (index: number, e: React.MouseEvent) => {
     const entry = EMOJI_LIST[index];
     if (!entry) return;
-    // Spawn particle from button position
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
+    // Spawn particle from click position
+    const x = e.clientX;
+    const y = e.clientY;
     setParticles((prev) => [...prev, createParticle(entry.emoji, x, y)]);
     if (!isSfxMuted) {
       playSfx(entry.sfx, 0.3);
