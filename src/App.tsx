@@ -24,7 +24,7 @@ import {
   RectangleVertical,
   ScanLine,
 } from 'lucide-react';
-import { GameState, ItemType } from './types';
+import { GameState, ItemType, ChatMessage } from './types';
 import { ITEM_DEFINITIONS } from './items';
 import { PlacementPayload, placeFurniture, stepBallerina, createInitialState } from './gameLogic';
 import { FurnitureButton } from './components/FurnitureButton';
@@ -34,10 +34,14 @@ import { ScrollContainer } from './components/ScrollContainer';
 import { VariantPreview } from './components/VariantPreview';
 import { LoadingScreen } from './components/LoadingScreen';
 import { DoorEntrance } from './components/DoorEntrance';
+import { WaitingRoom } from './components/WaitingRoom';
 import { motion, AnimatePresence } from 'motion/react';
 import { COLORS } from './constants';
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
+const USER_ID_KEY = 'rd-poc:userId';
+
+const HAS_WAITING_ROOM = !!import.meta.env.VITE_RELEASE_TIMESTAMP;
 
 function loadSavedVariants(): Record<string, number> {
   try {
@@ -87,10 +91,19 @@ export default function App() {
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [placementPath, setPlacementPath] = useState<{ x: number; y: number }[]>([]);
   const [cooldown, setCooldown] = useState(0);
-  const [appState, setAppState] = useState<'loading' | 'ready' | 'entering' | 'playing'>('loading');
+  const [appState, setAppState] = useState<
+    'loading' | 'ready' | 'entering' | 'waiting' | 'playing'
+  >('loading');
   const [variantCaptures, setVariantCaptures] = useState<Record<string, string>>({});
   const [signUrl, setSignUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Waiting room state
+  const [waitingUsers, setWaitingUsers] = useState<{ name: string; online: boolean }[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ uuid: string; name: string } | null>(null);
+  const [released, setReleased] = useState(false);
+  const [releaseTimestamp, setReleaseTimestamp] = useState<string>('');
 
   // WebSocket connection with demo mode fallback
   useEffect(() => {
@@ -108,6 +121,14 @@ export default function App() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setWs(socket);
 
+    socket.onopen = () => {
+      // Register for waiting room if enabled
+      if (HAS_WAITING_ROOM) {
+        const savedUuid = localStorage.getItem(USER_ID_KEY);
+        socket.send(JSON.stringify({ type: 'register', uuid: savedUuid }));
+      }
+    };
+
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'state') {
@@ -115,6 +136,16 @@ export default function App() {
         setGameState(data.state);
       } else if (data.type === 'cooldown') {
         setCooldown(data.remaining);
+      } else if (data.type === 'registered') {
+        localStorage.setItem(USER_ID_KEY, data.uuid);
+        setCurrentUser({ uuid: data.uuid, name: data.name });
+        setReleaseTimestamp(data.releaseTimestamp);
+      } else if (data.type === 'user_list') {
+        setWaitingUsers(data.users);
+      } else if (data.type === 'chat_broadcast') {
+        setChatMessages((prev) => [...prev, data.message]);
+      } else if (data.type === 'release') {
+        setReleased(true);
       }
     };
 
@@ -128,6 +159,17 @@ export default function App() {
 
     return () => socket.close();
   }, []);
+
+  // Transition from waiting to playing when released
+  useEffect(() => {
+    if (released && appState === 'waiting') {
+      // Small delay for the fade animation
+      const timer = setTimeout(() => {
+        setAppState('playing');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [released, appState]);
 
   // Demo mode: run ballerina loop locally
   useEffect(() => {
@@ -227,9 +269,24 @@ export default function App() {
 
     // Small delay to allow the flash to peak
     setTimeout(() => {
-      setAppState((prev) => (prev === 'entering' ? 'playing' : prev));
+      setAppState((prev) => {
+        if (prev !== 'entering') return prev;
+        // If waiting room is enabled and not yet released, go to waiting
+        if (HAS_WAITING_ROOM && !released) {
+          return 'waiting';
+        }
+        return 'playing';
+      });
     }, 100);
   };
+
+  const handleSendMessage = useCallback(
+    (messageIndex: number) => {
+      if (!ws || !currentUser) return;
+      ws.send(JSON.stringify({ type: 'chat', uuid: currentUser.uuid, messageIndex }));
+    },
+    [ws, currentUser]
+  );
 
   if (appState === 'loading') {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
@@ -436,6 +493,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* Door entrance overlay */}
       <AnimatePresence>
         {appState === 'ready' && (
           <motion.div
@@ -445,6 +503,29 @@ export default function App() {
             transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
           >
             <DoorEntrance onEnter={handleEnter} signUrl={signUrl ?? '/sign.png'} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Waiting room overlay */}
+      <AnimatePresence>
+        {appState === 'waiting' && (
+          <motion.div
+            key="waiting-room"
+            className="fixed inset-0 z-30"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5 }}
+          >
+            <WaitingRoom
+              users={waitingUsers}
+              messages={chatMessages}
+              currentUser={currentUser}
+              releaseTimestamp={releaseTimestamp}
+              onSendMessage={handleSendMessage}
+              released={released}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -75,3 +75,20 @@ export interface FurnitureProps {
   variant?: number;
   z?: number;
 }
+
+// --- Waiting Room Types ---
+
+export interface WaitingRoomUser {
+  uuid: string;
+  name: string;
+  coins: number;
+  online: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  type: 'user' | 'system';
+  sender?: string;
+  text: string;
+  timestamp: number;
+}
