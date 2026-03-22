@@ -16,6 +16,7 @@ import {
   ITEM_COIN_COSTS,
   ITEM_SPARKLE_REWARDS,
   ITEM_MAX_PLACEMENTS,
+  ENFORCE_FURNITURE_LIMIT,
 } from './src/economy.ts';
 import type { ItemType } from './src/types.ts';
 
@@ -292,11 +293,13 @@ async function startServer() {
           }
 
           // Enforce per-user placement limit
-          const maxPlacements = ITEM_MAX_PLACEMENTS[typedItemType];
           const currentPlacements = user.itemPlacements[typedItemType] || 0;
-          if (currentPlacements >= maxPlacements) {
-            ws.send(JSON.stringify({ type: 'transaction_failed', reason: 'placement_limit_reached' }));
-            return;
+          if (ENFORCE_FURNITURE_LIMIT) {
+            const maxPlacements = ITEM_MAX_PLACEMENTS[typedItemType];
+            if (currentPlacements >= maxPlacements) {
+              ws.send(JSON.stringify({ type: 'transaction_failed', reason: 'placement_limit_reached' }));
+              return;
+            }
           }
 
           const newState = placeFurniture(gameState, message.payload);

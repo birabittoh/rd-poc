@@ -51,6 +51,10 @@ export const ITEM_SPARKLE_REWARDS: Record<ItemType, number> = {
   bed: 31,
 };
 
+// Set to true to enforce per-user placement limits defined in ITEM_MAX_PLACEMENTS.
+// When false (default), users can place unlimited furniture of any type.
+export const ENFORCE_FURNITURE_LIMIT = false;
+
 export const ITEM_MAX_PLACEMENTS: Record<ItemType, number> = {
   plant: 6,
   chair: 6,
