@@ -128,6 +128,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3">Video</h3>
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-300">Particle Effects</span>
+                  <Toggle checked={video.particleEffects} onChange={(v) => updateSettings({ video: { particleEffects: v } })} />
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="text-sm text-zinc-300">Shadows</span>
                   <Toggle checked={video.shadows} onChange={(v) => updateSettings({ video: { shadows: v } })} />
                 </div>

@@ -4,6 +4,7 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import { SVGLoader } from 'three-stdlib';
 import { FurnitureProps } from '../../types';
+import { useSettings } from '../../contexts/SettingsContext';
 
 // Musical note SVG paths
 const NOTE_SVGS = [
@@ -48,6 +49,7 @@ function NoteParticle({ color, type, phase, offset, scale }: { color: string, ty
 }
 
 export function Boombox({ variant }: FurnitureProps) {
+  const { settings } = useSettings();
   const groupRef = useRef<THREE.Group>(null);
   const notesRef = useRef<THREE.Group>(null);
 
@@ -112,18 +114,20 @@ export function Boombox({ variant }: FurnitureProps) {
       </group>
 
       {/* Musical Note Particles */}
-      <group ref={notesRef}>
-        {notes.map((note, i) => (
-          <NoteParticle
-            key={i}
-            color={accentColor}
-            type={note.type}
-            phase={note.phase}
-            offset={note.offset}
-            scale={note.scale}
-          />
-        ))}
-      </group>
+      {settings.video.particleEffects && (
+        <group ref={notesRef}>
+          {notes.map((note, i) => (
+            <NoteParticle
+              key={i}
+              color={accentColor}
+              type={note.type}
+              phase={note.phase}
+              offset={note.offset}
+              scale={note.scale}
+            />
+          ))}
+        </group>
+      )}
     </group>
   );
 }

@@ -6,6 +6,7 @@ export interface AudioSettings {
 }
 
 export interface VideoSettings {
+  particleEffects: boolean;
   shadows: boolean;
   highQualityShadows: boolean;
   highResolution: boolean;
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     sfxMuted: false,
   },
   video: {
+    particleEffects: true,
     shadows: true,
     highQualityShadows: false,
     highResolution: false,
