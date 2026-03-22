@@ -26,17 +26,17 @@ EMOJIS = [
 # (name, tier, max_placements)
 ITEM_TIERS = [
     # Tier 0 - starter (cheap, limited)
-    ("plant", 0, 3), ("chair", 0, 3),
+    ("plant", 0, 6), ("chair", 0, 6),
     # Tier 1 - basic
-    ("bedside_table", 1, 3), ("coffee_table", 1, 3), ("lamp", 1, 3),
+    ("bedside_table", 1, 6), ("coffee_table", 1, 6), ("lamp", 1, 6),
     # Tier 2 - standard
-    ("table", 2, 2), ("vase", 2, 3), ("book", 2, 3),
+    ("table", 2, 4), ("vase", 2, 6), ("book", 2, 6),
     # Tier 3 - mid
-    ("drawer", 3, 2), ("floor_lamp", 3, 2), ("laptop", 3, 3),
+    ("drawer", 3, 4), ("floor_lamp", 3, 4), ("laptop", 3, 6),
     # Tier 4 - advanced
-    ("mirror", 4, 2), ("mirror_ornament", 4, 2), ("boombox", 4, 2),
+    ("mirror", 4, 4), ("mirror_ornament", 4, 4), ("boombox", 4, 4),
     # Tier 5 - premium
-    ("library", 5, 2), ("tv", 5, 2), ("wardrobe", 5, 2), ("bed", 5, 2),
+    ("library", 5, 4), ("tv", 5, 4), ("wardrobe", 5, 4), ("bed", 5, 4),
 ]
 
 NUM_TIERS = 6
@@ -56,7 +56,7 @@ ITEM_COST_BASE = 21
 ITEM_COST_GROWTH = 1.73
 
 # Item sparkle rewards (earned on placement)
-SPARKLE_BASE = 2
+SPARKLE_BASE = 3
 SPARKLE_GROWTH = 1.6
 
 # Starting currencies
