@@ -28,9 +28,13 @@ import {
 } from './src/economy.ts';
 import type { ItemType } from './src/types.ts';
 
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const CHAT_COOLDOWN_MS = CHAT_COOLDOWN * 1000;
 const MAX_CHAT_HISTORY = 100;
+
+// Cheats mode
+const CHEATS = process.env.CHEATS === 'true';
+if (CHEATS) console.log('CHEATS enabled: all users start with 99999 coins and 99999 sparkles');
 
 // Release timestamp (optional)
 const RELEASE_TIMESTAMP_STR = process.env.RELEASE_TIMESTAMP || '';
@@ -139,8 +143,8 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
     user = {
       uuid,
       name,
-      coins: INITIAL_COINS,
-      sparkles: INITIAL_SPARKLES,
+      coins: CHEATS ? 99999 : INITIAL_COINS,
+      sparkles: CHEATS ? 99999 : INITIAL_SPARKLES,
       unlockedEmojis: [...DEFAULT_UNLOCKED_EMOJIS],
       itemPlacements: {},
       online: true,
