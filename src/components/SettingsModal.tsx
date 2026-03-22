@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Music, Music2, Volume2, VolumeX } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContext';
+import { VideoPreset, VIDEO_PRESETS, detectVideoPreset } from '../settings';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -29,9 +30,35 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
   );
 }
 
+const PRESET_LABELS: { key: VideoPreset; label: string }[] = [
+  { key: 'low', label: 'Low' },
+  { key: 'medium', label: 'Medium' },
+  { key: 'high', label: 'High' },
+  { key: 'custom', label: 'Custom' },
+];
+
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { settings, updateSettings } = useSettings();
   const { audio, video } = settings;
+
+  const activePreset = detectVideoPreset(video);
+  const [showCustom, setShowCustom] = useState(activePreset === 'custom');
+
+  // Sync custom panel visibility when preset changes
+  useEffect(() => {
+    if (activePreset === 'custom') {
+      setShowCustom(true);
+    }
+  }, [activePreset]);
+
+  const handlePresetClick = (preset: VideoPreset) => {
+    if (preset === 'custom') {
+      setShowCustom(true);
+    } else {
+      setShowCustom(false);
+      updateSettings({ video: VIDEO_PRESETS[preset] });
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -126,44 +153,77 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {/* Video Section */}
             <div className="px-5 py-3 pb-5">
               <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3">Video</h3>
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-300">Particle Effects</span>
-                  <Toggle checked={video.particleEffects} onChange={(v) => updateSettings({ video: { particleEffects: v } })} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-300">Shadows</span>
-                  <Toggle checked={video.shadows} onChange={(v) => updateSettings({ video: { shadows: v } })} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${video.shadows ? 'text-zinc-300' : 'text-zinc-500'}`}>High-Quality Shadows</span>
-                  <Toggle
-                    checked={video.highQualityShadows}
-                    onChange={(v) => updateSettings({ video: { highQualityShadows: v } })}
-                    disabled={!video.shadows}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm ${video.shadows ? 'text-zinc-300' : 'text-zinc-500'}`}>Contact Shadows</span>
-                  <Toggle
-                    checked={video.contactShadows}
-                    onChange={(v) => updateSettings({ video: { contactShadows: v } })}
-                    disabled={!video.shadows}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-300">High Resolution</span>
-                  <Toggle checked={video.highResolution} onChange={(v) => updateSettings({ video: { highResolution: v } })} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-300">Antialiasing</span>
-                  <Toggle checked={video.antialiasing} onChange={(v) => updateSettings({ video: { antialiasing: v } })} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-300">Light Reflections</span>
-                  <Toggle checked={video.lightReflections} onChange={(v) => updateSettings({ video: { lightReflections: v } })} />
-                </div>
+
+              {/* Preset Buttons */}
+              <div className="flex gap-1.5 mb-3">
+                {PRESET_LABELS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => handlePresetClick(key)}
+                    className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                      (key === 'custom' ? showCustom && activePreset === 'custom' : activePreset === key && !showCustom)
+                        ? 'bg-indigo-500 text-white'
+                        : (key === 'custom' && showCustom)
+                          ? 'bg-zinc-600 text-zinc-100'
+                          : 'bg-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
+
+              {/* Custom Settings Panel */}
+              <AnimatePresence>
+                {showCustom && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-2.5 pt-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-zinc-300">Particle Effects</span>
+                        <Toggle checked={video.particleEffects} onChange={(v) => updateSettings({ video: { particleEffects: v } })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-zinc-300">Shadows</span>
+                        <Toggle checked={video.shadows} onChange={(v) => updateSettings({ video: { shadows: v } })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm ${video.shadows ? 'text-zinc-300' : 'text-zinc-500'}`}>High-Quality Shadows</span>
+                        <Toggle
+                          checked={video.highQualityShadows}
+                          onChange={(v) => updateSettings({ video: { highQualityShadows: v } })}
+                          disabled={!video.shadows}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm ${video.shadows ? 'text-zinc-300' : 'text-zinc-500'}`}>Contact Shadows</span>
+                        <Toggle
+                          checked={video.contactShadows}
+                          onChange={(v) => updateSettings({ video: { contactShadows: v } })}
+                          disabled={!video.shadows}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-zinc-300">High Resolution</span>
+                        <Toggle checked={video.highResolution} onChange={(v) => updateSettings({ video: { highResolution: v } })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-zinc-300">Antialiasing</span>
+                        <Toggle checked={video.antialiasing} onChange={(v) => updateSettings({ video: { antialiasing: v } })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-zinc-300">Light Reflections</span>
+                        <Toggle checked={video.lightReflections} onChange={(v) => updateSettings({ video: { lightReflections: v } })} />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </motion.div>

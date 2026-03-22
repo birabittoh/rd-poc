@@ -82,3 +82,45 @@ export function loadSettings(): AppSettings {
 export function saveSettings(settings: AppSettings): void {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
+
+export type VideoPreset = 'low' | 'medium' | 'high' | 'custom';
+
+export const VIDEO_PRESETS: Record<Exclude<VideoPreset, 'custom'>, VideoSettings> = {
+  low: {
+    particleEffects: false,
+    shadows: false,
+    highQualityShadows: false,
+    highResolution: false,
+    antialiasing: false,
+    contactShadows: false,
+    lightReflections: false,
+  },
+  medium: {
+    particleEffects: true,
+    shadows: true,
+    highQualityShadows: false,
+    highResolution: false,
+    antialiasing: true,
+    contactShadows: false,
+    lightReflections: false,
+  },
+  high: {
+    particleEffects: true,
+    shadows: true,
+    highQualityShadows: true,
+    highResolution: true,
+    antialiasing: true,
+    contactShadows: true,
+    lightReflections: true,
+  },
+};
+
+export function detectVideoPreset(video: VideoSettings): VideoPreset {
+  for (const key of ['low', 'medium', 'high'] as const) {
+    const preset = VIDEO_PRESETS[key];
+    if (Object.keys(preset).every((k) => video[k as keyof VideoSettings] === preset[k as keyof VideoSettings])) {
+      return key;
+    }
+  }
+  return 'custom';
+}
