@@ -5,9 +5,9 @@ export const INITIAL_COINS = 0;
 export const INITIAL_SPARKLES = 0;
 export const DEFAULT_UNLOCKED_EMOJIS: number[] = [0];
 
-export const EMOJI_COIN_REWARDS: number[] = [1, 2, 3, 4, 6, 10, 16, 26, 42, 68, 109, 175, 281];
+export const EMOJI_COIN_REWARDS: number[] = [1, 2, 3, 5, 8, 15, 26, 46, 80, 138, 240, 415, 718];
 
-export const EMOJI_UNLOCK_COSTS: number[] = [0, 7, 12, 21, 37, 65, 114, 201, 351, 615, 1077, 1885, 3300];
+export const EMOJI_UNLOCK_COSTS: number[] = [0, 7, 11, 17, 28, 45, 73, 117, 187, 300, 481, 769, 1231];
 
 export const ITEM_COIN_COSTS: Record<ItemType, number> = {
   plant: 21,
@@ -31,43 +31,43 @@ export const ITEM_COIN_COSTS: Record<ItemType, number> = {
 };
 
 export const ITEM_SPARKLE_REWARDS: Record<ItemType, number> = {
-  plant: 2,
-  chair: 2,
-  bedside_table: 3,
-  coffee_table: 3,
-  lamp: 3,
-  table: 5,
-  vase: 5,
-  book: 5,
-  drawer: 8,
-  floor_lamp: 8,
-  laptop: 8,
-  mirror: 13,
-  mirror_ornament: 13,
-  boombox: 13,
-  library: 20,
-  tv: 20,
-  wardrobe: 20,
-  bed: 20,
+  plant: 3,
+  chair: 3,
+  bedside_table: 4,
+  coffee_table: 4,
+  lamp: 4,
+  table: 7,
+  vase: 7,
+  book: 7,
+  drawer: 12,
+  floor_lamp: 12,
+  laptop: 12,
+  mirror: 19,
+  mirror_ornament: 19,
+  boombox: 19,
+  library: 31,
+  tv: 31,
+  wardrobe: 31,
+  bed: 31,
 };
 
 export const ITEM_MAX_PLACEMENTS: Record<ItemType, number> = {
-  plant: 3,
-  chair: 3,
-  bedside_table: 3,
-  coffee_table: 3,
-  lamp: 3,
-  table: 2,
-  vase: 3,
-  book: 3,
-  drawer: 2,
-  floor_lamp: 2,
-  laptop: 3,
-  mirror: 2,
-  mirror_ornament: 2,
-  boombox: 2,
-  library: 2,
-  tv: 2,
-  wardrobe: 2,
-  bed: 2,
+  plant: 6,
+  chair: 6,
+  bedside_table: 6,
+  coffee_table: 6,
+  lamp: 6,
+  table: 4,
+  vase: 6,
+  book: 6,
+  drawer: 4,
+  floor_lamp: 4,
+  laptop: 6,
+  mirror: 4,
+  mirror_ornament: 4,
+  boombox: 4,
+  library: 4,
+  tv: 4,
+  wardrobe: 4,
+  bed: 4,
 };
