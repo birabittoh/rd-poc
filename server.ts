@@ -6,7 +6,15 @@ import http from 'http';
 
 import { PREMADE_MESSAGES, CHAT_COOLDOWN, EMOJI_LIST } from './src/constants.ts';
 import type { GameState, ChatMessage } from './src/types.ts';
-import { stepBallerina, placeFurniture, createInitialState } from './src/gameLogic.ts';
+import {
+  stepBallerina,
+  placeFurniture,
+  createInitialState,
+  checkPhaseTransition,
+  tryTriggerBubble,
+  checkBubbleExpiry,
+  tickVnAdvance,
+} from './src/gameLogic.ts';
 import {
   INITIAL_COINS,
   INITIAL_SPARKLES,
@@ -20,9 +28,13 @@ import {
 } from './src/economy.ts';
 import type { ItemType } from './src/types.ts';
 
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const CHAT_COOLDOWN_MS = CHAT_COOLDOWN * 1000;
 const MAX_CHAT_HISTORY = 100;
+
+// Cheats mode
+const CHEATS = process.env.CHEATS === 'true';
+if (CHEATS) console.log('CHEATS enabled: all users start with 99999 coins and 99999 sparkles');
 
 // Release timestamp (optional)
 const RELEASE_TIMESTAMP_STR = process.env.RELEASE_TIMESTAMP || '';
@@ -131,8 +143,8 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
     user = {
       uuid,
       name,
-      coins: INITIAL_COINS,
-      sparkles: INITIAL_SPARKLES,
+      coins: CHEATS ? 99999 : INITIAL_COINS,
+      sparkles: CHEATS ? 99999 : INITIAL_SPARKLES,
       unlockedEmojis: [...DEFAULT_UNLOCKED_EMOJIS],
       itemPlacements: {},
       online: true,
@@ -240,6 +252,9 @@ setInterval(() => {
   if (!RELEASE_TIMESTAMP || released) {
     gameState = stepBallerina(gameState);
   }
+  // Advance VN dialogue and expire speech bubbles
+  gameState = tickVnAdvance(gameState);
+  gameState = checkBubbleExpiry(gameState);
   broadcastState();
 }, 2000);
 
@@ -276,6 +291,9 @@ async function startServer() {
       try {
         const message = JSON.parse(data.toString());
         if (message.type === 'place_furniture') {
+          // Block placement during VN dialogue
+          if (gameState.phaseState.vnActive) return;
+
           // Look up user for economy
           const uuid = wsToUuid.get(ws);
           if (!uuid) return;
@@ -312,6 +330,17 @@ async function startServer() {
           user.sparkles += sparkleReward;
 
           gameState = newState;
+
+          // Phase transitions only for floor items
+          if (message.payload.z === 0) {
+            const afterPhase = checkPhaseTransition(gameState);
+            if (afterPhase !== gameState) {
+              gameState = afterPhase;
+            } else {
+              gameState = tryTriggerBubble(gameState);
+            }
+          }
+
           broadcastState();
           sendCurrencyUpdate(ws, user, { sparkles: sparkleReward });
         } else if (message.type === 'reset') {

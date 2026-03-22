@@ -1,6 +1,14 @@
 import type { Furniture, GameState, ItemType } from './types.ts';
 import { ITEM_DEFINITIONS } from './items.ts';
 import { GRID_SIZE, CENTER } from './constants.ts';
+import {
+  createInitialPhaseState,
+  calculateFreePercentage,
+  PHASES,
+  BUBBLE_TRIGGER_CHANCE,
+  type PhaseState,
+  type Dialogue,
+} from './phases.ts';
 
 export interface PlacementPayload {
   type: ItemType;
@@ -427,6 +435,100 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   return { ...state, furniture: updatedFurniture };
 }
 
+export function checkPhaseTransition(state: GameState): GameState {
+  const freePercent = calculateFreePercentage(state);
+  const { currentPhase } = state.phaseState;
+  const nextPhaseIndex = currentPhase + 1;
+
+  if (nextPhaseIndex >= PHASES.length) return state;
+
+  const nextPhase = PHASES[nextPhaseIndex];
+  if (freePercent <= nextPhase.threshold) {
+    return {
+      ...state,
+      phaseState: {
+        currentPhase: nextPhaseIndex,
+        vnActive: true,
+        vnLineIndex: 0,
+        vnStartedAt: Date.now(),
+        bubbleActive: false,
+        bubbleDialogue: null,
+        bubbleStartedAt: 0,
+      },
+    };
+  }
+  return state;
+}
+
+export function advanceVnLine(state: GameState): GameState {
+  if (!state.phaseState.vnActive) return state;
+
+  const phase = PHASES[state.phaseState.currentPhase];
+  const nextIndex = state.phaseState.vnLineIndex + 1;
+
+  if (nextIndex >= phase.vnDialogue.length) {
+    return {
+      ...state,
+      phaseState: { ...state.phaseState, vnActive: false, vnLineIndex: 0, vnStartedAt: 0 },
+    };
+  }
+
+  return {
+    ...state,
+    phaseState: {
+      ...state.phaseState,
+      vnLineIndex: nextIndex,
+      vnStartedAt: Date.now(),
+    },
+  };
+}
+
+export function tryTriggerBubble(state: GameState): GameState {
+  if (state.phaseState.vnActive || state.phaseState.bubbleActive) return state;
+  if (Math.random() > BUBBLE_TRIGGER_CHANCE) return state;
+
+  const phase = PHASES[state.phaseState.currentPhase];
+  if (phase.bubbleDialogue.length === 0) return state;
+
+  const dialogue = phase.bubbleDialogue[Math.floor(Math.random() * phase.bubbleDialogue.length)];
+  return {
+    ...state,
+    phaseState: {
+      ...state.phaseState,
+      bubbleActive: true,
+      bubbleDialogue: dialogue,
+      bubbleStartedAt: Date.now(),
+    },
+  };
+}
+
+export function checkBubbleExpiry(state: GameState): GameState {
+  if (!state.phaseState.bubbleActive || !state.phaseState.bubbleDialogue) return state;
+
+  const elapsed = (Date.now() - state.phaseState.bubbleStartedAt) / 1000;
+  if (elapsed >= state.phaseState.bubbleDialogue.duration) {
+    return {
+      ...state,
+      phaseState: { ...state.phaseState, bubbleActive: false, bubbleDialogue: null, bubbleStartedAt: 0 },
+    };
+  }
+  return state;
+}
+
+export function tickVnAdvance(state: GameState): GameState {
+  if (!state.phaseState.vnActive) return state;
+
+  const phase = PHASES[state.phaseState.currentPhase];
+  const currentLine = phase.vnDialogue[state.phaseState.vnLineIndex];
+  if (!currentLine) return advanceVnLine(state);
+
+  const elapsed = (Date.now() - state.phaseState.vnStartedAt) / 1000;
+  if (elapsed >= currentLine.duration) {
+    return advanceVnLine(state);
+  }
+  return state;
+}
+
 export function createInitialState(): GameState {
   return {
     furniture: [
@@ -446,5 +548,6 @@ export function createInitialState(): GameState {
       isDancing: false,
     },
     status: 'playing',
+    phaseState: createInitialPhaseState(),
   };
 }

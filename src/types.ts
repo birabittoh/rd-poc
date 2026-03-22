@@ -62,6 +62,7 @@ export interface GameState {
   furniture: Furniture[];
   ballerina: Ballerina;
   status: 'playing' | 'game_over';
+  phaseState: import('./phases').PhaseState;
 }
 
 export interface Connections {

@@ -28,7 +28,16 @@ import {
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
 import { ITEM_DEFINITIONS } from './items';
-import { PlacementPayload, placeFurniture, stepBallerina, createInitialState } from './gameLogic';
+import {
+  PlacementPayload,
+  placeFurniture,
+  stepBallerina,
+  createInitialState,
+  checkPhaseTransition,
+  tryTriggerBubble,
+  checkBubbleExpiry,
+  tickVnAdvance,
+} from './gameLogic';
 import { FurnitureButton } from './components/FurnitureButton';
 import { cn } from './utils/cn';
 import { Room } from './components/Room';
@@ -40,6 +49,7 @@ import { WaitingRoom } from './components/WaitingRoom';
 import { motion, AnimatePresence } from 'motion/react';
 import { COLORS, EMOJI_LIST } from './constants';
 import { EmojiParticles, createParticle, Particle } from './components/EmojiParticles';
+import { VnOverlay } from './components/VnOverlay';
 import { preloadAllSfx, playSfx } from './sfx';
 import { sliderToVolume } from './settings';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
@@ -97,11 +107,7 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   boombox: <Music />,
 };
 
-const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS)
-  .filter((d) => d.category === 'floor')
-  .sort((a, b) => ITEM_SPARKLE_REWARDS[a.type] - ITEM_SPARKLE_REWARDS[b.type]);
-const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS)
-  .filter((d) => d.category === 'surface')
+const ALL_ITEMS = Object.values(ITEM_DEFINITIONS)
   .sort((a, b) => ITEM_SPARKLE_REWARDS[a.type] - ITEM_SPARKLE_REWARDS[b.type]);
 
 export default function App() {
@@ -270,13 +276,20 @@ function AppInner() {
   useEffect(() => {
     if (!isDemoMode) return;
     const interval = setInterval(() => {
-      setGameState((prev) => (prev ? stepBallerina(prev) : prev));
+      setGameState((prev) => {
+        if (!prev) return prev;
+        let next = stepBallerina(prev);
+        next = tickVnAdvance(next);
+        next = checkBubbleExpiry(next);
+        return next;
+      });
     }, 2000);
     return () => clearInterval(interval);
   }, [isDemoMode]);
 
   const handlePlace = (x: number, y: number, z: number, rotationOverride?: number) => {
     if (!selectedItem || gameState?.status !== 'playing') return;
+    if (gameState?.phaseState?.vnActive) return;
 
     // Check affordability and placement limit
     const itemCost = ITEM_COIN_COSTS[selectedItem];
@@ -330,7 +343,17 @@ function AppInner() {
     if (isDemoMode) {
       const result = placeFurniture(gameState!, payload);
       if (result) {
-        setGameState(result);
+        // Apply phase logic for floor items
+        let finalState = result;
+        if (payload.z === 0) {
+          const afterPhase = checkPhaseTransition(finalState);
+          if (afterPhase !== finalState) {
+            finalState = afterPhase;
+          } else {
+            finalState = tryTriggerBubble(finalState);
+          }
+        }
+        setGameState(finalState);
         // Local economy in demo mode
         setCoins((c) => c - itemCost);
         const sparkleReward = ITEM_SPARKLE_REWARDS[selectedItem];
@@ -442,6 +465,11 @@ function AppInner() {
     [ws, currentUser]
   );
 
+  const vnActive = !!gameState?.phaseState?.vnActive;
+  useEffect(() => {
+    if (vnActive) setMenuView('earn');
+  }, [vnActive]);
+
   if (appState === 'loading') {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
   }
@@ -460,7 +488,7 @@ function AppInner() {
   const showRoom = appState === 'playing';
 
   const isOrnament = selectedItem ? ITEM_DEFINITIONS[selectedItem].category === 'surface' : false;
-  const isPlacementDisabled = gameState && gameState.status !== 'playing';
+  const isPlacementDisabled = gameState && (gameState.status !== 'playing' || vnActive);
 
   const surfaceOccupied = new Set(
     gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)
@@ -567,6 +595,13 @@ function AppInner() {
         </div>
       )}
 
+      {/* VN Dialogue Overlay */}
+      <AnimatePresence>
+        {showRoom && gameState.phaseState?.vnActive && (
+          <VnOverlay phaseState={gameState.phaseState} />
+        )}
+      </AnimatePresence>
+
       {/* Emoji Particles Overlay */}
       <EmojiParticles particles={particles} onParticleEnd={handleParticleEnd} />
 
@@ -605,11 +640,12 @@ function AppInner() {
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
-                <ScrollContainer title="Floor">
-                  {FLOOR_ITEMS.map((item) => {
+                <ScrollContainer title="Place">
+                  {ALL_ITEMS.map((item) => {
                     const placed = itemPlacements[item.type] || 0;
                     const maxP = ITEM_MAX_PLACEMENTS[item.type];
                     const maxedOut = ENFORCE_FURNITURE_LIMIT && placed >= maxP;
+                    const isOrnament = item.category === 'surface';
                     return (
                       <FurnitureButton
                         key={item.type}
@@ -617,43 +653,14 @@ function AppInner() {
                         label={item.label}
                         icon={ITEM_ICONS[item.type]}
                         selected={selectedItem === item.type}
-                        disabled={isPlacementDisabled || maxedOut}
+                        disabled={isPlacementDisabled || (isOrnament && !hasFreeSurface) || maxedOut}
                         onClick={() => {
                           if (maxedOut || coins < ITEM_COIN_COSTS[item.type]) return;
                           setSelectedItem(item.type);
                           setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
                           setPlacementPath([]);
                         }}
-                        price={ITEM_COIN_COSTS[item.type]}
-                        affordable={coins >= ITEM_COIN_COSTS[item.type]}
-                        remaining={ENFORCE_FURNITURE_LIMIT ? maxP - placed : undefined}
-                        max={ENFORCE_FURNITURE_LIMIT ? maxP : undefined}
-                        sparkleReward={ITEM_SPARKLE_REWARDS[item.type]}
-                      />
-                    );
-                  })}
-                </ScrollContainer>
-
-                <ScrollContainer title="Surface">
-                  {SURFACE_ITEMS.map((item) => {
-                    const placed = itemPlacements[item.type] || 0;
-                    const maxP = ITEM_MAX_PLACEMENTS[item.type];
-                    const maxedOut = ENFORCE_FURNITURE_LIMIT && placed >= maxP;
-                    return (
-                      <FurnitureButton
-                        key={item.type}
-                        type={item.type}
-                        label={item.label}
-                        icon={ITEM_ICONS[item.type]}
-                        selected={selectedItem === item.type}
-                        disabled={isPlacementDisabled || !hasFreeSurface || maxedOut}
-                        onClick={() => {
-                          if (maxedOut || coins < ITEM_COIN_COSTS[item.type]) return;
-                          setSelectedItem(item.type);
-                          setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
-                          setPlacementPath([]);
-                        }}
-                        isOrnament
+                        isOrnament={isOrnament}
                         price={ITEM_COIN_COSTS[item.type]}
                         affordable={coins >= ITEM_COIN_COSTS[item.type]}
                         remaining={ENFORCE_FURNITURE_LIMIT ? maxP - placed : undefined}
@@ -724,13 +731,15 @@ function AppInner() {
                 transition={{ duration: 0.2 }}
                 className="relative"
               >
-                <button
-                  onClick={() => setMenuView('purchase')}
-                  className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
-                  aria-label="Go to Purchase"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {!vnActive && (
+                  <button
+                    onClick={() => setMenuView('purchase')}
+                    className="absolute top-1.5 right-1.5 z-20 p-2 rounded-xl bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors border border-white/5 shadow-lg"
+                    aria-label="Go to Purchase"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
 
                 <ScrollContainer title="Earn">
                   {EMOJI_LIST.map((entry, i) => {

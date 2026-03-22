@@ -309,7 +309,10 @@ export function Room({
       })}
 
       {/* Ballerina */}
-      <BallerinaModel ballerina={gameState.ballerina} />
+      <BallerinaModel
+        ballerina={gameState.ballerina}
+        bubbleDialogue={gameState.phaseState?.bubbleActive ? gameState.phaseState.bubbleDialogue : null}
+      />
 
       {/* Dynamic Walls */}
       <DynamicWalls />
