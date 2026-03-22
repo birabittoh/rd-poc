@@ -8,6 +8,7 @@ RUN npm ci
 
 COPY . .
 
+ARG VITE_RELEASE_TIMESTAMP
 # Build the Vite React app and bundle the server into a single JS file
 RUN npm run build && \
     node_modules/.bin/esbuild server.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/server.js
