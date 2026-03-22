@@ -62,7 +62,7 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
   };
 
   return (
-    <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl overflow-hidden">
+    <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl">
       <div className="absolute top-2 left-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none z-10">
         {title}
       </div>
