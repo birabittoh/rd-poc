@@ -32,17 +32,17 @@ export function DoorEntrance({ onEnter, signUrl }: DoorEntranceProps) {
           >
             <div className="group relative" style={{ perspective: '1200px' }}>
               <div
-                className="relative w-48 h-72 rounded-t-full shadow-2xl flex items-center justify-center border-4"
+                className="relative w-48 h-72 md:w-64 md:h-96 rounded-t-full shadow-2xl flex items-center justify-center border-4"
                 style={{ backgroundColor: COLORS.DOOR, borderColor: COLORS.DOOR_BORDER }}
               >
                 {/* Sign image */}
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 md:w-96 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
                   <img src={signUrl} alt="My Room Sign" className="w-full h-auto" />
                 </div>
 
                 <svg
                   viewBox="0 0 24 24"
-                  className="w-24 h-24 transition-colors duration-500 mt-48"
+                  className="w-24 h-24 md:w-32 md:h-32 transition-colors duration-500 mt-48 md:mt-64"
                   style={{ color: COLORS.DOOR_BORDER }}
                   fill="none"
                   stroke="currentColor"
@@ -83,17 +83,17 @@ export function DoorEntrance({ onEnter, signUrl }: DoorEntranceProps) {
                 initial={{ rotateY: 0 }}
                 animate={{ rotateY: -110, x: -100, scale: 1.1 }}
                 transition={{ duration: 1.2, ease: [0.45, 0, 0.55, 1] }}
-                className="w-48 h-72 rounded-t-full shadow-2xl flex items-center justify-center origin-left z-20 border-4"
+                className="w-48 h-72 md:w-64 md:h-96 rounded-t-full shadow-2xl flex items-center justify-center origin-left z-20 border-4"
                 style={{ backgroundColor: COLORS.DOOR, borderColor: COLORS.DOOR_BORDER }}
               >
                 {/* Sign image on the opening door */}
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 md:w-96 z-30 pointer-events-none drop-shadow-xl rotate-[-2deg]">
                   <img src={signUrl} alt="My Room Sign" className="w-full h-auto" />
                 </div>
 
                 <svg
                   viewBox="0 0 24 24"
-                  className="w-24 h-24 transition-colors duration-500 mt-48"
+                  className="w-24 h-24 md:w-32 md:h-32 transition-colors duration-500 mt-48 md:mt-64"
                   style={{ color: COLORS.DOOR_BORDER }}
                   fill="none"
                   stroke="currentColor"
