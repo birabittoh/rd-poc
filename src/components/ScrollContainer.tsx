@@ -78,7 +78,7 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
         className="overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab"
         style={{ cursor: 'grab' }}
       >
-        <div className="flex gap-2 px-4 w-fit min-w-full justify-center">{children}</div>
+        <div className="flex gap-2 px-4">{children}</div>
       </div>
 
       {/* Left Fade */}
