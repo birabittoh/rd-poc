@@ -43,21 +43,33 @@ NUM_TIERS = 6
 
 # === TUNING PARAMETERS ===
 
+# Item prices grow exponentially — this gates "bruteforcing" higher tiers with
+# weaker emojis, since a player using emoji[0] at tier 5 would need exponentially
+# more clicks than one using the correct emoji.
+# The same rate applies to coin rewards so each tier takes the same number of
+# clicks (linear progression): item_cost[t] / coin_reward[t] = constant.
+PRICE_GROWTH = 1.73
+
+# Sparkle economy: both sparkle rewards and emoji unlock costs grow at this rate,
+# keeping the number of items needed per emoji unlock constant across tiers:
+# emoji_unlock_cost[t] / sparkle_reward[t] = constant.
+SPARKLE_GROWTH = 1.6
+
 # Emoji coin rewards: coins earned per click
 COIN_BASE = 1
-COIN_GROWTH = 1.6
+COIN_GROWTH = PRICE_GROWTH      # must equal PRICE_GROWTH for linear progression
 
 # Emoji unlock costs (in sparkles)
 UNLOCK_BASE = 7
-UNLOCK_GROWTH = 1.75
+UNLOCK_GROWTH = SPARKLE_GROWTH  # must equal SPARKLE_GROWTH for linear progression
 
-# Item coin costs (to place)
+# Item coin costs (to place) — exponentially increasing prices per tier
 ITEM_COST_BASE = 21
-ITEM_COST_GROWTH = 1.73
+ITEM_COST_GROWTH = PRICE_GROWTH
 
 # Item sparkle rewards (earned on placement)
 SPARKLE_BASE = 3
-SPARKLE_GROWTH = 1.6
+# SPARKLE_GROWTH already defined above
 
 # Starting currencies
 INITIAL_COINS = 0
@@ -167,7 +179,9 @@ def print_tables(emoji_rewards, emoji_costs, item_costs, item_rewards, item_limi
         placements_used[cheapest_item] = placements_used.get(cheapest_item, 0) + 1
         total_placements += 1
 
+        clicks_per_item = cost / reward_per_click
         print(f"  First item: {cheapest_item} costs {cost} 🪙, rewards {sparkle_gain} ✨")
+        print(f"  Clicks per item: {clicks_per_item:.1f}  ← should be ~constant (linear progression)")
         print(f"  Clicks for first: {clicks_needed}")
         print(f"  After first: {coins} 🪙, {sparkles} ✨")
 
