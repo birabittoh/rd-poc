@@ -144,8 +144,8 @@ function AppInner() {
   const [sparkles, setSparkles] = useState(INITIAL_SPARKLES);
   const [unlockedEmojis, setUnlockedEmojis] = useState<number[]>([...DEFAULT_UNLOCKED_EMOJIS]);
   const [itemPlacements, setItemPlacements] = useState<Record<string, number>>({});
-  const [coinPulse, setCoinPulse] = useState(false);
-  const [sparklePulse, setSparklePulse] = useState(false);
+  const [coinPulse, setCoinPulse] = useState(0);
+  const [sparklePulse, setSparklePulse] = useState(0);
 
   // Keep settings ref in sync for use in callbacks
   useEffect(() => {
@@ -205,12 +205,10 @@ function AppInner() {
         setUnlockedEmojis(data.unlockedEmojis);
         setItemPlacements(data.itemPlacements ?? {});
         if (data.earned?.coins) {
-          setCoinPulse(true);
-          setTimeout(() => setCoinPulse(false), 600);
+          setCoinPulse((c) => c + 1);
         }
         if (data.earned?.sparkles) {
-          setSparklePulse(true);
-          setTimeout(() => setSparklePulse(false), 600);
+          setSparklePulse((c) => c + 1);
         }
       } else if (data.type === 'user_list') {
         setWaitingUsers(data.users);
@@ -335,15 +333,13 @@ function AppInner() {
         setGameState(result);
         // Local economy in demo mode
         setCoins((c) => c - itemCost);
-        setCoinPulse(false);
         const sparkleReward = ITEM_SPARKLE_REWARDS[selectedItem];
         setSparkles((s) => s + sparkleReward);
         setItemPlacements((prev) => ({
           ...prev,
           [selectedItem]: (prev[selectedItem] || 0) + 1,
         }));
-        setSparklePulse(true);
-        setTimeout(() => setSparklePulse(false), 600);
+        setSparklePulse((c) => c + 1);
       }
     } else if (ws) {
       ws.send(JSON.stringify({ type: 'place_furniture', payload }));
@@ -383,8 +379,7 @@ function AppInner() {
     if (isDemoMode) {
       const reward = EMOJI_COIN_REWARDS[index];
       setCoins((c) => c + reward);
-      setCoinPulse(true);
-      setTimeout(() => setCoinPulse(false), 600);
+      setCoinPulse((c) => c + 1);
     }
   };
 
@@ -497,32 +492,26 @@ function AppInner() {
       {showRoom && (
         <div className="absolute top-4 right-4 z-50 flex gap-2">
           <div
-            className={cn(
-              'flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300',
-              sparklePulse && 'ring-2 ring-yellow-400/50 shadow-yellow-400/20'
-            )}
+            key={`sparkle-${sparklePulse}`}
+            className="flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg"
+            style={sparklePulse ? { animation: 'hud-pulse-yellow 0.4s ease-out' } : undefined}
           >
             <span
-              className={cn(
-                'text-lg transition-transform duration-300',
-                sparklePulse && 'scale-125'
-              )}
+              className="text-lg"
+              style={sparklePulse ? { animation: 'hud-icon-pop 0.3s ease-out' } : undefined}
             >
               ✨
             </span>
             <span className="text-sm font-bold text-zinc-100 tabular-nums">{sparkles}</span>
           </div>
           <div
-            className={cn(
-              'flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300',
-              coinPulse && 'ring-2 ring-amber-400/50 shadow-amber-400/20'
-            )}
+            key={`coin-${coinPulse}`}
+            className="flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg"
+            style={coinPulse ? { animation: 'hud-pulse-amber 0.4s ease-out' } : undefined}
           >
             <span
-              className={cn(
-                'text-lg transition-transform duration-300',
-                coinPulse && 'scale-125'
-              )}
+              className="text-lg"
+              style={coinPulse ? { animation: 'hud-icon-pop 0.3s ease-out' } : undefined}
             >
               🪙
             </span>
