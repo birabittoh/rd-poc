@@ -5,8 +5,8 @@ export function SpeechBubble({ dialogue }: { dialogue: Dialogue }) {
   const emoji = EMOTION_EMOJI[dialogue.emotion];
 
   return (
-    <group position={[0, 2.5, 0]}>
-      <Html center distanceFactor={8} style={{ pointerEvents: 'none' }}>
+    <group position={[0, 3.2, 0]}>
+      <Html center distanceFactor={.025} style={{ pointerEvents: 'none' }}>
         <div className="relative bg-white/95 backdrop-blur rounded-xl px-4 py-2.5 shadow-lg border border-zinc-200 max-w-[200px] min-w-[100px] text-center whitespace-normal">
           {emoji && (
             <span className="absolute -top-3 -left-2 text-lg drop-shadow-sm">{emoji}</span>

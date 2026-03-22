@@ -4,7 +4,7 @@ import { PHASES, EMOTION_EMOJI, type PhaseState } from '../phases';
 
 const BASE_URL = import.meta.env.BASE_URL;
 
-export function VnOverlay({ phaseState }: { phaseState: PhaseState }) {
+export function VnOverlay({ phaseState, showEmojiBadge = true }: { phaseState: PhaseState; showEmojiBadge?: boolean }) {
   const [imgError, setImgError] = useState<string | null>(null);
 
   if (!phaseState.vnActive) return null;
@@ -21,14 +21,14 @@ export function VnOverlay({ phaseState }: { phaseState: PhaseState }) {
 
   return (
     <motion.div
-      className="absolute inset-0 z-10 flex flex-col items-center justify-end pointer-events-auto"
+      className="absolute inset-0 z-10 flex flex-col items-center justify-end pointer-events-none"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
       {/* Semi-transparent backdrop */}
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
       {/* Character image */}
       <div className="relative flex-1 flex items-center justify-center w-full">
@@ -53,7 +53,7 @@ export function VnOverlay({ phaseState }: { phaseState: PhaseState }) {
       </div>
 
       {/* Textbox */}
-      <div className="relative w-full max-w-2xl mx-4 mb-28 md:mb-32">
+      <div className="relative w-full max-w-2xl mx-4 mb-52 md:mb-56">
         <AnimatePresence mode="wait">
           <motion.div
             key={`${phaseState.currentPhase}-${phaseState.vnLineIndex}`}
@@ -64,7 +64,7 @@ export function VnOverlay({ phaseState }: { phaseState: PhaseState }) {
             transition={{ duration: 0.25 }}
           >
             {/* Emotion emoji badge */}
-            {emoji && (
+            {showEmojiBadge && emoji && (
               <span className="absolute -top-4 -left-2 text-2xl drop-shadow-md bg-zinc-800 rounded-full w-10 h-10 flex items-center justify-center border border-white/10">
                 {emoji}
               </span>
