@@ -53,6 +53,7 @@ import {
   ITEM_COIN_COSTS,
   ITEM_SPARKLE_REWARDS,
   ITEM_MAX_PLACEMENTS,
+  ENFORCE_FURNITURE_LIMIT,
 } from './economy';
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
@@ -270,8 +271,10 @@ export default function App() {
     // Check affordability and placement limit
     const itemCost = ITEM_COIN_COSTS[selectedItem];
     if (coins < itemCost) return;
-    const maxP = ITEM_MAX_PLACEMENTS[selectedItem];
-    if ((itemPlacements[selectedItem] || 0) >= maxP) return;
+    if (ENFORCE_FURNITURE_LIMIT) {
+      const maxP = ITEM_MAX_PLACEMENTS[selectedItem];
+      if ((itemPlacements[selectedItem] || 0) >= maxP) return;
+    }
 
     const def = ITEM_DEFINITIONS[selectedItem];
     let payload: PlacementPayload | null = null;
@@ -628,7 +631,7 @@ export default function App() {
                   {FLOOR_ITEMS.map((item) => {
                     const placed = itemPlacements[item.type] || 0;
                     const maxP = ITEM_MAX_PLACEMENTS[item.type];
-                    const maxedOut = placed >= maxP;
+                    const maxedOut = ENFORCE_FURNITURE_LIMIT && placed >= maxP;
                     return (
                       <FurnitureButton
                         key={item.type}
@@ -645,8 +648,8 @@ export default function App() {
                         }}
                         price={ITEM_COIN_COSTS[item.type]}
                         affordable={coins >= ITEM_COIN_COSTS[item.type]}
-                        remaining={maxP - placed}
-                        max={maxP}
+                        remaining={ENFORCE_FURNITURE_LIMIT ? maxP - placed : undefined}
+                        max={ENFORCE_FURNITURE_LIMIT ? maxP : undefined}
                         sparkleReward={ITEM_SPARKLE_REWARDS[item.type]}
                       />
                     );
@@ -657,7 +660,7 @@ export default function App() {
                   {SURFACE_ITEMS.map((item) => {
                     const placed = itemPlacements[item.type] || 0;
                     const maxP = ITEM_MAX_PLACEMENTS[item.type];
-                    const maxedOut = placed >= maxP;
+                    const maxedOut = ENFORCE_FURNITURE_LIMIT && placed >= maxP;
                     return (
                       <FurnitureButton
                         key={item.type}
@@ -675,8 +678,8 @@ export default function App() {
                         isOrnament
                         price={ITEM_COIN_COSTS[item.type]}
                         affordable={coins >= ITEM_COIN_COSTS[item.type]}
-                        remaining={maxP - placed}
-                        max={maxP}
+                        remaining={ENFORCE_FURNITURE_LIMIT ? maxP - placed : undefined}
+                        max={ENFORCE_FURNITURE_LIMIT ? maxP : undefined}
                         sparkleReward={ITEM_SPARKLE_REWARDS[item.type]}
                       />
                     );
