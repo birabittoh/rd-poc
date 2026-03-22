@@ -5,9 +5,9 @@ export const INITIAL_COINS = 0;
 export const INITIAL_SPARKLES = 0;
 export const DEFAULT_UNLOCKED_EMOJIS: number[] = [0];
 
-export const EMOJI_COIN_REWARDS: number[] = [1, 2, 3, 4, 6, 10, 16, 26, 42, 68, 109, 175, 281];
+export const EMOJI_COIN_REWARDS: number[] = [1, 2, 3, 5, 8, 15, 26, 46, 80, 138, 240, 415, 718];
 
-export const EMOJI_UNLOCK_COSTS: number[] = [0, 7, 12, 21, 37, 65, 114, 201, 351, 615, 1077, 1885, 3300];
+export const EMOJI_UNLOCK_COSTS: number[] = [0, 7, 11, 17, 28, 45, 73, 117, 187, 300, 481, 769, 1231];
 
 export const ITEM_COIN_COSTS: Record<ItemType, number> = {
   plant: 21,

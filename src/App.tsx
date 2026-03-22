@@ -100,8 +100,12 @@ const ITEM_ICONS: Record<ItemType, React.ReactNode> = {
   boombox: <Music />,
 };
 
-const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'floor');
-const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS).filter((d) => d.category === 'surface');
+const FLOOR_ITEMS = Object.values(ITEM_DEFINITIONS)
+  .filter((d) => d.category === 'floor')
+  .sort((a, b) => ITEM_SPARKLE_REWARDS[a.type] - ITEM_SPARKLE_REWARDS[b.type]);
+const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS)
+  .filter((d) => d.category === 'surface')
+  .sort((a, b) => ITEM_SPARKLE_REWARDS[a.type] - ITEM_SPARKLE_REWARDS[b.type]);
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);

@@ -62,7 +62,7 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
   };
 
   return (
-    <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl overflow-hidden">
+    <div className="relative bg-zinc-900/40 p-2 pt-7 rounded-xl">
       <div className="absolute top-2 left-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pointer-events-none z-10">
         {title}
       </div>
@@ -78,7 +78,7 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
         className="overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab"
         style={{ cursor: 'grab' }}
       >
-        <div className="flex gap-2 px-4 w-fit min-w-full justify-center">{children}</div>
+        <div className="flex gap-2 px-4 w-fit mx-auto">{children}</div>
       </div>
 
       {/* Left Fade */}
