@@ -1,8 +1,10 @@
 import React from 'react';
 import { Cylinder } from '@react-three/drei';
 import { FurnitureProps } from '../../types';
+import { useSettings } from '../../contexts/SettingsContext';
 
 export function Lamp({ variant }: FurnitureProps) {
+  const { settings } = useSettings();
   let lampColor = '#fef08a';
   if (variant === 1) lampColor = '#fca5a5';
   else if (variant === 2) lampColor = '#93c5fd';
@@ -27,7 +29,7 @@ export function Lamp({ variant }: FurnitureProps) {
       </Cylinder>
       <pointLight
         position={[0, 0.7, 0]}
-        intensity={1.2}
+        intensity={settings.video.lightReflections ? 1.2 : 0}
         color={lampColor}
         distance={5}
         castShadow

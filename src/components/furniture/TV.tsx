@@ -1,8 +1,10 @@
 import React from 'react';
 import { Box, Cylinder } from '@react-three/drei';
 import { FurnitureProps } from '../../types';
+import { useSettings } from '../../contexts/SettingsContext';
 
 export function TV({ localConn, variant }: FurnitureProps) {
+  const { settings } = useSettings();
   const isConnectedH = localConn.left || localConn.right;
   const width = 0.8 + (localConn.right ? 0.1 : 0) + (localConn.left ? 0.1 : 0);
   const posX = (localConn.right ? 0.05 : 0) - (localConn.left ? 0.05 : 0);
@@ -47,7 +49,7 @@ export function TV({ localConn, variant }: FurnitureProps) {
       <Box args={[innerWidth, height - 0.04, 0.01]} position={[innerPosX, screenY, 0.026]}>
         <meshStandardMaterial color={screenColor} emissive={lightColor} emissiveIntensity={0.5} />
       </Box>
-      <pointLight position={[posX, screenY, 0.2]} distance={4} intensity={0.8} color={lightColor} />
+      <pointLight position={[posX, screenY, 0.2]} distance={4} intensity={settings.video.lightReflections ? 0.8 : 0} color={lightColor} />
     </group>
   );
 }
