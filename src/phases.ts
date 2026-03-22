@@ -8,10 +8,19 @@ export interface Dialogue {
   emotion: string;
 }
 
+export interface Stats {
+  clutter: number; // 0–5
+  privacy: number;
+  rest: number;
+  fun: number;
+  control: number;
+}
+
 export interface Phase {
   id: number;
   name: string;
   threshold: number; // free spots percentage (1.0 = 100%) at which this phase triggers (<=)
+  stats: Stats;
   vnDialogue: Dialogue[];
   bubbleDialogue: Dialogue[];
 }
@@ -73,6 +82,7 @@ export const PHASES: Phase[] = [
     id: 1,
     name: 'Welcome',
     threshold: 1.0,
+    stats: { clutter: 0, privacy: 4, rest: 5, fun: 5, control: 5 },
     vnDialogue: [
       { duration: 15, content: "Oh wow, this room is all mine?! It's so spacious!", emotion: 'excited' },
       { duration: 15, content: "I can't wait to dance around in here! This is perfect!", emotion: 'happy' },
@@ -89,6 +99,7 @@ export const PHASES: Phase[] = [
     id: 2,
     name: 'Noticing',
     threshold: 0.75,
+    stats: { clutter: 2, privacy: 3, rest: 3, fun: 3, control: 3 },
     vnDialogue: [
       { duration: 15, content: "Hmm, it's starting to get a little cozy in here...", emotion: 'confused' },
       { duration: 15, content: "That's... a lot of furniture, isn't it?", emotion: 'neutral' },
@@ -105,6 +116,7 @@ export const PHASES: Phase[] = [
     id: 3,
     name: 'Frustrated',
     threshold: 0.55,
+    stats: { clutter: 3, privacy: 2, rest: 2, fun: 1, control: 2 },
     vnDialogue: [
       { duration: 15, content: 'Okay, seriously?! I can barely move anymore!', emotion: 'annoyed' },
       { duration: 15, content: "Who keeps putting all this stuff in MY room?!", emotion: 'angry' },
@@ -121,6 +133,7 @@ export const PHASES: Phase[] = [
     id: 4,
     name: 'Desperate',
     threshold: 0.35,
+    stats: { clutter: 4, privacy: 1, rest: 1, fun: 0, control: 1 },
     vnDialogue: [
       { duration: 15, content: "Please... I'm begging you. Stop.", emotion: 'sad' },
       { duration: 15, content: 'This was supposed to be my space. My sanctuary.', emotion: 'sad' },
@@ -137,6 +150,7 @@ export const PHASES: Phase[] = [
     id: 5,
     name: 'Acceptance',
     threshold: 0.18,
+    stats: { clutter: 5, privacy: 0, rest: 0, fun: 0, control: 0 },
     vnDialogue: [
       { duration: 15, content: '...', emotion: 'resigned' },
       { duration: 15, content: "You know what? It's fine. Everything is fine.", emotion: 'resigned' },
