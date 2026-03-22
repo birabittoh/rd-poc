@@ -25,14 +25,14 @@ const CHAT_COOLDOWN_MS = CHAT_COOLDOWN * 1000;
 const MAX_CHAT_HISTORY = 100;
 
 // Release timestamp (optional)
-const RELEASE_TIMESTAMP_STR = process.env.VITE_RELEASE_TIMESTAMP || '';
+const RELEASE_TIMESTAMP_STR = process.env.RELEASE_TIMESTAMP || '';
 const RELEASE_TIMESTAMP = RELEASE_TIMESTAMP_STR
   ? new Date(RELEASE_TIMESTAMP_STR).getTime()
   : null;
 
 if (RELEASE_TIMESTAMP !== null) {
   if (isNaN(RELEASE_TIMESTAMP)) {
-    console.error(`Invalid VITE_RELEASE_TIMESTAMP: "${RELEASE_TIMESTAMP_STR}"`);
+    console.error(`Invalid RELEASE_TIMESTAMP: "${RELEASE_TIMESTAMP_STR}"`);
     process.exit(1);
   }
   console.log(`Waiting room enabled. Release at: ${new Date(RELEASE_TIMESTAMP).toISOString()}`);

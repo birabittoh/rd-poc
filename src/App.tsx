@@ -26,7 +26,6 @@ import {
   Music2,
   Volume2,
   VolumeX,
-  ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
@@ -60,8 +59,6 @@ const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
 const USER_ID_KEY = 'rd-poc:userId';
 const BGM_MUTE_KEY = 'rd-poc:bgmMuted';
 const SFX_MUTE_KEY = 'rd-poc:sfxMuted';
-
-const HAS_WAITING_ROOM = !!import.meta.env.VITE_RELEASE_TIMESTAMP;
 
 function loadSavedVariants(): Record<string, number> {
   try {
@@ -170,6 +167,7 @@ export default function App() {
     setWs(socket);
 
     socket.onopen = () => {
+      setIsDemoMode(false);
       const savedUuid = localStorage.getItem(USER_ID_KEY);
       socket.send(JSON.stringify({ type: 'register', uuid: savedUuid }));
     };
@@ -420,7 +418,9 @@ export default function App() {
       setAppState((prev) => {
         if (prev !== 'entering') return prev;
         // If waiting room is enabled and not yet released, go to waiting
-        if (HAS_WAITING_ROOM && !released) {
+        // In demo mode, the waiting room is always skipped
+        const hasWaitingRoom = !!releaseTimestamp && !isDemoMode;
+        if (hasWaitingRoom && !released) {
           return 'waiting';
         }
 
