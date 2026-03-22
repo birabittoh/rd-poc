@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     shadows: true,
     highQualityShadows: false,
     highResolution: false,
-    antialiasing: false,
+    antialiasing: true,
     contactShadows: false,
     lightReflections: false,
   },

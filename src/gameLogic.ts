@@ -160,7 +160,13 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
       rotation = getFaceAwayFromWallRotation(x, y);
     }
   } else if (manualRotation === undefined && def.rotationStrategy === 'faceInteractable') {
-    const targets = state.furniture.filter((f) => ITEM_DEFINITIONS[f.type].interactable);
+    const targets = state.furniture.filter((f) => {
+      if (!ITEM_DEFINITIONS[f.type].interactable) return false;
+      const dx = f.x - x;
+      const dy = f.y - y;
+      const inRange = (dx === 0 && Math.abs(dy) <= 2) || (dy === 0 && Math.abs(dx) <= 2);
+      return inRange;
+    });
     if (targets.length > 0) {
       let selected = targets[0];
       let minDist = Infinity;
