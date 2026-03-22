@@ -23,9 +23,7 @@ import {
   RectangleVertical,
   ScanLine,
   Music,
-  Music2,
-  Volume2,
-  VolumeX,
+  Settings,
   ArrowRight,
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
@@ -43,6 +41,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { COLORS, EMOJI_LIST } from './constants';
 import { EmojiParticles, createParticle, Particle } from './components/EmojiParticles';
 import { preloadAllSfx, playSfx } from './sfx';
+import { sliderToVolume } from './settings';
+import { SettingsProvider, useSettings } from './contexts/SettingsContext';
+import { SettingsModal } from './components/SettingsModal';
 import {
   INITIAL_COINS,
   INITIAL_SPARKLES,
@@ -57,8 +58,6 @@ import {
 
 const VARIANT_STORAGE_KEY = 'rd-poc:lastVariants';
 const USER_ID_KEY = 'rd-poc:userId';
-const BGM_MUTE_KEY = 'rd-poc:bgmMuted';
-const SFX_MUTE_KEY = 'rd-poc:sfxMuted';
 
 function loadSavedVariants(): Record<string, number> {
   try {
@@ -106,6 +105,15 @@ const SURFACE_ITEMS = Object.values(ITEM_DEFINITIONS)
   .sort((a, b) => ITEM_SPARKLE_REWARDS[a.type] - ITEM_SPARKLE_REWARDS[b.type]);
 
 export default function App() {
+  return (
+    <SettingsProvider>
+      <AppInner />
+    </SettingsProvider>
+  );
+}
+
+function AppInner() {
+  const { settings } = useSettings();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -117,13 +125,12 @@ export default function App() {
   >('loading');
   const [variantCaptures, setVariantCaptures] = useState<Record<string, string>>({});
   const [signUrl, setSignUrl] = useState<string | null>(null);
-  const [isBgmMuted, setIsBgmMuted] = useState(() => localStorage.getItem(BGM_MUTE_KEY) === 'true');
-  const [isSfxMuted, setIsSfxMuted] = useState(() => localStorage.getItem(SFX_MUTE_KEY) === 'true');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [menuView, setMenuView] = useState<'purchase' | 'earn'>('earn');
   const [particles, setParticles] = useState<Particle[]>([]);
-  const isSfxMutedRef = useRef(false);
+  const settingsRef = useRef(settings);
   const bottomPanelRef = useRef<HTMLDivElement>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Waiting room state
   const [waitingUsers, setWaitingUsers] = useState<{ name: string; online: boolean }[]>([]);
@@ -137,13 +144,20 @@ export default function App() {
   const [sparkles, setSparkles] = useState(INITIAL_SPARKLES);
   const [unlockedEmojis, setUnlockedEmojis] = useState<number[]>([...DEFAULT_UNLOCKED_EMOJIS]);
   const [itemPlacements, setItemPlacements] = useState<Record<string, number>>({});
-  const [coinPulse, setCoinPulse] = useState(false);
-  const [sparklePulse, setSparklePulse] = useState(false);
+  const [coinPulse, setCoinPulse] = useState(0);
+  const [sparklePulse, setSparklePulse] = useState(0);
 
-  // Keep sfx mute ref in sync
+  // Keep settings ref in sync for use in callbacks
   useEffect(() => {
-    isSfxMutedRef.current = isSfxMuted;
-  }, [isSfxMuted]);
+    settingsRef.current = settings;
+  }, [settings]);
+
+  // Sync BGM volume with settings changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = settings.audio.bgmMuted ? 0 : sliderToVolume(settings.audio.bgmVolume);
+    }
+  }, [settings.audio.bgmMuted, settings.audio.bgmVolume]);
 
   // Preload SFX audio
   useEffect(() => {
@@ -191,12 +205,10 @@ export default function App() {
         setUnlockedEmojis(data.unlockedEmojis);
         setItemPlacements(data.itemPlacements ?? {});
         if (data.earned?.coins) {
-          setCoinPulse(true);
-          setTimeout(() => setCoinPulse(false), 600);
+          setCoinPulse((c) => c + 1);
         }
         if (data.earned?.sparkles) {
-          setSparklePulse(true);
-          setTimeout(() => setSparklePulse(false), 600);
+          setSparklePulse((c) => c + 1);
         }
       } else if (data.type === 'user_list') {
         setWaitingUsers(data.users);
@@ -212,8 +224,8 @@ export default function App() {
         const rx = panelEl ? panelEl.getBoundingClientRect().left + 40 : 80;
         const ry = panelEl ? panelEl.getBoundingClientRect().top + 20 : window.innerHeight - 200;
         setParticles((prev) => [...prev, createParticle(entry.emoji, rx, ry)]);
-        if (!isSfxMutedRef.current) {
-          playSfx(entry.sfx, 0.3);
+        if (!settingsRef.current.audio.sfxMuted) {
+          playSfx(entry.sfx, sliderToVolume(settingsRef.current.audio.sfxVolume));
         }
       }
     };
@@ -239,7 +251,7 @@ export default function App() {
         if (!audioRef.current) {
           const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
           audio.loop = true;
-          audio.volume = isBgmMuted ? 0 : 0.10;
+          audio.volume = settings.audio.bgmMuted ? 0 : sliderToVolume(settings.audio.bgmVolume);
           audio
             .play()
             .then(() => {
@@ -252,7 +264,7 @@ export default function App() {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [released, appState, isBgmMuted]);
+  }, [released, appState, settings.audio.bgmMuted, settings.audio.bgmVolume]);
 
   // Demo mode: run ballerina loop locally
   useEffect(() => {
@@ -321,15 +333,13 @@ export default function App() {
         setGameState(result);
         // Local economy in demo mode
         setCoins((c) => c - itemCost);
-        setCoinPulse(false);
         const sparkleReward = ITEM_SPARKLE_REWARDS[selectedItem];
         setSparkles((s) => s + sparkleReward);
         setItemPlacements((prev) => ({
           ...prev,
           [selectedItem]: (prev[selectedItem] || 0) + 1,
         }));
-        setSparklePulse(true);
-        setTimeout(() => setSparklePulse(false), 600);
+        setSparklePulse((c) => c + 1);
       }
     } else if (ws) {
       ws.send(JSON.stringify({ type: 'place_furniture', payload }));
@@ -350,25 +360,6 @@ export default function App() {
     setAppState((prev) => (prev === 'loading' ? 'ready' : prev));
   }, []);
 
-  const toggleBgmMute = () => {
-    setIsBgmMuted((prev) => {
-      const next = !prev;
-      localStorage.setItem(BGM_MUTE_KEY, String(next));
-      if (audioRef.current) {
-        audioRef.current.volume = next ? 0 : 0.10;
-      }
-      return next;
-    });
-  };
-
-  const toggleSfxMute = () => {
-    setIsSfxMuted((prev) => {
-      const next = !prev;
-      localStorage.setItem(SFX_MUTE_KEY, String(next));
-      return next;
-    });
-  };
-
   const handleEmojiClick = (index: number, e: React.MouseEvent) => {
     if (!unlockedEmojis.includes(index)) return;
     const entry = EMOJI_LIST[index];
@@ -377,8 +368,8 @@ export default function App() {
     const x = e.clientX;
     const y = e.clientY;
     setParticles((prev) => [...prev, createParticle(entry.emoji, x, y)]);
-    if (!isSfxMuted) {
-      playSfx(entry.sfx, 0.3);
+    if (!settings.audio.sfxMuted) {
+      playSfx(entry.sfx, sliderToVolume(settings.audio.sfxVolume));
     }
     // Broadcast to server
     if (ws) {
@@ -388,8 +379,7 @@ export default function App() {
     if (isDemoMode) {
       const reward = EMOJI_COIN_REWARDS[index];
       setCoins((c) => c + reward);
-      setCoinPulse(true);
-      setTimeout(() => setCoinPulse(false), 600);
+      setCoinPulse((c) => c + 1);
     }
   };
 
@@ -428,7 +418,7 @@ export default function App() {
         if (!audioRef.current) {
           const audio = new Audio(`${import.meta.env.BASE_URL}bgm.mp3`);
           audio.loop = true;
-          audio.volume = isBgmMuted ? 0 : 0.10;
+          audio.volume = settings.audio.bgmMuted ? 0 : sliderToVolume(settings.audio.bgmVolume);
           audio
             .play()
             .then(() => {
@@ -485,22 +475,15 @@ export default function App() {
       className="relative h-full w-full overflow-hidden font-sans text-zinc-100"
       style={{ backgroundColor: COLORS.BACKGROUND }}
     >
-      {/* Mute Buttons */}
+      {/* Settings Button */}
       {appState !== 'waiting' && (
-        <div className="absolute top-4 left-4 z-50 flex gap-2">
+        <div className="absolute top-4 left-4 z-50">
           <button
-            onClick={toggleBgmMute}
+            onClick={() => setIsSettingsOpen(true)}
             className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-            aria-label={isBgmMuted ? 'Unmute BGM' : 'Mute BGM'}
+            aria-label="Settings"
           >
-            {isBgmMuted ? <Music2 className="w-5 h-5 opacity-40" /> : <Music className="w-5 h-5" />}
-          </button>
-          <button
-            onClick={toggleSfxMute}
-            className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
-            aria-label={isSfxMuted ? 'Unmute SFX' : 'Mute SFX'}
-          >
-            {isSfxMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            <Settings className="w-5 h-5" />
           </button>
         </div>
       )}
@@ -509,32 +492,26 @@ export default function App() {
       {showRoom && (
         <div className="absolute top-4 right-4 z-50 flex gap-2">
           <div
-            className={cn(
-              'flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300',
-              sparklePulse && 'ring-2 ring-yellow-400/50 shadow-yellow-400/20'
-            )}
+            key={`sparkle-${sparklePulse}`}
+            className="flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg"
+            style={sparklePulse ? { animation: 'hud-pulse-yellow 0.4s ease-out' } : undefined}
           >
             <span
-              className={cn(
-                'text-lg transition-transform duration-300',
-                sparklePulse && 'scale-125'
-              )}
+              className="text-lg"
+              style={sparklePulse ? { animation: 'hud-icon-pop 0.3s ease-out' } : undefined}
             >
               ✨
             </span>
             <span className="text-sm font-bold text-zinc-100 tabular-nums">{sparkles}</span>
           </div>
           <div
-            className={cn(
-              'flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg transition-all duration-300',
-              coinPulse && 'ring-2 ring-amber-400/50 shadow-amber-400/20'
-            )}
+            key={`coin-${coinPulse}`}
+            className="flex items-center gap-1.5 bg-zinc-800/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg"
+            style={coinPulse ? { animation: 'hud-pulse-amber 0.4s ease-out' } : undefined}
           >
             <span
-              className={cn(
-                'text-lg transition-transform duration-300',
-                coinPulse && 'scale-125'
-              )}
+              className="text-lg"
+              style={coinPulse ? { animation: 'hud-icon-pop 0.3s ease-out' } : undefined}
             >
               🪙
             </span>
@@ -547,9 +524,10 @@ export default function App() {
       {showRoom && (
         <div className="absolute inset-0">
           <Canvas
-            shadows={{ type: THREE.PCFShadowMap }}
-            dpr={[1, 2]}
-            gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default' }}
+            key={`${settings.video.antialiasing}`}
+            shadows={settings.video.shadows ? { type: settings.video.highQualityShadows ? THREE.PCFShadowMap : THREE.BasicShadowMap } : false}
+            dpr={settings.video.highResolution ? [1, 2] : [1, 1]}
+            gl={{ failIfMajorPerformanceCaveat: false, powerPreference: 'default', antialias: settings.video.antialiasing }}
           >
             <OrthographicCamera
               makeDefault
@@ -568,8 +546,8 @@ export default function App() {
             <directionalLight
               position={[10, 20, 10]}
               intensity={1.5}
-              castShadow
-              shadow-mapSize={[2048, 2048]}
+              castShadow={settings.video.shadows}
+              shadow-mapSize={settings.video.highQualityShadows ? [2048, 2048] : [512, 512]}
             />
 
             <Room
@@ -856,6 +834,8 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }

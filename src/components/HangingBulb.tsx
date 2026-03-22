@@ -1,7 +1,9 @@
 import React from 'react';
 import { Sphere, Cylinder } from '@react-three/drei';
+import { useSettings } from '../contexts/SettingsContext';
 
 export function HangingBulb() {
+  const { settings } = useSettings();
   return (
     <group position={[0, 4, 0]}>
       {/* Cable hanging from the ceiling */}
@@ -23,7 +25,7 @@ export function HangingBulb() {
           transparent
           opacity={0.9}
         />
-        <pointLight intensity={1} distance={10} color="#fff5d7" castShadow />
+        <pointLight intensity={settings.video.lightReflections ? 1 : 0} distance={10} color="#fff5d7" castShadow />
       </Sphere>
     </group>
   );

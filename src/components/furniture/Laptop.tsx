@@ -1,8 +1,10 @@
 import React from 'react';
 import { Box } from '@react-three/drei';
 import { FurnitureProps } from '../../types';
+import { useSettings } from '../../contexts/SettingsContext';
 
 export function Laptop({ variant }: FurnitureProps) {
+  const { settings } = useSettings();
   let laptopColor = '#d4d4d8';
   let screenColor = '#0ea5e9';
   if (variant === 1) {
@@ -39,7 +41,7 @@ export function Laptop({ variant }: FurnitureProps) {
       <Box args={[0.36, 0.26, 0.01]} position={[0, 0.16, -0.13]} rotation={[-0.2, 0, 0]}>
         <meshStandardMaterial color={screenColor} emissive={screenColor} emissiveIntensity={0.5} />
       </Box>
-      <pointLight position={[0, 0.2, 0.1]} distance={2} intensity={0.4} color={screenColor} />
+      <pointLight position={[0, 0.2, 0.1]} distance={2} intensity={settings.video.lightReflections ? 0.4 : 0} color={screenColor} />
     </group>
   );
 }

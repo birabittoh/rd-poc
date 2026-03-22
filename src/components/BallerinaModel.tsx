@@ -4,6 +4,7 @@ import { ContactShadows, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Ballerina } from '../types';
 import { TILE_SIZE } from '../constants';
+import { useSettings } from '../contexts/SettingsContext';
 
 class ErrorBoundary extends React.Component<
   { fallback: React.ReactNode; children: React.ReactNode },
@@ -44,6 +45,7 @@ function BallerinaGLB() {
 }
 
 function BallerinaPrimitive() {
+  const { settings } = useSettings();
   const skinColor = '#fce2d5';
   const hairColor = '#b084cc';
   const shirtColor = '#f4c2d7';
@@ -210,7 +212,9 @@ function BallerinaPrimitive() {
         <boxGeometry args={[0.2, 0.2, 0.2]} />
         <meshStandardMaterial color={skinColor} />
       </mesh>
-      <ContactShadows position={[0, -0.39, 0]} opacity={0.5} scale={5} blur={2} far={4} />
+      {settings.video.contactShadows && (
+        <ContactShadows position={[0, -0.39, 0]} opacity={0.5} scale={5} blur={2} far={4} />
+      )}
     </group>
   );
 }
