@@ -5,6 +5,7 @@ import { useGLTF } from '@react-three/drei';
 import { CaptureManager } from './CaptureManager';
 import { ITEM_DEFINITIONS } from '../items';
 import { COLORS, EMOJI_LIST } from '../constants';
+import { ALL_EMOTIONS } from '../phases';
 
 interface LoadingScreenProps {
   onLoadingComplete: (captures: Record<string, string>) => void;
@@ -95,7 +96,8 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   // Preload core assets
   useEffect(() => {
     const sfxAssets = EMOJI_LIST.map((e) => `sfx/${e.sfx}.mp3`);
-    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.webp', 'logo.webp', ...sfxAssets];
+    const vnAssets = ALL_EMOTIONS.map((e) => `vn/${e}.webp`);
+    const assets = ['ballerina.glb', 'bgm.mp3', 'sign.webp', 'logo.webp', ...sfxAssets, ...vnAssets];
     let loadedCount = 0;
 
     const loadAsset = async (name: string) => {

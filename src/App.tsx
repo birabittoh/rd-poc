@@ -28,7 +28,16 @@ import {
 } from 'lucide-react';
 import { GameState, ItemType, ChatMessage } from './types';
 import { ITEM_DEFINITIONS } from './items';
-import { PlacementPayload, placeFurniture, stepBallerina, createInitialState } from './gameLogic';
+import {
+  PlacementPayload,
+  placeFurniture,
+  stepBallerina,
+  createInitialState,
+  checkPhaseTransition,
+  tryTriggerBubble,
+  checkBubbleExpiry,
+  tickVnAdvance,
+} from './gameLogic';
 import { FurnitureButton } from './components/FurnitureButton';
 import { cn } from './utils/cn';
 import { Room } from './components/Room';
@@ -40,6 +49,7 @@ import { WaitingRoom } from './components/WaitingRoom';
 import { motion, AnimatePresence } from 'motion/react';
 import { COLORS, EMOJI_LIST } from './constants';
 import { EmojiParticles, createParticle, Particle } from './components/EmojiParticles';
+import { VnOverlay } from './components/VnOverlay';
 import { preloadAllSfx, playSfx } from './sfx';
 import { sliderToVolume } from './settings';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
@@ -270,13 +280,20 @@ function AppInner() {
   useEffect(() => {
     if (!isDemoMode) return;
     const interval = setInterval(() => {
-      setGameState((prev) => (prev ? stepBallerina(prev) : prev));
+      setGameState((prev) => {
+        if (!prev) return prev;
+        let next = stepBallerina(prev);
+        next = tickVnAdvance(next);
+        next = checkBubbleExpiry(next);
+        return next;
+      });
     }, 2000);
     return () => clearInterval(interval);
   }, [isDemoMode]);
 
   const handlePlace = (x: number, y: number, z: number, rotationOverride?: number) => {
     if (!selectedItem || gameState?.status !== 'playing') return;
+    if (gameState?.phaseState?.vnActive) return;
 
     // Check affordability and placement limit
     const itemCost = ITEM_COIN_COSTS[selectedItem];
@@ -330,7 +347,17 @@ function AppInner() {
     if (isDemoMode) {
       const result = placeFurniture(gameState!, payload);
       if (result) {
-        setGameState(result);
+        // Apply phase logic for floor items
+        let finalState = result;
+        if (payload.z === 0) {
+          const afterPhase = checkPhaseTransition(finalState);
+          if (afterPhase !== finalState) {
+            finalState = afterPhase;
+          } else {
+            finalState = tryTriggerBubble(finalState);
+          }
+        }
+        setGameState(finalState);
         // Local economy in demo mode
         setCoins((c) => c - itemCost);
         const sparkleReward = ITEM_SPARKLE_REWARDS[selectedItem];
@@ -460,7 +487,7 @@ function AppInner() {
   const showRoom = appState === 'playing';
 
   const isOrnament = selectedItem ? ITEM_DEFINITIONS[selectedItem].category === 'surface' : false;
-  const isPlacementDisabled = gameState && gameState.status !== 'playing';
+  const isPlacementDisabled = gameState && (gameState.status !== 'playing' || gameState.phaseState?.vnActive);
 
   const surfaceOccupied = new Set(
     gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)
@@ -566,6 +593,13 @@ function AppInner() {
           DEMO
         </div>
       )}
+
+      {/* VN Dialogue Overlay */}
+      <AnimatePresence>
+        {showRoom && gameState.phaseState?.vnActive && (
+          <VnOverlay phaseState={gameState.phaseState} />
+        )}
+      </AnimatePresence>
 
       {/* Emoji Particles Overlay */}
       <EmojiParticles particles={particles} onParticleEnd={handleParticleEnd} />

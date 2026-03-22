@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import { Ballerina } from '../types';
 import { TILE_SIZE } from '../constants';
 import { useSettings } from '../contexts/SettingsContext';
+import { SpeechBubble } from './SpeechBubble';
+import type { Dialogue } from '../phases';
 
 class ErrorBoundary extends React.Component<
   { fallback: React.ReactNode; children: React.ReactNode },
@@ -219,7 +221,13 @@ function BallerinaPrimitive() {
   );
 }
 
-export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
+export function BallerinaModel({
+  ballerina,
+  bubbleDialogue,
+}: {
+  ballerina: Ballerina;
+  bubbleDialogue?: Dialogue | null;
+}) {
   const groupRef = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
 
@@ -285,6 +293,7 @@ export function BallerinaModel({ ballerina }: { ballerina: Ballerina }) {
           <BallerinaGLB />
         </Suspense>
       </ErrorBoundary>
+      {bubbleDialogue && <SpeechBubble dialogue={bubbleDialogue} />}
     </group>
   );
 }
