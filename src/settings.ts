@@ -11,6 +11,7 @@ export interface VideoSettings {
   highResolution: boolean;
   antialiasing: boolean;
   contactShadows: boolean;
+  lightReflections: boolean;
 }
 
 export interface AppSettings {
@@ -31,10 +32,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   video: {
     shadows: true,
-    highQualityShadows: true,
-    highResolution: true,
-    antialiasing: true,
-    contactShadows: true,
+    highQualityShadows: false,
+    highResolution: false,
+    antialiasing: false,
+    contactShadows: false,
+    lightReflections: false,
   },
 };
 

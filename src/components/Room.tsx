@@ -5,6 +5,7 @@ import { FurnitureModel } from './FurnitureModel';
 import { BallerinaModel } from './BallerinaModel';
 import { DynamicWalls } from './DynamicWalls';
 import { HangingBulb } from './HangingBulb';
+import { useSettings } from '../contexts/SettingsContext';
 
 function getOccupiedTiles(item: Furniture) {
   const def = ITEM_DEFINITIONS[item.type];
@@ -36,6 +37,7 @@ export function Room({
   placementPath: { x: number; y: number }[];
   onPlace: (x: number, y: number, z: number, rotation?: number) => void;
 }) {
+  const { settings } = useSettings();
   const itemDef = selectedItem ? ITEM_DEFINITIONS[selectedItem] : null;
   const isOrnament = itemDef?.category === 'surface';
 
@@ -134,7 +136,7 @@ export function Room({
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[GRID_SIZE * TILE_SIZE, GRID_SIZE * TILE_SIZE]} />
-        <meshStandardMaterial color={COLORS.FLOOR} roughness={0.1} metalness={0.2} />
+        <meshStandardMaterial color={COLORS.FLOOR} roughness={settings.video.lightReflections ? 0.1 : 0.8} metalness={settings.video.lightReflections ? 0.2 : 0} />
       </mesh>
 
       {/* Grid Tiles */}

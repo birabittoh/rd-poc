@@ -88,7 +88,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   className={`flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500 ${
                     audio.bgmMuted ? 'opacity-40' : ''
                   }`}
-                  style={{ background: audio.bgmMuted ? '#52525b' : undefined }}
+                  style={{
+                    background: `linear-gradient(to right, ${audio.bgmMuted ? '#52525b' : '#6366f1'} ${audio.bgmVolume}%, #3f3f46 ${audio.bgmVolume}%)`,
+                  }}
                 />
               </div>
 
@@ -111,7 +113,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   className={`flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500 ${
                     audio.sfxMuted ? 'opacity-40' : ''
                   }`}
-                  style={{ background: audio.sfxMuted ? '#52525b' : undefined }}
+                  style={{
+                    background: `linear-gradient(to right, ${audio.sfxMuted ? '#52525b' : '#6366f1'} ${audio.sfxVolume}%, #3f3f46 ${audio.sfxVolume}%)`,
+                  }}
                 />
               </div>
             </div>
@@ -150,6 +154,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-zinc-300">Antialiasing</span>
                   <Toggle checked={video.antialiasing} onChange={(v) => updateSettings({ video: { antialiasing: v } })} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-300">Light Reflections</span>
+                  <Toggle checked={video.lightReflections} onChange={(v) => updateSettings({ video: { lightReflections: v } })} />
                 </div>
               </div>
             </div>
