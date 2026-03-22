@@ -84,11 +84,6 @@ export function VnOverlay({ phaseState, showEmojiBadge = true }: { phaseState: P
                 transition={{ duration: line.duration, ease: 'linear' }}
               />
             </div>
-
-            {/* Phase indicator */}
-            <p className="mt-2 text-xs text-zinc-500 text-center tracking-wider uppercase">
-              {phase.name}
-            </p>
           </motion.div>
         </AnimatePresence>
       </div>
