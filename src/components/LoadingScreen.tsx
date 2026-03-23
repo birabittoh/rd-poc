@@ -105,14 +105,14 @@ export function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
         const response = await fetch(`${import.meta.env.BASE_URL}${name}`);
         if (!response.ok) throw new Error(`Failed to load ${name}`);
 
-        if (name === 'sign.webp' || name === 'logo.webp') {
+        if (name === 'sign.webp' || name === 'logo.webp' || name.startsWith('vn/')) {
           const blob = await response.blob();
           const dataUrl = await new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result as string);
             reader.readAsDataURL(blob);
           });
-          const key = name === 'sign.webp' ? 'sign' : 'logo';
+          let key = name === 'sign.webp' ? 'sign' : name === 'logo.webp' ? 'logo' : name.replace('/', '_').replace('.webp', '');
           setCaptures((prev) => (prev ? { ...prev, [key]: dataUrl } : { [key]: dataUrl }));
         } else {
           // Just blob it for caching purposes
