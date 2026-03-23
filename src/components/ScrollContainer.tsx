@@ -4,9 +4,10 @@ import { cn } from '../utils/cn';
 interface ScrollContainerProps {
   children: React.ReactNode;
   title: string;
+  activeId?: string | number;
 }
 
-export function ScrollContainer({ children, title }: ScrollContainerProps) {
+export function ScrollContainer({ children, title, activeId }: ScrollContainerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftFade, setShowLeftFade] = useState(false);
   const [showRightFade, setShowRightFade] = useState(false);
@@ -27,6 +28,26 @@ export function ScrollContainer({ children, title }: ScrollContainerProps) {
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
   }, [children]);
+
+  useEffect(() => {
+    if (activeId !== undefined && scrollRef.current) {
+      const activeElement = scrollRef.current.querySelector(
+        `[data-scroll-id="${activeId}"]`
+      ) as HTMLElement;
+      if (activeElement) {
+        const containerRect = scrollRef.current.getBoundingClientRect();
+        const elementRect = activeElement.getBoundingClientRect();
+        const relativeLeft = elementRect.left - containerRect.left + scrollRef.current.scrollLeft;
+        const { clientWidth: containerWidth } = scrollRef.current;
+        const { clientWidth: elementWidth } = activeElement;
+
+        scrollRef.current.scrollTo({
+          left: relativeLeft - containerWidth / 2 + elementWidth / 2,
+          behavior: 'smooth',
+        });
+      }
+    }
+  }, [activeId, title]); // Re-run when activeId OR title (view change) changes
 
   const handleWheel = (e: React.WheelEvent) => {
     if (!scrollRef.current) return;

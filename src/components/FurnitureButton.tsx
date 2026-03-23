@@ -15,6 +15,7 @@ export function FurnitureButton({
   remaining,
   max,
   sparkleReward,
+  ...props
 }: {
   type: ItemType;
   label?: string;
@@ -28,10 +29,12 @@ export function FurnitureButton({
   remaining?: number;
   max?: number;
   sparkleReward?: number;
+  [key: string]: any;
 }) {
   const maxedOut = remaining !== undefined && remaining <= 0;
   return (
     <button
+      {...props}
       onClick={onClick}
       disabled={disabled}
       className={cn(

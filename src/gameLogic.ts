@@ -76,6 +76,24 @@ export function getGridOccupancy(state: GameState): boolean[][] {
   return grid;
 }
 
+export function wouldBlockBallerina(state: GameState): boolean {
+  const grid = getGridOccupancy(state);
+  const { x, y } = state.ballerina;
+
+  const possibleMoves = [
+    { dx: 0, dy: -1 },
+    { dx: 0, dy: 1 },
+    { dx: -1, dy: 0 },
+    { dx: 1, dy: 0 },
+  ].filter(({ dx, dy }) => {
+    const nx = x + dx;
+    const ny = y + dy;
+    return nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && !grid[ny][nx];
+  });
+
+  return possibleMoves.length === 0;
+}
+
 export function stepBallerina(state: GameState): GameState {
   if (state.status !== 'playing') return state;
 
@@ -246,12 +264,27 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   // Validate bounds
   if (newTiles.some((t) => t.x < 0 || t.x >= GRID_SIZE || t.y < 0 || t.y >= GRID_SIZE)) return null;
 
-  // Check Ballerina
+  // Check Ballerina (current and target)
   if (
     z === 0 &&
-    newTiles.some((t) => t.x === state.ballerina.targetX && t.y === state.ballerina.targetY)
+    newTiles.some(
+      (t) =>
+        (t.x === state.ballerina.x && t.y === state.ballerina.y) ||
+        (t.x === state.ballerina.targetX && t.y === state.ballerina.targetY)
+    )
   )
     return null;
+
+  // Potential Block Check
+  if (z === 0 && state.phaseState.currentPhase < PHASES.length - 1) {
+    const potentialState = {
+      ...state,
+      furniture: [...state.furniture, newItem],
+    };
+    if (wouldBlockBallerina(potentialState)) {
+      return null;
+    }
+  }
 
   // Check Occupancy & Stacking
   const existingAtLevel = state.furniture.filter((f) => f.z === z);
