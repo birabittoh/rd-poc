@@ -25,7 +25,7 @@ export function Lamp({ variant }: FurnitureProps) {
         frustumCulled={false}
         renderOrder={10}
       >
-        <meshStandardMaterial color={lampColor} transparent opacity={0.9} depthWrite={false} />
+        <meshStandardMaterial color={lampColor} alphaHash opacity={0.9} />
       </Cylinder>
       <pointLight
         position={[0, 0.7, 0]}

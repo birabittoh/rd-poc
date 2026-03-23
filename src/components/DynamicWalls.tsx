@@ -39,7 +39,6 @@ export function DynamicWalls() {
     mats.forEach((mat, i) => {
       if (mat.current) {
         mat.current.opacity = newOpacities[i];
-        mat.current.depthWrite = newOpacities[i] >= 1;
       }
     });
   });
@@ -55,7 +54,7 @@ export function DynamicWalls() {
         <meshStandardMaterial
           ref={mat0}
           color={COLORS.WALL}
-          transparent
+          alphaHash
           opacity={1}
           roughness={0.4}
         />
@@ -71,7 +70,7 @@ export function DynamicWalls() {
         <meshStandardMaterial
           ref={mat1}
           color={COLORS.WALL}
-          transparent
+          alphaHash
           opacity={1}
           roughness={0.4}
         />
@@ -83,7 +82,7 @@ export function DynamicWalls() {
         <meshStandardMaterial
           ref={mat2}
           color={COLORS.WALL}
-          transparent
+          alphaHash
           opacity={1}
           roughness={0.4}
         />
@@ -95,7 +94,7 @@ export function DynamicWalls() {
         <meshStandardMaterial
           ref={mat3}
           color={COLORS.WALL}
-          transparent
+          alphaHash
           opacity={1}
           roughness={0.4}
         />

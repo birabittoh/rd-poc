@@ -41,7 +41,7 @@ function NoteParticle({ color, type, phase, offset, scale }: { color: string, ty
       {shapes.map((shape, i) => (
         <mesh key={i} rotation={[Math.PI, 0, 0]} scale={0.005} position={[-0.25, 0.25, 0]}>
           <shapeGeometry args={[shape]} />
-          <meshStandardMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.8} />
+          <meshStandardMaterial color={color} side={THREE.DoubleSide} alphaHash opacity={0.8} />
         </mesh>
       ))}
     </group>
