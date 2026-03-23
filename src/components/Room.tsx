@@ -1,4 +1,4 @@
-import { GameState, ItemType, Furniture } from '../types';
+import { GameState, ItemType } from '../types';
 import { ITEM_DEFINITIONS } from '../items';
 import { GRID_SIZE, TILE_SIZE, COLORS } from '../constants';
 import { FurnitureModel } from './FurnitureModel';
@@ -6,25 +6,7 @@ import { BallerinaModel } from './BallerinaModel';
 import { DynamicWalls } from './DynamicWalls';
 import { HangingBulb } from './HangingBulb';
 import { useSettings } from '../contexts/SettingsContext';
-
-function getOccupiedTiles(item: Furniture) {
-  const def = ITEM_DEFINITIONS[item.type];
-  const tiles: { x: number; y: number }[] = [{ x: item.x, y: item.y }];
-
-  if (def.size > 1) {
-    const rotation = item.rotation || 0;
-    const dx = Math.round(Math.sin(rotation));
-    const dy = Math.round(Math.cos(rotation));
-
-    for (let i = 1; i < def.size; i++) {
-      tiles.push({
-        x: item.x + dx * i,
-        y: item.y + dy * i,
-      });
-    }
-  }
-  return tiles;
-}
+import { getOccupiedTiles, placeFurniture } from '../gameLogic';
 
 export function Room({
   gameState,
@@ -41,26 +23,9 @@ export function Room({
   const itemDef = selectedItem ? ITEM_DEFINITIONS[selectedItem] : null;
   const isOrnament = itemDef?.category === 'surface';
 
-  // Calculate grid occupancy
-  const floorOccupied = new Set<string>();
-  gameState.furniture
-    .filter((f) => f.z === 0)
-    .forEach((f) => {
-      getOccupiedTiles(f).forEach((t) => floorOccupied.add(`${t.x},${t.y}`));
-    });
-
   const surfaceOccupied = new Set(
     gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)
   );
-
-  const isAdjacentToWallOrFurniture = (x: number, y: number) => {
-    if (x === 0 || x === GRID_SIZE - 1 || y === 0 || y === GRID_SIZE - 1) return true;
-    if (floorOccupied.has(`${x - 1},${y}`)) return true;
-    if (floorOccupied.has(`${x + 1},${y}`)) return true;
-    if (floorOccupied.has(`${x},${y - 1}`)) return true;
-    if (floorOccupied.has(`${x},${y + 1}`)) return true;
-    return false;
-  };
 
   const connectionsMap = new Map<
     string,
@@ -142,10 +107,6 @@ export function Room({
       {/* Grid Tiles */}
       {Array.from({ length: GRID_SIZE }).map((_, y) =>
         Array.from({ length: GRID_SIZE }).map((_, x) => {
-          const isOccupied = floorOccupied.has(`${x},${y}`);
-          const isBallerinaTarget =
-            gameState.ballerina.targetX === x && gameState.ballerina.targetY === y;
-
           let isHighlight = false;
           let highlightColor = '#6366f1'; // Indigo default
 
@@ -153,7 +114,9 @@ export function Room({
             if (itemDef?.size && itemDef.size > 1) {
               highlightColor = '#3b82f6'; // Blue for multi-tile
               if (placementPath.length === 0) {
-                const canPlaceFromHere = [
+                // To show a highlight when no tile is yet selected for a 2-tile item,
+                // we check if there's any valid placement starting from this tile.
+                isHighlight = [
                   { dx: 1, dy: 0 },
                   { dx: -1, dy: 0 },
                   { dx: 0, dy: 1 },
@@ -161,22 +124,36 @@ export function Room({
                 ].some((offset) => {
                   const nx = x + offset.dx;
                   const ny = y + offset.dy;
-                  if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) return false;
-                  if (floorOccupied.has(`${nx},${ny}`)) return false;
-                  return isAdjacentToWallOrFurniture(x, y) || isAdjacentToWallOrFurniture(nx, ny);
+                  let rotation = 0;
+                  if (offset.dx === 1) rotation = Math.PI / 2;
+                  else if (offset.dx === -1) rotation = -Math.PI / 2;
+                  else if (offset.dy === 1) rotation = 0;
+                  else if (offset.dy === -1) rotation = Math.PI;
+
+                  return !!placeFurniture(gameState, { type: selectedItem, x, y, z: 0, rotation });
                 });
-                isHighlight = !isOccupied && !isBallerinaTarget && canPlaceFromHere;
               } else {
                 const head = placementPath[0];
-                const dist = Math.abs(x - head.x) + Math.abs(y - head.y);
-                // Check if the resulting footprint is adjacent to wall or furniture
-                const isFootprintAdjacent =
-                  isAdjacentToWallOrFurniture(head.x, head.y) || isAdjacentToWallOrFurniture(x, y);
+                const dx = x - head.x;
+                const dy = y - head.y;
+                let rotation = 0;
+                if (dx === 1) rotation = Math.PI / 2;
+                else if (dx === -1) rotation = -Math.PI / 2;
+                else if (dy === 1) rotation = 0;
+                else if (dy === -1) rotation = Math.PI;
+
                 isHighlight =
-                  dist === 1 && !isOccupied && !isBallerinaTarget && isFootprintAdjacent;
+                  Math.abs(dx) + Math.abs(dy) === 1 &&
+                  !!placeFurniture(gameState, {
+                    type: selectedItem,
+                    x: head.x,
+                    y: head.y,
+                    z: 0,
+                    rotation,
+                  });
               }
             } else {
-              isHighlight = !isOccupied && !isBallerinaTarget && isAdjacentToWallOrFurniture(x, y);
+              isHighlight = !!placeFurniture(gameState, { type: selectedItem, x, y, z: 0 });
             }
           }
 
@@ -220,7 +197,12 @@ export function Room({
         const fDef = ITEM_DEFINITIONS[f.type];
         const isSurface = !!fDef.surfaceHeight;
         const hasOrnament = surfaceOccupied.has(`${f.x},${f.y}`);
-        const isHighlight = selectedItem && isOrnament && isSurface && !hasOrnament;
+        const isHighlight =
+          selectedItem &&
+          isOrnament &&
+          isSurface &&
+          !hasOrnament &&
+          !!placeFurniture(gameState, { type: selectedItem, x: f.x, y: f.y, z: 1 });
 
         const floorItem =
           f.z > 0

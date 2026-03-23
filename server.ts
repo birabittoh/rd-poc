@@ -387,6 +387,13 @@ async function startServer() {
           // Already unlocked?
           if (user.unlockedEmojis.includes(emojiIndex)) return;
 
+          // Phase locked?
+          const emojiDef = EMOJI_LIST[emojiIndex];
+          if (gameState.phaseState.currentPhase < emojiDef.unlocksAtPhase) {
+            ws.send(JSON.stringify({ type: 'transaction_failed', reason: 'phase_locked' }));
+            return;
+          }
+
           // Check sparkles
           const cost = EMOJI_UNLOCK_COSTS[emojiIndex];
           if (user.sparkles < cost) {

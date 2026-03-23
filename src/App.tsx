@@ -744,6 +744,8 @@ function AppInner() {
                 <ScrollContainer title="Earn">
                   {EMOJI_LIST.map((entry, i) => {
                     const isUnlocked = unlockedEmojis.includes(i);
+                    const isPhaseLocked =
+                      (gameState.phaseState?.currentPhase ?? 0) < entry.unlocksAtPhase;
                     const unlockCost = EMOJI_UNLOCK_COSTS[i];
                     const canAffordUnlock = sparkles >= unlockCost;
                     const coinReward = EMOJI_COIN_REWARDS[i];
@@ -754,7 +756,7 @@ function AppInner() {
                         onClick={(e) => {
                           if (isUnlocked) {
                             handleEmojiClick(i, e);
-                          } else {
+                          } else if (!isPhaseLocked) {
                             handleEmojiUnlock(i);
                           }
                         }}
@@ -778,6 +780,8 @@ function AppInner() {
                           <span className="text-[9px] font-bold text-amber-400">
                             +{coinReward} 🪙
                           </span>
+                        ) : isPhaseLocked ? (
+                          <span className="text-[9px] font-bold text-zinc-500">??? ✨</span>
                         ) : (
                           <span
                             className={cn(
