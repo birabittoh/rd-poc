@@ -70,6 +70,19 @@ const waitingRoomUsers = new Map<string, ServerUser>(); // uuid -> user
 const wsToUuid = new Map<WebSocket, string>(); // ws -> uuid (reverse lookup)
 let userCounter = 0;
 let released = false;
+
+function logAction(ws: WebSocket, action: string, data: any = {}) {
+  const ip = clients.get(ws) || 'unknown';
+  const uuid = wsToUuid.get(ws) || 'anonymous';
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    ip,
+    uuid,
+    action,
+    ...data,
+  };
+  console.log(JSON.stringify(logEntry));
+}
 const chatHistory: ChatMessage[] = [];
 const chatCooldowns = new Map<string, number>(); // uuid -> last chat timestamp
 
@@ -136,6 +149,7 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
     user.online = true;
     user.ws = ws;
     wsToUuid.set(ws, user.uuid);
+    logAction(ws, 'login', { status: 'returning', name: user.name });
   } else {
     // New user
     const uuid = crypto.randomUUID();
@@ -152,6 +166,7 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
     };
     waitingRoomUsers.set(uuid, user);
     wsToUuid.set(ws, uuid);
+    logAction(ws, 'login', { status: 'new', name: user.name });
   }
 
   // Send registration confirmation
@@ -219,6 +234,7 @@ function handleDisconnect(ws: WebSocket) {
   if (uuid) {
     const user = waitingRoomUsers.get(uuid);
     if (user) {
+      logAction(ws, 'logout', { name: user.name });
       user.online = false;
       user.ws = null;
 
@@ -306,6 +322,7 @@ async function startServer() {
           const typedItemType = itemType as ItemType;
           const cost = ITEM_COIN_COSTS[typedItemType];
           if (user.coins < cost) {
+            logAction(ws, 'transaction_failed', { reason: 'insufficient_coins', itemType: typedItemType });
             ws.send(JSON.stringify({ type: 'transaction_failed', reason: 'insufficient_coins' }));
             return;
           }
@@ -321,7 +338,19 @@ async function startServer() {
           }
 
           const newState = placeFurniture(gameState, message.payload);
-          if (!newState) return;
+          if (!newState) {
+            logAction(ws, 'placement_failed', {
+              itemType: typedItemType,
+              coords: { x: message.payload.x, y: message.payload.y, z: message.payload.z },
+            });
+            return;
+          }
+
+          logAction(ws, 'place_furniture', {
+            itemType: typedItemType,
+            variant: message.payload.variant,
+            coords: { x: message.payload.x, y: message.payload.y, z: message.payload.z },
+          });
 
           // Deduct coins, award sparkles, track placement
           user.coins -= cost;
@@ -404,6 +433,10 @@ async function startServer() {
           // Deduct sparkles, unlock emoji
           user.sparkles -= cost;
           user.unlockedEmojis.push(emojiIndex);
+          logAction(ws, 'unlock_emoji', {
+            emojiIndex,
+            emoji: emojiDef.emoji,
+          });
           sendCurrencyUpdate(ws, user, undefined, emojiIndex);
         }
       } catch (e) {
