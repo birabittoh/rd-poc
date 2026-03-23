@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { GameState, ItemType } from '../types';
 import { ITEM_DEFINITIONS } from '../items';
 import { GRID_SIZE, TILE_SIZE, COLORS } from '../constants';
@@ -23,74 +24,129 @@ export function Room({
   const itemDef = selectedItem ? ITEM_DEFINITIONS[selectedItem] : null;
   const isOrnament = itemDef?.category === 'surface';
 
-  const surfaceOccupied = new Set(
-    gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)
+  const surfaceOccupied = useMemo(
+    () => new Set(gameState.furniture.filter((f) => f.z > 0).map((f) => `${f.x},${f.y}`)),
+    [gameState.furniture]
   );
 
-  const connectionsMap = new Map<
-    string,
-    { top: boolean; right: boolean; bottom: boolean; left: boolean }
-  >();
-  gameState.furniture.forEach((f) => {
-    connectionsMap.set(f.id, { top: false, right: false, bottom: false, left: false });
-  });
+  const connectionsMap = useMemo(() => {
+    const map = new Map<string, { top: boolean; right: boolean; bottom: boolean; left: boolean }>();
+    gameState.furniture.forEach((f) => {
+      map.set(f.id, { top: false, right: false, bottom: false, left: false });
+    });
 
-  gameState.furniture.forEach((f) => {
-    const def = ITEM_DEFINITIONS[f.type];
-    if (!def.connectable) return;
-    const conn = connectionsMap.get(f.id)!;
-    const tiles = getOccupiedTiles(f);
+    gameState.furniture.forEach((f) => {
+      const def = ITEM_DEFINITIONS[f.type];
+      if (!def.connectable) return;
+      const conn = map.get(f.id)!;
+      const tiles = getOccupiedTiles(f);
 
-    // Constraint: No horizontal connections if stacked (except for non-stackable items with ornaments or TVs)
-    const isActuallyStackable = def.stackable;
-    if (f.type !== 'tv' && isActuallyStackable) {
-      const isStacked = gameState.furniture.some(
-        (other) =>
-          (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) &&
-          other.x === f.x &&
-          other.y === f.y
-      );
-      if (isStacked) return;
-    }
-
-    gameState.furniture.forEach((other) => {
-      if (
-        other.id === f.id ||
-        other.type !== f.type ||
-        other.z !== f.z ||
-        other.rotation !== f.rotation
-      )
-        return;
-
-      // Constraint: Other item also cannot be stacked (except for non-stackable items or TVs)
-      const otherDef = ITEM_DEFINITIONS[other.type];
-      if (f.type !== 'tv' && otherDef.stackable) {
-        const otherIsStacked = gameState.furniture.some(
-          (s) =>
-            (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) &&
-            s.x === other.x &&
-            s.y === other.y
+      const isActuallyStackable = def.stackable;
+      if (f.type !== 'tv' && isActuallyStackable) {
+        const isStacked = gameState.furniture.some(
+          (other) =>
+            (other.z === f.z + 1 || (f.z > 0 && other.z === f.z - 1)) &&
+            other.x === f.x &&
+            other.y === f.y
         );
-        if (otherIsStacked) return;
+        if (isStacked) return;
       }
 
-      const otherTiles = getOccupiedTiles(other);
+      gameState.furniture.forEach((other) => {
+        if (
+          other.id === f.id ||
+          other.type !== f.type ||
+          other.z !== f.z ||
+          other.rotation !== f.rotation
+        )
+          return;
 
-      const sidesOnly = def.connectableDirections !== 'all';
-      const rot = f.rotation || 0;
-      const allowX = !sidesOnly || Math.abs(Math.round(Math.cos(rot))) === 1;
-      const allowY = !sidesOnly || Math.abs(Math.round(Math.sin(rot))) === 1;
+        const otherDef = ITEM_DEFINITIONS[other.type];
+        if (f.type !== 'tv' && otherDef.stackable) {
+          const otherIsStacked = gameState.furniture.some(
+            (s) =>
+              (s.z === other.z + 1 || (other.z > 0 && s.z === other.z - 1)) &&
+              s.x === other.x &&
+              s.y === other.y
+          );
+          if (otherIsStacked) return;
+        }
 
-      tiles.forEach((t1) => {
-        otherTiles.forEach((t2) => {
-          if (allowY && t1.x === t2.x && t1.y === t2.y - 1) conn.bottom = true;
-          if (allowY && t1.x === t2.x && t1.y === t2.y + 1) conn.top = true;
-          if (allowX && t1.y === t2.y && t1.x === t2.x - 1) conn.right = true;
-          if (allowX && t1.y === t2.y && t1.x === t2.x + 1) conn.left = true;
+        const otherTiles = getOccupiedTiles(other);
+        const sidesOnly = def.connectableDirections !== 'all';
+        const rot = f.rotation || 0;
+        const allowX = !sidesOnly || Math.abs(Math.round(Math.cos(rot))) === 1;
+        const allowY = !sidesOnly || Math.abs(Math.round(Math.sin(rot))) === 1;
+
+        tiles.forEach((t1) => {
+          otherTiles.forEach((t2) => {
+            if (allowY && t1.x === t2.x && t1.y === t2.y - 1) conn.bottom = true;
+            if (allowY && t1.x === t2.x && t1.y === t2.y + 1) conn.top = true;
+            if (allowX && t1.y === t2.y && t1.x === t2.x - 1) conn.right = true;
+            if (allowX && t1.y === t2.y && t1.x === t2.x + 1) conn.left = true;
+          });
         });
       });
     });
-  });
+    return map;
+  }, [gameState.furniture]);
+
+  const validSpots = useMemo(() => {
+    const spots = new Set<string>();
+    if (selectedItem && !isOrnament) {
+      for (let gy = 0; gy < GRID_SIZE; gy++) {
+        for (let gx = 0; gx < GRID_SIZE; gx++) {
+          if (itemDef?.size && itemDef.size > 1) {
+            if (placementPath.length === 0) {
+              const canStart = [
+                { dx: 1, dy: 0, rot: Math.PI / 2 },
+                { dx: -1, dy: 0, rot: -Math.PI / 2 },
+                { dx: 0, dy: 1, rot: 0 },
+                { dx: 0, dy: -1, rot: Math.PI },
+              ].some(
+                (o) =>
+                  !!placeFurniture(gameState, {
+                    type: selectedItem,
+                    x: gx,
+                    y: gy,
+                    z: 0,
+                    rotation: o.rot,
+                  })
+              );
+              if (canStart) spots.add(`${gx},${gy}`);
+            } else {
+              const head = placementPath[placementPath.length - 1] || placementPath[0]; // Logic safety
+              const dx = gx - head.x;
+              const dy = gy - head.y;
+              if (Math.abs(dx) + Math.abs(dy) === 1) {
+                let rot = 0;
+                if (dx === 1) rot = Math.PI / 2;
+                else if (dx === -1) rot = -Math.PI / 2;
+                else if (dy === 1) rot = 0;
+                else if (dy === -1) rot = Math.PI;
+                if (
+                  !!placeFurniture(gameState, {
+                    type: selectedItem,
+                    x: head.x,
+                    y: head.y,
+                    z: 0,
+                    rotation: rot,
+                  })
+                ) {
+                  spots.add(`${gx},${gy}`);
+                }
+              }
+            }
+          } else {
+            if (!!placeFurniture(gameState, { type: selectedItem, x: gx, y: gy, z: 0 })) {
+              spots.add(`${gx},${gy}`);
+            }
+          }
+        }
+      }
+    }
+    return spots;
+  }, [selectedItem, isOrnament, itemDef, placementPath, gameState]);
 
   return (
     <group position={[-(GRID_SIZE * TILE_SIZE) / 2, 0, -(GRID_SIZE * TILE_SIZE) / 2]}>
@@ -107,56 +163,8 @@ export function Room({
       {/* Grid Tiles */}
       {Array.from({ length: GRID_SIZE }).map((_, y) =>
         Array.from({ length: GRID_SIZE }).map((_, x) => {
-          let isHighlight = false;
-          let highlightColor = '#6366f1'; // Indigo default
-
-          if (selectedItem && !isOrnament) {
-            if (itemDef?.size && itemDef.size > 1) {
-              highlightColor = '#3b82f6'; // Blue for multi-tile
-              if (placementPath.length === 0) {
-                // To show a highlight when no tile is yet selected for a 2-tile item,
-                // we check if there's any valid placement starting from this tile.
-                isHighlight = [
-                  { dx: 1, dy: 0 },
-                  { dx: -1, dy: 0 },
-                  { dx: 0, dy: 1 },
-                  { dx: 0, dy: -1 },
-                ].some((offset) => {
-                  const nx = x + offset.dx;
-                  const ny = y + offset.dy;
-                  let rotation = 0;
-                  if (offset.dx === 1) rotation = Math.PI / 2;
-                  else if (offset.dx === -1) rotation = -Math.PI / 2;
-                  else if (offset.dy === 1) rotation = 0;
-                  else if (offset.dy === -1) rotation = Math.PI;
-
-                  return !!placeFurniture(gameState, { type: selectedItem, x, y, z: 0, rotation });
-                });
-              } else {
-                const head = placementPath[0];
-                const dx = x - head.x;
-                const dy = y - head.y;
-                let rotation = 0;
-                if (dx === 1) rotation = Math.PI / 2;
-                else if (dx === -1) rotation = -Math.PI / 2;
-                else if (dy === 1) rotation = 0;
-                else if (dy === -1) rotation = Math.PI;
-
-                isHighlight =
-                  Math.abs(dx) + Math.abs(dy) === 1 &&
-                  !!placeFurniture(gameState, {
-                    type: selectedItem,
-                    x: head.x,
-                    y: head.y,
-                    z: 0,
-                    rotation,
-                  });
-              }
-            } else {
-              isHighlight = !!placeFurniture(gameState, { type: selectedItem, x, y, z: 0 });
-            }
-          }
-
+          const isHighlight = validSpots.has(`${x},${y}`);
+          const highlightColor = itemDef?.size && itemDef.size > 1 ? '#3b82f6' : '#6366f1';
           const isPath = placementPath.some((p) => p.x === x && p.y === y);
 
           return (
@@ -202,7 +210,11 @@ export function Room({
           isOrnament &&
           isSurface &&
           !hasOrnament &&
-          !!placeFurniture(gameState, { type: selectedItem, x: f.x, y: f.y, z: 1 });
+          (() => {
+            // Optimization: check item count and sparkles before calling complex logic
+            if (!!placeFurniture(gameState, { type: selectedItem, x: f.x, y: f.y, z: 1 })) return true;
+            return false;
+          })();
 
         const floorItem =
           f.z > 0

@@ -89,8 +89,8 @@ export function VnOverlay({ phaseState, showEmojiBadge = true }: { phaseState: P
       {/* Bottom content area */}
       <div className="relative w-full max-w-4xl px-4 mb-56 md:mb-60 flex flex-col md:flex-row md:items-end gap-4">
 
-        {/* Radar chart — left on desktop, below textbox on mobile */}
-        <div className="order-last md:order-first md:mb-0 flex justify-center md:justify-start md:pb-2 shrink-0">
+        {/* Radar chart — left on desktop, hidden on mobile in this container */}
+        <div className="hidden md:block md:mb-0 md:pb-2 shrink-0">
           <div className="bg-zinc-900/70 backdrop-blur-sm border border-white/10 rounded-2xl p-3">
             <RadarChart stats={phase.stats} />
           </div>
@@ -98,25 +98,56 @@ export function VnOverlay({ phaseState, showEmojiBadge = true }: { phaseState: P
 
         {/* Character image + Textbox stacked */}
         <div className="flex flex-col items-center flex-1 min-w-0">
-          {/* Character image — directly above textbox */}
-          <AnimatePresence mode="wait">
-            {showImage && (
-              <motion.img
-                key={`${phaseState.currentPhase}-${phaseState.vnLineIndex}`}
-                src={imgSrc}
-                alt={line.emotion}
-                className="max-h-[35vh] md:max-h-[45vh] w-auto object-contain drop-shadow-2xl"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.25 }}
-                onError={() => setImgError(line.emotion)}
-              />
+          {/* Mobile-only header with chart and image */}
+          <div className="flex md:hidden items-end w-full gap-2 mb-2">
+             {/* Mobile Chart - left */}
+             <div className="bg-zinc-900/70 backdrop-blur-sm border border-white/10 rounded-2xl p-1 shrink-0 scale-75 origin-bottom-left">
+                <RadarChart stats={phase.stats} />
+             </div>
+             {/* Mobile Character Image - right */}
+             <div className="flex-1 flex justify-center">
+               <AnimatePresence mode="wait">
+                  {showImage && (
+                    <motion.img
+                      key={`${phaseState.currentPhase}-${phaseState.vnLineIndex}-mobile`}
+                      src={imgSrc}
+                      alt={line.emotion}
+                      className="max-h-[25vh] w-auto object-contain drop-shadow-2xl"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.25 }}
+                      onError={() => setImgError(line.emotion)}
+                    />
+                  )}
+               </AnimatePresence>
+               {!showImage && emoji && (
+                  <span className="text-6xl drop-shadow-2xl">{emoji}</span>
+               )}
+             </div>
+          </div>
+
+          {/* Desktop Character image — directly above textbox */}
+          <div className="hidden md:block">
+            <AnimatePresence mode="wait">
+              {showImage && (
+                <motion.img
+                  key={`${phaseState.currentPhase}-${phaseState.vnLineIndex}`}
+                  src={imgSrc}
+                  alt={line.emotion}
+                  className="md:max-h-[45vh] w-auto object-contain drop-shadow-2xl"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25 }}
+                  onError={() => setImgError(line.emotion)}
+                />
+              )}
+            </AnimatePresence>
+            {!showImage && emoji && (
+              <span className="md:text-9xl drop-shadow-2xl">{emoji}</span>
             )}
-          </AnimatePresence>
-          {!showImage && emoji && (
-            <span className="text-8xl md:text-9xl drop-shadow-2xl">{emoji}</span>
-          )}
+          </div>
 
           {/* Textbox — no margin between it and the character image above */}
           <AnimatePresence mode="wait">

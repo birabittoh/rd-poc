@@ -264,10 +264,14 @@ export function placeFurniture(state: GameState, payload: PlacementPayload): Gam
   // Validate bounds
   if (newTiles.some((t) => t.x < 0 || t.x >= GRID_SIZE || t.y < 0 || t.y >= GRID_SIZE)) return null;
 
-  // Check Ballerina
+  // Check Ballerina (current and target)
   if (
     z === 0 &&
-    newTiles.some((t) => t.x === state.ballerina.targetX && t.y === state.ballerina.targetY)
+    newTiles.some(
+      (t) =>
+        (t.x === state.ballerina.x && t.y === state.ballerina.y) ||
+        (t.x === state.ballerina.targetX && t.y === state.ballerina.targetY)
+    )
   )
     return null;
 
