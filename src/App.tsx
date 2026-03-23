@@ -600,7 +600,7 @@ function AppInner() {
       {/* VN Dialogue Overlay */}
       <AnimatePresence>
         {showRoom && gameState.phaseState?.vnActive && (
-          <VnOverlay phaseState={gameState.phaseState} />
+          <VnOverlay phaseState={gameState.phaseState} captures={variantCaptures} />
         )}
       </AnimatePresence>
 

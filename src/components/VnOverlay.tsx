@@ -60,7 +60,15 @@ function RadarChart({ stats }: { stats: Stats }) {
   );
 }
 
-export function VnOverlay({ phaseState, showEmojiBadge = true }: { phaseState: PhaseState; showEmojiBadge?: boolean }) {
+export function VnOverlay({
+  phaseState,
+  showEmojiBadge = true,
+  captures,
+}: {
+  phaseState: PhaseState;
+  showEmojiBadge?: boolean;
+  captures?: Record<string, string>;
+}) {
   const [imgError, setImgError] = useState<string | null>(null);
 
   if (!phaseState.vnActive) return null;
@@ -72,7 +80,7 @@ export function VnOverlay({ phaseState, showEmojiBadge = true }: { phaseState: P
   if (!line) return null;
 
   const emoji = EMOTION_EMOJI[line.emotion];
-  const imgSrc = `${BASE_URL}vn/${line.emotion}.webp`;
+  const imgSrc = captures?.[`vn_${line.emotion}`] || `${BASE_URL}vn/${line.emotion}.webp`;
   const showImage = imgError !== line.emotion;
 
   return (
