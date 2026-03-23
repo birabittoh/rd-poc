@@ -152,6 +152,8 @@ function AppInner() {
   const [itemPlacements, setItemPlacements] = useState<Record<string, number>>({});
   const [coinPulse, setCoinPulse] = useState(0);
   const [sparklePulse, setSparklePulse] = useState(0);
+  const [lastEmojiIndex, setLastEmojiIndex] = useState<number | null>(null);
+  const [lastFurnitureType, setLastFurnitureType] = useState<ItemType | null>(null);
 
   // Keep settings ref in sync for use in callbacks
   useEffect(() => {
@@ -640,7 +642,7 @@ function AppInner() {
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
-                <ScrollContainer title="Place">
+                <ScrollContainer title="Place" activeId={lastFurnitureType ?? undefined}>
                   {ALL_ITEMS.map((item) => {
                     const placed = itemPlacements[item.type] || 0;
                     const maxP = ITEM_MAX_PLACEMENTS[item.type];
@@ -649,6 +651,7 @@ function AppInner() {
                     return (
                       <FurnitureButton
                         key={item.type}
+                        data-scroll-id={item.type}
                         type={item.type}
                         label={item.label}
                         icon={ITEM_ICONS[item.type]}
@@ -657,6 +660,7 @@ function AppInner() {
                         onClick={() => {
                           if (maxedOut || coins < ITEM_COIN_COSTS[item.type]) return;
                           setSelectedItem(item.type);
+                          setLastFurnitureType(item.type);
                           setSelectedVariant(loadSavedVariants()[item.type] ?? 0);
                           setPlacementPath([]);
                         }}
@@ -741,7 +745,7 @@ function AppInner() {
                   </button>
                 )}
 
-                <ScrollContainer title="Earn">
+                <ScrollContainer title="Earn" activeId={lastEmojiIndex ?? undefined}>
                   {EMOJI_LIST.map((entry, i) => {
                     const isUnlocked = unlockedEmojis.includes(i);
                     const isPhaseLocked =
@@ -753,9 +757,11 @@ function AppInner() {
                     return (
                       <button
                         key={i}
+                        data-scroll-id={i}
                         onClick={(e) => {
                           if (isUnlocked) {
                             handleEmojiClick(i, e);
+                            setLastEmojiIndex(i);
                           } else if (!isPhaseLocked) {
                             handleEmojiUnlock(i);
                           }
