@@ -295,11 +295,15 @@ if (RELEASE_TIMESTAMP !== null) {
 
 async function startServer() {
   const app = express();
+  app.set('trust proxy', true);
   const server = http.createServer(app);
   const wss = new WebSocketServer({ server });
 
   wss.on('connection', (ws, req) => {
-    const ip = req.socket.remoteAddress || 'unknown';
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip =
+      (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : req.socket.remoteAddress) ||
+      'unknown';
     clients.set(ws, ip);
 
     // Send initial game state
