@@ -17,14 +17,12 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-        disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
-      } ${checked ? 'bg-indigo-500' : 'bg-zinc-600'}`}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+        } ${checked ? 'bg-indigo-500' : 'bg-zinc-600'}`}
     >
       <span
-        className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
-          checked ? 'translate-x-4.5' : 'translate-x-0.5'
-        }`}
+        className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${checked ? 'translate-x-4.5' : 'translate-x-0.5'
+          }`}
       />
     </button>
   );
@@ -83,7 +81,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
-              <h2 className="text-lg font-semibold text-zinc-100">Settings</h2>
+              <h2 className="text-lg font-semibold text-zinc-100">Impostazioni</h2>
               <button
                 onClick={onClose}
                 className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors"
@@ -105,16 +103,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 >
                   {audio.bgmMuted ? <Music2 className="w-4 h-4 opacity-40" /> : <Music className="w-4 h-4" />}
                 </button>
-                <span className="text-sm text-zinc-300 w-10">BGM</span>
+                <span className="text-sm text-zinc-300 w-10">Musica</span>
                 <input
                   type="range"
                   min={0}
                   max={100}
                   value={audio.bgmVolume}
                   onChange={(e) => updateSettings({ audio: { bgmVolume: Number(e.target.value) } })}
-                  className={`flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500 ${
-                    audio.bgmMuted ? 'opacity-40' : ''
-                  }`}
+                  className={`flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500 ${audio.bgmMuted ? 'opacity-40' : ''
+                    }`}
                   style={{
                     background: `linear-gradient(to right, ${audio.bgmMuted ? '#52525b' : '#6366f1'} ${audio.bgmVolume}%, #3f3f46 ${audio.bgmVolume}%)`,
                   }}
@@ -130,16 +127,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 >
                   {audio.sfxMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </button>
-                <span className="text-sm text-zinc-300 w-10">SFX</span>
+                <span className="text-sm text-zinc-300 w-10">Effetti</span>
                 <input
                   type="range"
                   min={0}
                   max={100}
                   value={audio.sfxVolume}
                   onChange={(e) => updateSettings({ audio: { sfxVolume: Number(e.target.value) } })}
-                  className={`flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500 ${
-                    audio.sfxMuted ? 'opacity-40' : ''
-                  }`}
+                  className={`flex-1 h-1.5 rounded-full appearance-none cursor-pointer accent-indigo-500 ${audio.sfxMuted ? 'opacity-40' : ''
+                    }`}
                   style={{
                     background: `linear-gradient(to right, ${audio.sfxMuted ? '#52525b' : '#6366f1'} ${audio.sfxVolume}%, #3f3f46 ${audio.sfxVolume}%)`,
                   }}
@@ -160,13 +156,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <button
                     key={key}
                     onClick={() => handlePresetClick(key)}
-                    className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                      (key === 'custom' ? showCustom && activePreset === 'custom' : activePreset === key && !showCustom)
-                        ? 'bg-indigo-500 text-white'
-                        : (key === 'custom' && showCustom)
-                          ? 'bg-zinc-600 text-zinc-100'
-                          : 'bg-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
-                    }`}
+                    className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${(key === 'custom' ? showCustom && activePreset === 'custom' : activePreset === key && !showCustom)
+                      ? 'bg-indigo-500 text-white'
+                      : (key === 'custom' && showCustom)
+                        ? 'bg-zinc-600 text-zinc-100'
+                        : 'bg-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
+                      }`}
                   >
                     {label}
                   </button>

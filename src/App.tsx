@@ -34,6 +34,7 @@ import {
   stepBallerina,
   createInitialState,
   checkPhaseTransition,
+  forceAdvancePhase,
   tryTriggerBubble,
   checkBubbleExpiry,
   tickVnAdvance,
@@ -144,6 +145,7 @@ function AppInner() {
   const [currentUser, setCurrentUser] = useState<{ uuid: string; name: string } | null>(null);
   const [released, setReleased] = useState(false);
   const [releaseTimestamp, setReleaseTimestamp] = useState<string>('');
+  const [cheatsEnabled, setCheatsEnabled] = useState(false);
 
   // Economy state
   const [coins, setCoins] = useState(INITIAL_COINS);
@@ -203,6 +205,7 @@ function AppInner() {
         localStorage.setItem(USER_ID_KEY, data.uuid);
         setCurrentUser({ uuid: data.uuid, name: data.name });
         setReleaseTimestamp(data.releaseTimestamp);
+        setCheatsEnabled(data.cheats ?? false);
         setCoins(data.coins ?? INITIAL_COINS);
         setSparkles(data.sparkles ?? INITIAL_SPARKLES);
         setUnlockedEmojis(data.unlockedEmojis ?? [...DEFAULT_UNLOCKED_EMOJIS]);
@@ -507,7 +510,7 @@ function AppInner() {
     >
       {/* Settings Button */}
       {appState !== 'waiting' && (
-        <div className="absolute top-4 left-4 z-50">
+        <div className="absolute top-4 left-4 z-50 flex gap-2">
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="p-2 rounded-xl bg-zinc-800/80 backdrop-blur-md text-zinc-100 border border-white/10 shadow-lg hover:bg-zinc-700/80 transition-colors"
@@ -515,6 +518,20 @@ function AppInner() {
           >
             <Settings className="w-5 h-5" />
           </button>
+          {cheatsEnabled && showRoom && gameState && (
+            <button
+              onClick={() => {
+                if (isDemoMode) {
+                  setGameState((prev) => prev ? forceAdvancePhase(prev) : prev);
+                } else {
+                  ws?.send(JSON.stringify({ type: 'skip_phase' }));
+                }
+              }}
+              className="px-3 py-2 rounded-xl bg-yellow-500/80 backdrop-blur-md text-zinc-900 font-bold border border-yellow-300/30 shadow-lg hover:bg-yellow-400/80 transition-colors text-xs"
+            >
+              Skip Phase
+            </button>
+          )}
         </div>
       )}
 
@@ -592,9 +609,15 @@ function AppInner() {
 
       {/* Demo mode badge */}
       {isDemoMode && showRoom && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500/90 backdrop-blur-md text-black font-bold px-4 py-1.5 rounded-full text-sm tracking-widest shadow-lg pointer-events-none select-none">
+        <button
+          onClick={() => setCheatsEnabled((prev) => {
+            if (!prev) { setCoins(99999); setSparkles(99999); }
+            return !prev;
+          })}
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500/90 backdrop-blur-md text-black font-bold px-4 py-1.5 rounded-full text-sm tracking-widest shadow-lg select-none"
+        >
           DEMO
-        </div>
+        </button>
       )}
 
       {/* VN Dialogue Overlay */}
@@ -612,12 +635,12 @@ function AppInner() {
         {gameState.status === 'game_over' && (
           <div className="mb-8 bg-red-500/90 backdrop-blur-md text-white px-8 py-4 rounded-2xl shadow-2xl pointer-events-auto flex flex-col items-center transform transition-all animate-in fade-in slide-in-from-bottom-4">
             <h2 className="text-3xl font-bold mb-2">Game Over!</h2>
-            <p className="text-red-100 mb-4">The ballerina is stuck.</p>
+            <p className="text-red-100 mb-4">La ballerina è bloccata.</p>
             <button
               onClick={resetGame}
               className="px-6 py-2 bg-white text-red-600 font-bold rounded-full hover:bg-red-50 transition-colors flex items-center gap-2"
             >
-              <RotateCcw className="w-4 h-4" /> Play Again
+              <RotateCcw className="w-4 h-4" /> Gioca Ancora
             </button>
           </div>
         )}
@@ -642,7 +665,7 @@ function AppInner() {
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
-                <ScrollContainer title="Place" activeId={lastFurnitureType ?? undefined}>
+                <ScrollContainer title="Piazza" activeId={lastFurnitureType ?? undefined}>
                   {ALL_ITEMS.map((item) => {
                     const placed = itemPlacements[item.type] || 0;
                     const maxP = ITEM_MAX_PLACEMENTS[item.type];
@@ -745,7 +768,7 @@ function AppInner() {
                   </button>
                 )}
 
-                <ScrollContainer title="Earn" activeId={lastEmojiIndex ?? undefined}>
+                <ScrollContainer title="Guadagna" activeId={lastEmojiIndex ?? undefined}>
                   {EMOJI_LIST.map((entry, i) => {
                     const isUnlocked = unlockedEmojis.includes(i);
                     const isPhaseLocked =
@@ -809,10 +832,10 @@ function AppInner() {
         <div className="mt-4 relative h-6 flex items-center justify-center w-full">
           <p className="text-sm text-zinc-400 font-medium tracking-wide">
             {selectedItem
-              ? `Select a ${isOrnament ? 'surface' : 'floor tile'} to place ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`
+              ? `Seleziona ${isOrnament ? 'una superficie' : 'un pavimento'} dove piazzare ${ITEM_DEFINITIONS[selectedItem].label ?? selectedItem.replace('_', ' ')}`
               : menuView === 'earn'
-                ? 'Tap an emoji to earn coins'
-                : 'Select an item to place'}
+                ? "Tocca un'emoji per guadagnare monete"
+                : 'Seleziona un oggetto da piazzare'}
           </p>
         </div>
       </div>}

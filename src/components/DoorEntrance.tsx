@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { COLORS } from '../constants';
 
+const DOOR_TEXT = "Clicca per entrare";
+
 interface DoorEntranceProps {
   onEnter: () => void;
   signUrl: string;
@@ -68,7 +70,7 @@ export function DoorEntrance({ onEnter, signUrl }: DoorEntranceProps) {
               transition={{ delay: 0.5, duration: 1 }}
               className="text-sm font-bold tracking-[0.3em] text-zinc-600 uppercase"
             >
-              Click to Enter
+              {DOOR_TEXT}
             </motion.p>
           </motion.div>
         ) : (
@@ -107,9 +109,9 @@ export function DoorEntrance({ onEnter, signUrl }: DoorEntranceProps) {
                 />
               </motion.div>
 
-              {/* Spacer matching "Click to Enter" text height */}
+              {/* Spacer matching door text height */}
               <div className="text-sm invisible select-none uppercase tracking-[0.3em] font-bold">
-                Click to Enter
+                {DOOR_TEXT}
               </div>
             </div>
 

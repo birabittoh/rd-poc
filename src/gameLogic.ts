@@ -493,6 +493,24 @@ export function checkPhaseTransition(state: GameState): GameState {
   return state;
 }
 
+export function forceAdvancePhase(state: GameState): GameState {
+  const { currentPhase } = state.phaseState;
+  const nextPhaseIndex = currentPhase + 1;
+  if (nextPhaseIndex >= PHASES.length) return state;
+  return {
+    ...state,
+    phaseState: {
+      currentPhase: nextPhaseIndex,
+      vnActive: true,
+      vnLineIndex: 0,
+      vnStartedAt: Date.now(),
+      bubbleActive: false,
+      bubbleDialogue: null,
+      bubbleStartedAt: 0,
+    },
+  };
+}
+
 export function advanceVnLine(state: GameState): GameState {
   if (!state.phaseState.vnActive) return state;
 

@@ -11,6 +11,7 @@ import {
   placeFurniture,
   createInitialState,
   checkPhaseTransition,
+  forceAdvancePhase,
   tryTriggerBubble,
   checkBubbleExpiry,
   tickVnAdvance,
@@ -180,6 +181,7 @@ function handleRegister(ws: WebSocket, incomingUuid: string | null) {
       unlockedEmojis: user.unlockedEmojis,
       itemPlacements: user.itemPlacements,
       releaseTimestamp: RELEASE_TIMESTAMP_STR,
+      cheats: CHEATS,
     })
   );
 
@@ -372,6 +374,9 @@ async function startServer() {
 
           broadcastState();
           sendCurrencyUpdate(ws, user, { sparkles: sparkleReward });
+        } else if (message.type === 'skip_phase' && CHEATS) {
+          gameState = forceAdvancePhase(gameState);
+          broadcastState();
         } else if (message.type === 'reset') {
           gameState = createInitialState();
           broadcastState();

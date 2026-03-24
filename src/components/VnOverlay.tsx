@@ -107,7 +107,7 @@ export function VnOverlay({
         {/* Character image + Textbox stacked */}
         <div className="flex flex-col items-center flex-1 min-w-0">
           {/* Mobile-only header with chart and image */}
-          <div className="flex md:hidden items-end w-full gap-2 mb-2">
+          <div className="flex md:hidden items-end w-full gap-2">
              {/* Mobile Chart - left */}
              <div className="bg-zinc-900/70 backdrop-blur-sm border border-white/10 rounded-2xl p-1 shrink-0 scale-75 origin-bottom-left">
                 <RadarChart stats={phase.stats} />

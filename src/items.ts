@@ -2,6 +2,7 @@ import type { ItemType, ItemDefinition } from './types.ts';
 
 export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
   table: {
+    label: 'tavolo',
     type: 'table',
     category: 'floor',
     size: 1,
@@ -13,6 +14,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     variants: 4,
   },
   chair: {
+    label: 'sedia',
     type: 'chair',
     category: 'floor',
     size: 1,
@@ -21,6 +23,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     variants: 8,
   },
   plant: {
+    label: 'pianta',
     type: 'plant',
     category: 'floor',
     size: 1,
@@ -28,8 +31,8 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     variants: 4,
   },
   library: {
+    label: 'libreria',
     type: 'library',
-    label: 'bookshelf',
     category: 'floor',
     size: 1,
     connectable: true,
@@ -38,6 +41,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 1.8,
   },
   floor_lamp: {
+    label: 'piantana',
     type: 'floor_lamp',
     category: 'floor',
     size: 1,
@@ -46,6 +50,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 1.15,
   },
   bed: {
+    label: 'letto',
     type: 'bed',
     category: 'floor',
     size: 2,
@@ -56,6 +61,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 1.8,
   },
   laptop: {
+    label: 'portatile',
     type: 'laptop',
     category: 'surface',
     size: 1,
@@ -76,6 +82,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     variants: 4,
   },
   vase: {
+    label: 'vaso',
     type: 'vase',
     category: 'surface',
     size: 1,
@@ -84,6 +91,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 0.8,
   },
   book: {
+    label: 'libro',
     type: 'book',
     category: 'surface',
     size: 1,
@@ -93,6 +101,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 0.8,
   },
   lamp: {
+    label: 'lampada',
     type: 'lamp',
     category: 'surface',
     size: 1,
@@ -101,6 +110,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 0.8,
   },
   drawer: {
+    label: 'comò',
     type: 'drawer',
     category: 'floor',
     size: 1,
@@ -110,6 +120,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     variants: 4,
   },
   bedside_table: {
+    label: 'comodino',
     type: 'bedside_table',
     category: 'floor',
     size: 1,
@@ -119,6 +130,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 0.9,
   },
   wardrobe: {
+    label: 'armadio',
     type: 'wardrobe',
     category: 'floor',
     size: 1,
@@ -128,6 +140,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 1.6,
   },
   coffee_table: {
+    label: 'tavolino',
     type: 'coffee_table',
     category: 'floor',
     size: 1,
@@ -138,6 +151,7 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     variants: 4,
   },
   mirror: {
+    label: 'specchio',
     type: 'mirror',
     category: 'floor',
     size: 1,
@@ -147,8 +161,8 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 1.3,
   },
   mirror_ornament: {
+    label: 'specchietto',
     type: 'mirror_ornament',
-    label: 'Table Mirror',
     category: 'surface',
     size: 1,
     interactable: true,
@@ -157,8 +171,8 @@ export const ITEM_DEFINITIONS: Record<ItemType, ItemDefinition> = {
     previewAdjustCamera: 0.8,
   },
   boombox: {
+    label: 'radio',
     type: 'boombox',
-    label: 'Boombox',
     category: 'surface',
     size: 1,
     interactable: true,
