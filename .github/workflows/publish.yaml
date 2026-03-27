@@ -56,14 +56,27 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-
+      
             cd /home/${{ secrets.VPS_USER }}/${{ github.event.repository.name }}
-
+      
+            TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+      
+            echo "Saving current container logs..."
+      
+            # Crea directory logs se non esiste
+            mkdir -p logs
+      
+            # Itera su tutti i servizi definiti in docker compose
+            for service in $(docker compose config --services); do
+              echo "Saving logs for $service..."
+              docker compose logs $service > logs/${TIMESTAMP}-${service}.log || true
+            done
+      
             echo "Pulling latest images..."
             docker compose pull
-
+      
             echo "Restarting services..."
             docker compose up -d
-
+      
             echo "Cleaning up old images..."
             docker image prune -f
