@@ -447,6 +447,8 @@ async function startServer() {
             emoji: emojiDef.emoji,
           });
           sendCurrencyUpdate(ws, user, undefined, emojiIndex);
+        } else if (message.type === 'click_door') {
+          logAction(ws, 'click_door');
         }
       } catch (e) {
         console.error('Invalid message', e);
