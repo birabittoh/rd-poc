@@ -6,13 +6,15 @@ const DOOR_TEXT = "Clicca per entrare";
 
 interface DoorEntranceProps {
   onEnter: () => void;
+  onClick?: () => void;
   signUrl: string;
 }
 
-export function DoorEntrance({ onEnter, signUrl }: DoorEntranceProps) {
+export function DoorEntrance({ onEnter, onClick, signUrl }: DoorEntranceProps) {
   const [isOpening, setIsOpening] = useState(false);
 
   const handleOpen = () => {
+    onClick?.();
     setIsOpening(true);
     setTimeout(onEnter, 1000);
   };
