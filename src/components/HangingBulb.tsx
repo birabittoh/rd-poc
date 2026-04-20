@@ -22,7 +22,7 @@ export function HangingBulb() {
           color="#fff5d7"
           emissive="#fff5d7"
           emissiveIntensity={1}
-          transparent
+          alphaHash
           opacity={0.9}
         />
         <pointLight intensity={settings.video.lightReflections ? 1 : 0} distance={10} color="#fff5d7" castShadow />
